@@ -432,18 +432,22 @@ If asked something outside CraftCycle (politics, unrelated topics), politely red
       }
 
     } catch (err) {
-      console.error("Chatbot Error:", err);
+      console.error("Chatbot Critical Error:", err);
       hideTyping();
       
-      // Provide more specific error feedback based on what happened
-      let errorMsg = "I'm having trouble connecting to my AI core. Please check your internet or try again later! ⚙️";
-      if (err.message && err.message !== "API Error") {
-        errorMsg = `⚠️ AI Engine Error: ${err.message}`;
-      } else if (err.status === 429) {
-        errorMsg = "⚠️ Too many messages! Please wait a moment before asking more questions.";
+      // Provide verbose diagnostic feedback
+      let errorMsg = `⚠️ AI Connection Failure\n\nReason: ${err.message || 'Network Timeout'}`;
+      
+      if (err.status) {
+        errorMsg += `\nStatus Code: ${err.status}`;
       }
       
-      addMessage("bot", errorMsg);
+      // Check if it's likely a CORS issue
+      if (err.message && err.message.includes('fetch')) {
+        errorMsg += "\nTip: Likely a browser security block (CORS). Testing from localhost?";
+      }
+
+      addMessage("bot", errorMsg + "\n\nPlease try again or contact support if this persists! ⚙️");
     } finally {
       isTyping = false;
       sendBtn.disabled = false;

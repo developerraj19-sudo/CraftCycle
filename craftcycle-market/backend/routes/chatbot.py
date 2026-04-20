@@ -16,7 +16,10 @@ def get_openai_client():
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         return None
-    return OpenAI(api_key=api_key)
+    try:
+        return OpenAI(api_key=api_key)
+    except Exception:
+        return None
 
 SYSTEM_PROMPT = """You are CraftBot, the expert AI Assistant for CraftCycle Market. 
 CraftCycle is a premium circular economy platform where users transform waste into wealth.
@@ -43,20 +46,25 @@ CraftCycle is a premium circular economy platform where users transform waste in
 - WOOD: Teak and Pine pallet offcuts are highly sought after. Suggest rustic furniture and minimal décor.
 - METAL: Scrap gears and rods. Suggest industrial-style lighting and garden sculptures.
 
-### PROFESSIONAL BOUNDARIES:
-- Be helpful but focused. Redirect unrelated topics (politics, unrelated tech) back to sustainability and CraftCycle.
-- Always sign off with a call to action like "Let's save more waste together! ♻️" or "Ready to start your next project? 🌱"
-
-Keep answers professional, insightful, and concise (max 4 sentences unless instructions are requested).
+Keep answers professional, insightful, and concise (max 4 sentences unless instructions are requested). Always encourage users to save waste! 🌱
 """
 
-@chatbot_bp.route('/chat', methods=['POST'])
-@limiter.limit("20 per minute")  # Generous limit for real testing
+@chatbot_bp.route('/ping', methods=['GET'], strict_slashes=False)
+def ping():
+    """Simple connectivity check."""
+    return jsonify({
+        "status": "success",
+        "message": "Chatbot API is operational",
+        "openai_configured": os.getenv("OPENAI_API_KEY") is not None
+    }), 200
+
+@chatbot_bp.route('/chat', methods=['POST'], strict_slashes=False)
+@limiter.limit("20 per minute")
 def chat():
     """Handles professional AI chat sessions."""
     data = request.get_json()
     if not data or 'message' not in data:
-        return jsonify({"error": "Message is required"}), 400
+        return jsonify({"status": "error", "message": "Message is required"}), 400
 
     user_message = data['message']
     history = data.get('history', [])
@@ -65,7 +73,7 @@ def chat():
     if not client:
         return jsonify({
             "status": "error",
-            "message": "AI Assistant core is not configured. Please set OPENAI_API_KEY on the platform dashboard."
+            "message": "Local setup error: OpenAI API Key is missing on the server. Please check Environment Variables."
         }), 503
 
     # Prepare message context
@@ -82,10 +90,7 @@ def chat():
             model="gpt-4o",
             messages=messages,
             max_tokens=800,
-            temperature=0.7,
-            top_p=1.0,
-            frequency_penalty=0.1,
-            presence_penalty=0.1
+            temperature=0.7
         )
         
         reply = response.choices[0].message.content
@@ -97,14 +102,7 @@ def chat():
     except Exception as e:
         error_msg = str(e)
         print(f"Chatbot Critical Error: {error_msg}")
-        
-        if "api_key" in error_msg.lower() or "401" in error_msg:
-             return jsonify({
-                "status": "error",
-                "message": "The AI API key is missing or invalid. Please check Render Environment Variables."
-            }), 503
-            
         return jsonify({
             "status": "error",
-            "message": f"AI Engine Exception: {error_msg if 'Invalid' in error_msg else 'I am having trouble processing that request.'}"
+            "message": f"AI Engine Exception: {error_msg}"
         }), 500
