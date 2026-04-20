@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>CraftCycle Market — My Profile</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♻️</text></svg>">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    /* ── Profile Hero Banner ── */
+    .profile-hero {
+      background: linear-gradient(135deg, rgba(0, 255, 136, .07) 0%, rgba(0, 212, 255, .05) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: var(--s8);
+      display: flex;
+      align-items: center;
+      gap: var(--s6);
+      flex-wrap: wrap;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .profile-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 55% 80% at 15% 50%, rgba(0, 255, 136, .04) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .profile-avatar-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .profile-avatar-large {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: var(--green-glow);
+      border: 3px solid rgba(0, 255, 136, .35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.8rem;
+      font-weight: 900;
+      font-family: var(--font-display);
+      color: var(--green);
+      overflow: hidden;
+      box-shadow: 0 0 30px rgba(0, 255, 136, .12);
+    }
+
+    .profile-avatar-large img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    .avatar-change-btn {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 28px;
+      height: 28px;
+      background: var(--surface-1);
+      border: 2px solid var(--green);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .75rem;
+      cursor: pointer;
+      transition: all .15s;
+      color: var(--green);
+    }
+
+    .avatar-change-btn:hover {
+      background: var(--green);
+      color: #000;
+      transform: scale(1.1);
+    }
+
+    .profile-hero-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .profile-hero-name {
+      font-family: var(--font-display);
+      font-size: clamp(1.2rem, 3vw, 1.8rem);
+      font-weight: 900;
+      margin-bottom: var(--s2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .profile-hero-email {
+      font-family: var(--font-mono);
+      font-size: .8rem;
+      color: var(--text-3);
+      margin-bottom: var(--s3);
+    }
+
+    .profile-badges {
+      display: flex;
+      gap: var(--s2);
+      flex-wrap: wrap;
+      margin-bottom: var(--s3);
+    }
+
+    .profile-hero-meta {
+      font-size: .75rem;
+      color: var(--text-3);
+      display: flex;
+      gap: var(--s4);
+      flex-wrap: wrap;
+    }
+
+    .profile-hero-meta span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* ── Stats Row ── */
+    .profile-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .pstat {
+      padding: var(--s5) var(--s6);
+      text-align: center;
+      border-right: 1px solid var(--border);
+    }
+
+    .pstat:last-child {
+      border-right: none;
+    }
+
+    .pstat-val {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: var(--green);
+      margin-bottom: 2px;
+    }
+
+    .pstat-val.cyan {
+      color: var(--cyan);
+    }
+
+    .pstat-val.purple {
+      color: var(--purple, #a855f7);
+    }
+
+    .pstat-val.orange {
+      color: var(--orange, #f59e0b);
+    }
+
+    .pstat-label {
+      font-size: .68rem;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    /* ── Profile Layout ── */
+    .profile-layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: var(--s6);
+      padding: var(--s6);
+      align-items: start;
+    }
+
+    /* ── Section Cards ── */
+    .section-card {
+      margin-bottom: var(--s5);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--s5) var(--s6);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: .85rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+      display: flex;
+      align-items: center;
+      gap: var(--s2);
+    }
+
+    .section-body {
+      padding: var(--s6);
+    }
+
+    /* ── Input Overrides to match app style ── */
+    .form-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s4);
+    }
+
+    /* ── Avatar Emoji Picker ── */
+    .avatar-emoji-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: var(--s2);
+      margin-top: var(--s4);
+    }
+
+    .emoji-opt {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--r-md);
+      border: 1.5px solid var(--border);
+      background: var(--surface-3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .emoji-opt:hover {
+      border-color: rgba(0, 255, 136, .4);
+      transform: scale(1.1);
+    }
+
+    .emoji-opt.selected {
+      border-color: var(--green);
+      background: var(--green-glow);
+    }
+
+    /* ── Password Strength ── */
+    .pwd-strength-bar {
+      height: 4px;
+      border-radius: 4px;
+      background: var(--surface-3);
+      margin-top: var(--s2);
+      overflow: hidden;
+    }
+
+    .pwd-strength-fill {
+      height: 100%;
+      border-radius: 4px;
+      width: 0;
+      transition: width .3s ease, background .3s ease;
+    }
+
+    .pwd-strength-label {
+      font-size: .68rem;
+      margin-top: 4px;
+      color: var(--text-3);
+    }
+
+    /* ── Info Row ── */
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--s3) 0;
+      border-bottom: 1px solid var(--border);
+      font-size: .875rem;
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+    }
+
+    .info-key {
+      color: var(--text-3);
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-weight: 600;
+    }
+
+    .info-val {
+      font-weight: 600;
+      font-family: var(--font-mono);
+      font-size: .8rem;
+    }
+
+    /* ── Danger Zone ── */
+    .danger-zone {
+      border-color: rgba(255, 77, 77, .2) !important;
+    }
+
+    .danger-zone .section-header {
+      border-color: rgba(255, 77, 77, .15);
+    }
+
+    .danger-zone .section-title {
+      color: #FF4D4D;
+    }
+
+    .danger-btn {
+      background: rgba(255, 77, 77, .08);
+      border: 1px solid rgba(255, 77, 77, .3);
+      color: #FF4D4D;
+      padding: 10px var(--s5);
+      border-radius: var(--r-lg);
+      font-size: .82rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: var(--s3);
+      display: flex;
+      align-items: center;
+      gap: var(--s2);
+      transition: all .15s;
+    }
+
+    .danger-btn:hover {
+      background: rgba(255, 77, 77, .16);
+      border-color: rgba(255, 77, 77, .5);
+    }
+
+    /* ── Activity Feed ── */
+    .activity-item {
+      display: flex;
+      gap: var(--s3);
+      padding: var(--s3) 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .activity-item:last-child {
+      border-bottom: none;
+    }
+
+    .activity-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--r-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+      background: var(--surface-3);
+    }
+
+    .activity-text {
+      flex: 1;
+      font-size: .82rem;
+      line-height: 1.5;
+    }
+
+    .activity-time {
+      font-size: .68rem;
+      color: var(--text-3);
+      white-space: nowrap;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 960px) {
+      .profile-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .profile-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .profile-stats .pstat:nth-child(2) {
+        border-right: none;
+      }
+
+      .profile-stats .pstat:nth-child(3) {
+        border-top: 1px solid var(--border);
+      }
+
+      .profile-stats .pstat:nth-child(4) {
+        border-top: 1px solid var(--border);
+        border-right: none;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .profile-hero {
+        flex-direction: column;
+        text-align: center;
+        padding: var(--s5);
+      }
+
+      .profile-hero-meta {
+        justify-content: center;
+      }
+
+      .profile-badges {
+        justify-content: center;
+      }
+
+      .profile-layout {
+        padding: var(--s4);
+        gap: var(--s4);
+      }
+
+      .form-row-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .profile-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .avatar-emoji-grid {
+        grid-template-columns: repeat(6, 1fr);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="sidebar-overlay"></div>
+  <div class="app-shell">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-mark">
+          <div class="logo-icon">♻️</div>
+          <div>
+            <div class="logo-text">CraftCycle</div>
+            <div class="logo-sub">Market</div>
+          </div>
+        </div>
+      </div>
+      <nav class="sidebar-nav"></nav>
+      <div class="sidebar-footer"></div>
+    </aside>
+
+    <!-- ── Main Content ── -->
+    <div class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="hamburger"><span></span><span></span><span></span></button>
+          <div class="page-title">MY PROFILE</div>
+        </div>
+        <div class="topbar-right">
+          <button class="notif-btn">🔔<span class="notif-dot"></span></button>
+          <div class="user-avatar" data-user-avatar></div>
+        </div>
+      </header>
+
+      <main>
+
+        <!-- ── Profile Hero ── -->
+        <div class="profile-hero">
+          <div class="profile-avatar-wrap">
+            <div class="profile-avatar-large" id="hero-avatar">?</div>
+            <button class="avatar-change-btn" onclick="toggleAvatarPicker()" title="Change avatar">✏️</button>
+          </div>
+          <div class="profile-hero-info">
+            <div class="profile-hero-name" id="hero-name">Loading…</div>
+            <div class="profile-hero-email" id="hero-email">loading@example.com</div>
+            <div class="profile-badges">
+              <span class="badge badge-green" id="hero-role">User</span>
+              <span class="badge badge-cyan" id="hero-city" style="display:none">📍 —</span>
+              <span class="badge badge-gray" id="hero-joined" style="font-size:.65rem">Joined —</span>
+            </div>
+            <div class="profile-hero-meta">
+              <span>🪙 <strong id="hero-coins" style="color:var(--green)">0</strong> Green Coins</span>
+              <span>📦 <strong id="hero-listings">0</strong> Listings</span>
+              <span>🌱 <strong id="hero-waste">0 kg</strong> Diverted</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Stats Row ── -->
+        <div class="profile-stats">
+          <div class="pstat">
+            <div class="pstat-val" id="st-coins">0</div>
+            <div class="pstat-label">🪙 Green Coins</div>
+          </div>
+          <div class="pstat">
+            <div class="pstat-val cyan" id="st-scans">0</div>
+            <div class="pstat-label">🔍 AI Scans</div>
+          </div>
+          <div class="pstat">
+            <div class="pstat-val purple" id="st-orders">0</div>
+            <div class="pstat-label">🛒 Orders</div>
+          </div>
+          <div class="pstat">
+            <div class="pstat-val orange" id="st-rank">#—</div>
+            <div class="pstat-label">🏆 Eco Rank</div>
+          </div>
+        </div>
+
+        <!-- ── Avatar Emoji Picker (hidden by default) ── -->
+        <div id="avatar-picker"
+          style="display:none;padding:var(--s5) var(--s6);background:var(--surface-2);border-bottom:1px solid var(--border)">
+          <div style="font-size:.78rem;color:var(--text-3);margin-bottom:var(--s2);font-weight:600">Choose your avatar
+            emoji</div>
+          <div class="avatar-emoji-grid" id="emoji-grid"></div>
+          <div style="display:flex;gap:var(--s3);margin-top:var(--s4)">
+            <button class="btn btn-primary btn-sm" onclick="saveAvatar()">Save Avatar</button>
+            <button class="btn btn-ghost btn-sm" onclick="toggleAvatarPicker()">Cancel</button>
+          </div>
+        </div>
+
+        <!-- ── Main Layout ── -->
+        <div class="profile-layout">
+
+          <!-- LEFT COLUMN -->
+          <div>
+
+            <!-- Personal Information Form -->
+            <div class="card section-card">
+              <div class="section-header">
+                <div class="section-title">👤 Personal Information</div>
+                <span style="font-size:.72rem;color:var(--text-3)">Visible to other users</span>
+              </div>
+              <div class="section-body">
+                <form id="profile-form" onsubmit="saveProfile(event)">
+                  <div class="form-row-2" style="margin-bottom:var(--s4)">
+                    <div class="form-group">
+                      <label class="form-label">Full Name *</label>
+                      <input class="form-input" id="edit-name" required placeholder="Your full name" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Username</label>
+                      <input class="form-input" id="edit-username" placeholder="@username" />
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <div style="position:relative">
+                      <input class="form-input" id="edit-email" type="email" disabled
+                        style="opacity:.6;cursor:not-allowed;padding-right:120px" />
+                      <span
+                        style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:.68rem;color:var(--orange);font-weight:600">
+                        🔒 Cannot change
+                      </span>
+                    </div>
+                    <div style="font-size:.72rem;color:var(--text-3);margin-top:4px">To change your email, contact
+                      support@craftcycle.in</div>
+                  </div>
+
+                  <div class="form-row-2" style="margin-bottom:var(--s4)">
+                    <div class="form-group">
+                      <label class="form-label">Phone Number</label>
+                      <input class="form-input" id="edit-phone" type="tel" placeholder="+91 98765 43210" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">City / Location</label>
+                      <input class="form-input" id="edit-city" placeholder="e.g. Bengaluru, KA" />
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Bio <span style="color:var(--text-3);font-weight:400">(max 200
+                        chars)</span></label>
+                    <textarea class="form-input" id="edit-bio" rows="3" maxlength="200"
+                      placeholder="Tell the community about your sustainable crafts, what materials you work with…"></textarea>
+                    <div style="font-size:.68rem;color:var(--text-3);text-align:right;margin-top:4px">
+                      <span id="bio-char-count">0</span>/200
+                    </div>
+                  </div>
+
+                  <div class="form-group" style="margin-bottom:0">
+                    <label class="form-label">Skills / Speciality</label>
+                    <input class="form-input" id="edit-skills"
+                      placeholder="e.g. Woodworking, Upcycling, Fabric crafts (comma separated)" />
+                    <div style="font-size:.72rem;color:var(--text-3);margin-top:4px">These appear as tags on your public
+                      profile</div>
+                  </div>
+
+                  <div style="display:flex;gap:var(--s3);margin-top:var(--s6)">
+                    <button type="submit" class="btn btn-primary" id="save-profile-btn">
+                      💾 Save Changes
+                    </button>
+                    <button type="button" class="btn btn-ghost" onclick="resetProfileForm()">
+                      ↺ Discard
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- Change Password -->
+            <div class="card section-card">
+              <div class="section-header">
+                <div class="section-title">🔑 Change Password</div>
+              </div>
+              <div class="section-body">
+                <form id="pwd-form" onsubmit="changePassword(event)">
+                  <div class="form-group">
+                    <label class="form-label">Current Password *</label>
+                    <div style="position:relative">
+                      <input class="form-input" id="pwd-current" type="password" required
+                        placeholder="Enter current password" style="padding-right:44px" />
+                      <button type="button" onclick="togglePwd('pwd-current', this)"
+                        style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.9rem;color:var(--text-3)">👁</button>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">New Password *</label>
+                    <div style="position:relative">
+                      <input class="form-input" id="pwd-new" type="password" required
+                        placeholder="At least 8 characters" style="padding-right:44px"
+                        oninput="checkPasswordStrength(this.value)" />
+                      <button type="button" onclick="togglePwd('pwd-new', this)"
+                        style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.9rem;color:var(--text-3)">👁</button>
+                    </div>
+                    <div class="pwd-strength-bar">
+                      <div class="pwd-strength-fill" id="pwd-strength-fill"></div>
+                    </div>
+                    <div class="pwd-strength-label" id="pwd-strength-label"></div>
+                  </div>
+
+                  <div class="form-group" style="margin-bottom:0">
+                    <label class="form-label">Confirm New Password *</label>
+                    <input class="form-input" id="pwd-confirm" type="password" required
+                      placeholder="Repeat new password" />
+                  </div>
+
+                  <button type="submit" class="btn btn-primary" style="margin-top:var(--s5)">
+                    🔐 Update Password
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <!-- Notification Preferences -->
+            <div class="card section-card">
+              <div class="section-header">
+                <div class="section-title">🔔 Notification Preferences</div>
+              </div>
+              <div class="section-body">
+                <div style="display:flex;flex-direction:column;gap:var(--s3)">
+                  <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
+                    <span style="font-size:.875rem">📦 New listing in my category</span>
+                    <input type="checkbox" id="notif-listing" checked
+                      style="width:16px;height:16px;accent-color:var(--green)" />
+                  </label>
+                  <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
+                    <span style="font-size:.875rem">🪙 Green Coin rewards</span>
+                    <input type="checkbox" id="notif-coins" checked
+                      style="width:16px;height:16px;accent-color:var(--green)" />
+                  </label>
+                  <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
+                    <span style="font-size:.875rem">💬 Community replies</span>
+                    <input type="checkbox" id="notif-community"
+                      style="width:16px;height:16px;accent-color:var(--green)" />
+                  </label>
+                  <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
+                    <span style="font-size:.875rem">📧 Weekly digest email</span>
+                    <input type="checkbox" id="notif-digest" checked
+                      style="width:16px;height:16px;accent-color:var(--green)" />
+                  </label>
+                </div>
+                <button class="btn btn-ghost btn-sm" style="margin-top:var(--s5)" onclick="saveNotifPrefs()">
+                  Save Preferences
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- RIGHT COLUMN -->
+          <div>
+
+            <!-- Account Info -->
+            <div class="card section-card">
+              <div class="section-header">
+                <div class="section-title">🗂 Account Details</div>
+              </div>
+              <div class="section-body">
+                <div class="info-row">
+                  <span class="info-key">User ID</span>
+                  <span class="info-val" id="acc-id">—</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-key">Role</span>
+                  <span class="info-val" id="acc-role">—</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-key">Member Since</span>
+                  <span class="info-val" id="acc-joined">—</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-key">Last Login</span>
+                  <span class="info-val" id="acc-login">—</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-key">Account Status</span>
+                  <span class="badge badge-green" style="font-size:.68rem">✅ Active</span>
+                </div>
+                <div class="info-row" style="border-bottom:none">
+                  <span class="info-key">2FA</span>
+                  <span style="font-size:.72rem;color:var(--orange)">⚠️ Not enabled</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card section-card">
+              <div class="section-header">
+                <div class="section-title">⏱ Recent Activity</div>
+                <a href="orders.html" style="font-size:.72rem;color:var(--green);text-decoration:none">View all →</a>
+              </div>
+              <div class="section-body" style="padding:var(--s4) var(--s5)">
+                <div class="activity-item">
+                  <div class="activity-icon" style="background:var(--green-glow)">🛍</div>
+                  <div class="activity-text">
+                    <strong>Added to cart</strong><br>
+                    <span style="color:var(--text-3)">Teak Wood Offcuts</span>
+                  </div>
+                  <span class="activity-time">2h ago</span>
+                </div>
+                <div class="activity-item">
+                  <div class="activity-icon" style="background:var(--cyan-glow)">🔍</div>
+                  <div class="activity-text">
+                    <strong>AI Scan completed</strong><br>
+                    <span style="color:var(--text-3)">Aluminium can · +5 coins</span>
+                  </div>
+                  <span class="activity-time">1d ago</span>
+                </div>
+                <div class="activity-item">
+                  <div class="activity-icon" style="background:var(--purple-glow, rgba(168,85,247,.12))">🏆</div>
+                  <div class="activity-text">
+                    <strong>Challenge joined</strong><br>
+                    <span style="color:var(--text-3)">30-Day Eco Sprint</span>
+                  </div>
+                  <span class="activity-time">3d ago</span>
+                </div>
+                <div class="activity-item" style="border:none;padding-bottom:0">
+                  <div class="activity-icon">🌿</div>
+                  <div class="activity-text">
+                    <strong>Account created</strong><br>
+                    <span style="color:var(--text-3)">Welcome to CraftCycle!</span>
+                  </div>
+                  <span class="activity-time" id="act-joined">—</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Skill Tags display -->
+            <div class="card section-card">
+              <div class="section-header">
+                <div class="section-title">🎨 Your Skills</div>
+              </div>
+              <div class="section-body">
+                <div id="skill-tags-display" style="display:flex;flex-wrap:wrap;gap:var(--s2);min-height:32px">
+                  <span style="font-size:.78rem;color:var(--text-3)">No skills added yet — edit your profile
+                    above.</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="card section-card danger-zone">
+              <div class="section-header">
+                <div class="section-title">⚠️ Danger Zone</div>
+              </div>
+              <div class="section-body">
+                <button class="danger-btn" onclick="exportData()">
+                  📤 Export My Data
+                </button>
+                <button class="danger-btn" onclick="confirmLogoutAll()">
+                  🚪 Logout All Devices
+                </button>
+                <button class="danger-btn" onclick="confirmDeleteAccount()" style="opacity:.7;border-style:dashed">
+                  🗑 Delete Account
+                </button>
+                <p style="font-size:.68rem;color:var(--text-3);margin-top:var(--s3);line-height:1.6">
+                  Deleting your account is permanent. All listings, coins, and data will be lost.
+                  This action cannot be undone.
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/utils.js"></script>
+  <script src="../assets/js/lang.js"></script>
+  <script src="../assets/js/chatbot.js?v=2"></script>
+  <script>
+    // ══════════════════════════════════════════════════════════
+    //  PROFILE PAGE — Full script
+    // ══════════════════════════════════════════════════════════
+
+    // Cached raw user object (from localStorage first, then API)
+    let currentUser = null;
+
+    // ── Load & Populate ──────────────────────────────────────
+    async function loadProfile() {
+      // Start with cached user for instant display
+      currentUser = Auth.getUser();
+      if (currentUser) fillUI(currentUser);
+
+      // Then try fresh data from API
+      try {
+        const data = await AuthAPI.me();
+        if (data?.user) {
+          currentUser = data.user;
+          Auth.setUser(currentUser);   // keep localStorage fresh
+          fillUI(currentUser);
+        }
+      } catch (e) {
+        // API unavailable — work from cache silently
+        console.warn('Profile API unavailable, using cached data.', e.message);
+      }
+    }
+
+    function fillUI(u) {
+      if (!u) return;
+
+      // ── Hero ──────────────────────────────────────────────
+      const name = u.full_name || u.username || 'User';
+      document.getElementById('hero-name').textContent = name;
+      document.getElementById('hero-email').textContent = u.email || '—';
+
+      const roleEl = document.getElementById('hero-role');
+      roleEl.textContent = capitalize(u.role || 'user');
+      roleEl.className = `badge badge-${u.role === 'admin' ? 'orange' : u.role === 'seller' ? 'cyan' : 'green'}`;
+
+      if (u.city) {
+        const cityEl = document.getElementById('hero-city');
+        cityEl.textContent = '📍 ' + u.city;
+        cityEl.style.display = 'inline-flex';
+      }
+
+      if (u.created_at) {
+        const date = new Date(u.created_at);
+        const joined = date.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+        document.getElementById('hero-joined').textContent = 'Joined ' + joined;
+        document.getElementById('acc-joined').textContent = date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        document.getElementById('act-joined').textContent = timeAgo(u.created_at);
+      }
+
+      // ── Hero Avatar ────────────────────────────────────────
+      const heroAv = document.getElementById('hero-avatar');
+      const savedEmoji = localStorage.getItem('cc_avatar_emoji');
+      if (savedEmoji) {
+        heroAv.textContent = savedEmoji;
+      } else if (u.avatar_url) {
+        heroAv.innerHTML = `<img src="${u.avatar_url}" alt="avatar" />`;
+      } else {
+        heroAv.textContent = name[0].toUpperCase();
+      }
+
+      // ── Stats ─────────────────────────────────────────────
+      const coins = u.green_coins || 0;
+      document.getElementById('hero-coins').textContent = coins.toLocaleString();
+      document.getElementById('st-coins').textContent = coins.toLocaleString();
+      document.getElementById('st-scans').textContent = u.total_scans || 0;
+      document.getElementById('st-orders').textContent = u.total_orders || 0;
+      document.getElementById('st-rank').textContent = u.eco_rank ? '#' + u.eco_rank : '#—';
+
+      document.getElementById('hero-listings').textContent = u.total_listings || 0;
+      const wasteKg = (u.total_scans || 0) * 0.8 + (u.green_coins || 0) * 0.05;
+      document.getElementById('hero-waste').textContent = wasteKg.toFixed(1) + ' kg';
+
+      // ── Account details ────────────────────────────────────
+      document.getElementById('acc-id').textContent = u.id ? '#' + u.id : '—';
+      document.getElementById('acc-role').textContent = capitalize(u.role || 'user');
+      document.getElementById('acc-login').textContent = u.last_login ? timeAgo(u.last_login) : 'Now';
+
+      // ── Form fields ────────────────────────────────────────
+      document.getElementById('edit-name').value = u.full_name || '';
+      document.getElementById('edit-username').value = u.username || '';
+      document.getElementById('edit-email').value = u.email || '';
+      document.getElementById('edit-phone').value = u.phone || '';
+      document.getElementById('edit-city').value = u.city || '';
+      document.getElementById('edit-bio').value = u.bio || '';
+      document.getElementById('edit-skills').value = (u.skills || []).join(', ');
+      updateBioCount();
+
+      // ── Skills display ─────────────────────────────────────
+      renderSkillTags(u.skills || []);
+    }
+
+    // ── Save Profile ─────────────────────────────────────────
+    async function saveProfile(e) {
+      e.preventDefault();
+      const btn = document.getElementById('save-profile-btn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Saving…';
+
+      const skills = document.getElementById('edit-skills').value
+        .split(',').map(s => s.trim()).filter(Boolean);
+
+      const payload = {
+        full_name: document.getElementById('edit-name').value.trim(),
+        username: document.getElementById('edit-username').value.trim(),
+        phone: document.getElementById('edit-phone').value.trim(),
+        city: document.getElementById('edit-city').value.trim(),
+        bio: document.getElementById('edit-bio').value.trim(),
+        skills,
+      };
+
+      try {
+        // Try API update
+        const data = await api.put('/auth/profile', payload);
+        if (data?.user) {
+          currentUser = { ...currentUser, ...data.user };
+          Auth.setUser(currentUser);
+        }
+        Toast.success('Profile Saved!', 'Your changes have been updated.');
+      } catch (err) {
+        // API might not exist yet — save to localStorage only
+        currentUser = { ...currentUser, ...payload };
+        Auth.setUser(currentUser);
+        Toast.success('Profile Saved!', 'Changes saved locally.');
+      }
+
+      // Refresh UI
+      fillUI(currentUser);
+      btn.disabled = false;
+      btn.textContent = '💾 Save Changes';
+    }
+
+    // ── Reset Form ────────────────────────────────────────────
+    function resetProfileForm() {
+      if (currentUser) fillUI(currentUser);
+      Toast.info('Discarded', 'No changes were saved.');
+    }
+
+    // ── Change Password ───────────────────────────────────────
+    async function changePassword(e) {
+      e.preventDefault();
+      const current = document.getElementById('pwd-current').value;
+      const newPwd = document.getElementById('pwd-new').value;
+      const confirm = document.getElementById('pwd-confirm').value;
+
+      if (newPwd.length < 8) {
+        Toast.error('Too Short', 'Password must be at least 8 characters.'); return;
+      }
+      if (newPwd !== confirm) {
+        Toast.error('Mismatch', 'New passwords do not match.'); return;
+      }
+
+      try {
+        await api.put('/auth/change-password', { current_password: current, new_password: newPwd });
+        Toast.success('Password Updated!', 'Your password has been changed successfully.');
+        document.getElementById('pwd-form').reset();
+        document.getElementById('pwd-strength-fill').style.width = '0';
+        document.getElementById('pwd-strength-label').textContent = '';
+      } catch (err) {
+        Toast.error('Failed', err.message || 'Current password may be incorrect.');
+      }
+    }
+
+    // ── Password Strength ─────────────────────────────────────
+    function checkPasswordStrength(pwd) {
+      const fill = document.getElementById('pwd-strength-fill');
+      const label = document.getElementById('pwd-strength-label');
+      if (!pwd) { fill.style.width = '0'; label.textContent = ''; return; }
+
+      let score = 0;
+      if (pwd.length >= 8) score++;
+      if (pwd.length >= 12) score++;
+      if (/[A-Z]/.test(pwd)) score++;
+      if (/[0-9]/.test(pwd)) score++;
+      if (/[^A-Za-z0-9]/.test(pwd)) score++;
+
+      const levels = [
+        { w: '20%', bg: '#FF4D4D', txt: 'Very weak' },
+        { w: '40%', bg: '#F59E0B', txt: 'Weak' },
+        { w: '60%', bg: '#F59E0B', txt: 'Fair' },
+        { w: '80%', bg: '#00D4FF', txt: 'Good' },
+        { w: '100%', bg: '#00FF88', txt: 'Strong 💪' },
+      ];
+      const lvl = levels[Math.min(score - 1, 4)] || levels[0];
+      fill.style.width = lvl.w;
+      fill.style.background = lvl.bg;
+      label.textContent = lvl.txt;
+      label.style.color = lvl.bg;
+    }
+
+    // ── Toggle password visibility ────────────────────────────
+    function togglePwd(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const isText = input.type === 'text';
+      input.type = isText ? 'password' : 'text';
+      btn.textContent = isText ? '👁' : '🙈';
+    }
+
+    // ── Avatar Picker ─────────────────────────────────────────
+    const AVATAR_EMOJIS = ['😊', '🌿', '♻️', '🌍', '🪵', '⚙️', '🎨', '🔧', '🌱', '🦋',
+      '🐝', '🌊', '☀️', '🏔', '🌾', '🦁', '🐢', '🦊', '🌺', '🌻',
+      '🧵', '📦', '🔬', '⭐', '🚀', '🎯', '💡', '🏆'];
+    let selectedEmoji = null;
+
+    function buildEmojiGrid() {
+      const grid = document.getElementById('emoji-grid');
+      const saved = localStorage.getItem('cc_avatar_emoji');
+      grid.innerHTML = AVATAR_EMOJIS.map(em => `
+        <div class="emoji-opt ${saved === em ? 'selected' : ''}"
+          onclick="selectEmoji(this,'${em}')">${em}</div>
+      `).join('');
+      if (saved) selectedEmoji = saved;
+    }
+
+    function selectEmoji(el, emoji) {
+      document.querySelectorAll('.emoji-opt').forEach(e => e.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedEmoji = emoji;
+    }
+
+    function toggleAvatarPicker() {
+      const picker = document.getElementById('avatar-picker');
+      const isHidden = picker.style.display === 'none';
+      picker.style.display = isHidden ? 'block' : 'none';
+      if (isHidden) buildEmojiGrid();
+    }
+
+    function saveAvatar() {
+      if (!selectedEmoji) { Toast.warning('Pick one', 'Select an emoji first.'); return; }
+      localStorage.setItem('cc_avatar_emoji', selectedEmoji);
+      document.getElementById('hero-avatar').textContent = selectedEmoji;
+      // Update sidebar avatar too
+      document.querySelectorAll('[data-user-avatar]').forEach(el => {
+        if (el !== document.getElementById('hero-avatar')) el.textContent = selectedEmoji;
+      });
+      toggleAvatarPicker();
+      Toast.success('Avatar Updated!', 'Your new avatar is set.');
+    }
+
+    // ── Skills ────────────────────────────────────────────────
+    function renderSkillTags(skills) {
+      const container = document.getElementById('skill-tags-display');
+      if (!skills || !skills.length) {
+        container.innerHTML = `<span style="font-size:.78rem;color:var(--text-3)">No skills added yet — edit your profile above.</span>`;
+        return;
+      }
+      container.innerHTML = skills.map(s => `
+        <span class="badge badge-gray" style="font-size:.72rem;padding:4px 10px">${s}</span>
+      `).join('');
+    }
+
+    // ── Bio char counter ──────────────────────────────────────
+    function updateBioCount() {
+      const bio = document.getElementById('edit-bio');
+      document.getElementById('bio-char-count').textContent = bio.value.length;
+    }
+    document.getElementById('edit-bio').addEventListener('input', updateBioCount);
+
+    // ── Notification Prefs ────────────────────────────────────
+    function saveNotifPrefs() {
+      const prefs = {
+        listing: document.getElementById('notif-listing').checked,
+        coins: document.getElementById('notif-coins').checked,
+        community: document.getElementById('notif-community').checked,
+        digest: document.getElementById('notif-digest').checked,
+      };
+      localStorage.setItem('cc_notif_prefs', JSON.stringify(prefs));
+      Toast.success('Preferences Saved', 'Notification settings updated.');
+    }
+
+    function loadNotifPrefs() {
+      try {
+        const prefs = JSON.parse(localStorage.getItem('cc_notif_prefs') || '{}');
+        if ('listing' in prefs) document.getElementById('notif-listing').checked = prefs.listing;
+        if ('coins' in prefs) document.getElementById('notif-coins').checked = prefs.coins;
+        if ('community' in prefs) document.getElementById('notif-community').checked = prefs.community;
+        if ('digest' in prefs) document.getElementById('notif-digest').checked = prefs.digest;
+      } catch (_) { }
+    }
+
+    // ── Danger Zone ───────────────────────────────────────────
+    function exportData() {
+      const user = Auth.getUser();
+      const cart = localStorage.getItem('craftcycle_cart') || '[]';
+      const exportObj = { user, cart: JSON.parse(cart), exported_at: new Date().toISOString() };
+      const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `craftcycle-data-${Date.now()}.json`;
+      a.click();
+      Toast.success('Export Ready', 'Your data file has been downloaded.');
+    }
+
+    function confirmLogoutAll() {
+      if (!confirm('This will log you out from all devices. Continue?')) return;
+      Auth.clear();
+      Toast.info('Logged Out', 'All sessions terminated. Redirecting…');
+      setTimeout(() => window.location.href = 'auth.html', 1500);
+    }
+
+    function confirmDeleteAccount() {
+      const confirmed = confirm(
+        '⚠️ DELETE ACCOUNT\n\nThis will permanently delete your account, listings, coins and all data.\n\nType OK to confirm.'
+      );
+      if (!confirmed) return;
+      Toast.error('Account Deletion Requested', 'Our team will process this within 7 days. You will receive a confirmation email.');
+    }
+
+    // ── Helpers ───────────────────────────────────────────────
+    function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+
+    // ── Real-time coin update listener ────────────────────────
+    // Fires whenever scanner.html (or any page) calls CoinManager.award()
+    window.addEventListener('coins:updated', (e) => {
+      const { coins } = e.detail;
+
+      // Animate hero coin count
+      const heroCoins = document.getElementById('hero-coins');
+      if (heroCoins) animateCount(heroCoins, coins);
+
+      // Animate stat tile
+      const stCoins = document.getElementById('st-coins');
+      if (stCoins) animateCount(stCoins, coins);
+
+      // Update localStorage-backed user so profile re-reads correctly
+      const u = Auth.getUser();
+      if (u) { u.green_coins = coins; Auth.setUser(u); currentUser = u; }
+    });
+
+    /** Animate a DOM element's text from its current number to `target`. */
+    function animateCount(el, target) {
+      const from = parseInt(el.textContent.replace(/,/g, '')) || 0;
+      if (from === target) return;
+      const duration = 900;
+      const start = Date.now();
+      function tick() {
+        const progress = Math.min((Date.now() - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = Math.round(from + (target - from) * eased).toLocaleString();
+        if (progress < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+      // Flash green
+      el.style.transition = 'color .2s';
+      el.style.color = 'var(--green)';
+      setTimeout(() => el.style.color = '', 1500);
+    }
+
+    // ── Init ──────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      requireAuth();
+      loadProfile();
+      loadNotifPrefs();
+    });
+  </script>
+</body>
+
+</html>

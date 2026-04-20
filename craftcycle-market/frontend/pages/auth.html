@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CraftCycle Market — Sign In</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♻️</text></svg>">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    body {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── Split layout ── */
+    .auth-visual {
+      flex: 1;
+      background: linear-gradient(135deg, #050D1A 0%, #0A1628 40%, #0D1F35 100%);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--s10);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .auth-form-wrap {
+      width: 480px;
+      flex-shrink: 0;
+      background: var(--surface-1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--s10) var(--s8);
+      overflow-y: auto;
+    }
+
+    .auth-form-inner {
+      width: 100%;
+      max-width: 380px;
+    }
+
+    /* ── Visual panel decorations ── */
+    .visual-logo {
+      font-size: 4rem;
+      margin-bottom: var(--s6);
+      animation: float 4s ease-in-out infinite;
+    }
+
+    .visual-headline {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 900;
+      text-align: center;
+      line-height: 1.2;
+      margin-bottom: var(--s4);
+    }
+
+    .visual-sub {
+      color: var(--text-2);
+      text-align: center;
+      max-width: 340px;
+      line-height: 1.7;
+      margin-bottom: var(--s8);
+    }
+
+    .visual-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--s4);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .vstat {
+      text-align: center;
+      padding: var(--s4);
+      background: rgba(0, 255, 136, 0.05);
+      border: 1px solid rgba(0, 255, 136, 0.15);
+      border-radius: var(--r-lg);
+    }
+
+    .vstat-value {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: var(--green);
+    }
+
+    .vstat-label {
+      font-size: 0.7rem;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: 4px;
+    }
+
+    /* Floating particles */
+    .particles {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .particle {
+      position: absolute;
+      font-size: 1.5rem;
+      opacity: 0.15;
+      animation: float-particle linear infinite;
+    }
+
+    @keyframes float-particle {
+      0% {
+        transform: translateY(110vh) rotate(0deg);
+        opacity: 0;
+      }
+
+      10% {
+        opacity: 0.15;
+      }
+
+      90% {
+        opacity: 0.15;
+      }
+
+      100% {
+        transform: translateY(-10vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    /* ── Tab switcher ── */
+    .auth-tabs {
+      display: flex;
+      background: var(--surface-3);
+      border-radius: var(--r-lg);
+      padding: 4px;
+      margin-bottom: var(--s8);
+      gap: 4px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: var(--r-md);
+      background: none;
+      color: var(--text-2);
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--t-fast);
+    }
+
+    .auth-tab.active {
+      background: var(--surface-1);
+      color: var(--green);
+    }
+
+    /* ── Form panels ── */
+    .auth-panel {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .auth-panel.active {
+      display: block;
+    }
+
+    /* ── Logo on form side ── */
+    .form-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--s3);
+      justify-content: center;
+      margin-bottom: var(--s8);
+    }
+
+    .form-logo-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--green-glow);
+      border: 2px solid rgba(0, 255, 136, 0.4);
+      border-radius: var(--r-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+    }
+
+    .form-logo-text {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--green);
+    }
+
+    /* ── Role selector ── */
+    .role-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s3);
+      margin-bottom: var(--s5);
+    }
+
+    .role-card {
+      padding: var(--s4) var(--s3);
+      border: 2px solid var(--border);
+      border-radius: var(--r-lg);
+      cursor: pointer;
+      text-align: center;
+      transition: all var(--t-fast);
+      background: var(--surface-3);
+    }
+
+    .role-card:hover {
+      border-color: rgba(0, 255, 136, 0.3);
+    }
+
+    .role-card.selected {
+      border-color: var(--green);
+      background: var(--green-glow);
+    }
+
+    .role-card input {
+      display: none;
+    }
+
+    .role-card-icon {
+      font-size: 1.5rem;
+      margin-bottom: var(--s2);
+    }
+
+    .role-card-title {
+      font-size: 0.875rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .role-card-desc {
+      font-size: 0.72rem;
+      color: var(--text-3);
+      line-height: 1.4;
+    }
+
+    /* ── Password strength ── */
+    .pw-strength {
+      margin-top: var(--s2);
+    }
+
+    .pw-bar {
+      height: 4px;
+      border-radius: 2px;
+      background: var(--surface-3);
+      overflow: hidden;
+      margin-bottom: var(--s1);
+    }
+
+    .pw-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.3s ease, background 0.3s ease;
+    }
+
+    .pw-label {
+      font-size: 0.72rem;
+      color: var(--text-3);
+    }
+
+    /* ── Success overlay ── */
+    .success-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 13, 26, 0.95);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .success-overlay.show {
+      display: flex;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .success-icon {
+      font-size: 4rem;
+      margin-bottom: var(--s5);
+    }
+
+    .success-title {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      color: var(--green);
+      margin-bottom: var(--s3);
+    }
+
+    .success-msg {
+      color: var(--text-2);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .auth-visual {
+        display: none;
+      }
+
+      .auth-form-wrap {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+
+  <!-- ── Visual Panel ─────────────────────────────────────────── -->
+  <div class="auth-visual">
+    <div class="particles" id="particles"></div>
+    <div class="visual-logo">♻️</div>
+    <h1 class="visual-headline">
+      Trash to<br><span class="text-green">Treasure</span>
+    </h1>
+    <p class="visual-sub">
+      The circular economy marketplace where waste becomes wealth.
+      Buy scrap, create products, sell with impact.
+    </p>
+    <div class="visual-stats">
+      <div class="vstat">
+        <div class="vstat-value">12K+</div>
+        <div class="vstat-label">Creators</div>
+      </div>
+      <div class="vstat">
+        <div class="vstat-value">50T</div>
+        <div class="vstat-label">Waste Saved</div>
+      </div>
+      <div class="vstat">
+        <div class="vstat-value">₹5Cr</div>
+        <div class="vstat-label">GMV</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Form Panel ────────────────────────────────────────────── -->
+  <div class="auth-form-wrap">
+    <div class="auth-form-inner">
+
+      <a href="../home.html"
+        style="display:inline-flex; align-items:center; gap:6px; margin-bottom:var(--s5); font-size:0.875rem; font-weight:600; color:var(--text-3); text-decoration:none; transition:color 0.2s;"
+        onmouseover="this.style.color='var(--green)'" onmouseout="this.style.color='var(--text-3)'">
+        ← Back to Home
+      </a>
+
+      <div class="form-logo">
+        <div class="form-logo-icon">♻️</div>
+        <div class="form-logo-text">CraftCycle</div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login" onclick="showTab('login')">Sign In</button>
+        <button class="auth-tab" id="tab-signup" onclick="showTab('signup')">Create Account</button>
+      </div>
+
+      <!-- ── LOGIN FORM ────────────────────────────────────────── -->
+      <div class="auth-panel active" id="panel-login">
+        <form id="login-form" onsubmit="handleLogin(event)">
+
+          <div class="form-group">
+            <label class="form-label" for="login-email">Email or Username</label>
+            <input class="form-input" id="login-email" type="text" placeholder="you@example.com" autocomplete="username"
+              required />
+            <div class="form-error" id="login-email-error"></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="login-password">Password</label>
+            <div class="input-group">
+              <input class="form-input" id="login-password" type="password" placeholder="••••••••"
+                autocomplete="current-password" required />
+              <button type="button" class="input-toggle" onclick="togglePw('login-password', this)">👁</button>
+            </div>
+            <div class="form-error" id="login-pw-error"></div>
+          </div>
+
+          <div style="text-align:right;margin-bottom:var(--s5)">
+            <a href="#" onclick="showTab('forgot')" style="font-size:0.8rem;color:var(--text-2)">Forgot password?</a>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-full btn-lg" id="login-btn">
+            Sign In →
+          </button>
+
+          <div id="login-general-error" class="form-error" style="text-align:center;margin-top:var(--s3)"></div>
+        </form>
+      </div>
+
+      <!-- ── SIGNUP FORM ────────────────────────────────────────── -->
+      <div class="auth-panel" id="panel-signup">
+        <form id="signup-form" onsubmit="handleSignup(event)">
+
+          <!-- Role selection -->
+          <div class="form-group">
+            <label class="form-label">I want to…</label>
+            <div class="role-cards">
+              <label class="role-card selected" id="role-buyer-card">
+                <input type="radio" name="role" value="buyer" checked />
+                <div class="role-card-icon">🛒</div>
+                <div class="role-card-title">Buy Materials</div>
+                <div class="role-card-desc">Browse scrap & handmade products</div>
+              </label>
+              <label class="role-card" id="role-seller-card">
+                <input type="radio" name="role" value="seller" />
+                <div class="role-card-icon">🔨</div>
+                <div class="role-card-title">Sell & Create</div>
+                <div class="role-card-desc">List scrap & sell upcycled goods</div>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="signup-name">Full Name</label>
+            <input class="form-input" id="signup-name" type="text" placeholder="Riya Sharma" autocomplete="name"
+              required />
+            <div class="form-error" id="name-error"></div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--s4)">
+            <div class="form-group">
+              <label class="form-label" for="signup-username">Username</label>
+              <input class="form-input" id="signup-username" type="text" placeholder="riya_creates"
+                autocomplete="username" required />
+              <div class="form-error" id="username-error"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="signup-email">Email</label>
+              <input class="form-input" id="signup-email" type="email" placeholder="riya@example.com"
+                autocomplete="email" required />
+              <div class="form-error" id="email-error"></div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="signup-password">Password</label>
+            <div class="input-group">
+              <input class="form-input" id="signup-password" type="password"
+                placeholder="Min 8 chars, 1 uppercase, 1 number" autocomplete="new-password"
+                oninput="checkStrength(this.value)" required />
+              <button type="button" class="input-toggle" onclick="togglePw('signup-password', this)">👁</button>
+            </div>
+            <div class="pw-strength">
+              <div class="pw-bar">
+                <div class="pw-bar-fill" id="pw-bar-fill"></div>
+              </div>
+              <div class="pw-label" id="pw-label">Enter a password</div>
+            </div>
+            <div class="form-error" id="pw-error"></div>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-full btn-lg" id="signup-btn">
+            Create Account →
+          </button>
+
+          <div id="signup-general-error" class="form-error" style="text-align:center;margin-top:var(--s3)"></div>
+        </form>
+      </div>
+
+      <!-- ── FORGOT PASSWORD ─────────────────────────────────────── -->
+      <div class="auth-panel" id="panel-forgot">
+        <div style="text-align:center;margin-bottom:var(--s6)">
+          <div style="font-size:2rem;margin-bottom:var(--s3)">🔐</div>
+          <h2 style="font-size:1.1rem;margin-bottom:var(--s2)">Reset Password</h2>
+          <p class="text-secondary" style="font-size:0.875rem">Enter your email and we'll send a reset link.</p>
+        </div>
+        <form id="forgot-form" onsubmit="handleForgot(event)">
+          <div class="form-group">
+            <label class="form-label" for="forgot-email">Email Address</label>
+            <input class="form-input" id="forgot-email" type="email" placeholder="you@example.com" required />
+          </div>
+          <button type="submit" class="btn btn-primary w-full" id="forgot-btn">Send Reset Link</button>
+          <button type="button" class="btn btn-ghost w-full" style="margin-top:var(--s3)" onclick="showTab('login')">←
+            Back to Sign In</button>
+          <div id="forgot-success" style="display:none;text-align:center;margin-top:var(--s5)">
+            <div style="font-size:2rem;margin-bottom:var(--s3)">📧</div>
+            <p class="text-green" style="font-weight:700">Reset link sent!</p>
+            <p class="text-secondary" style="font-size:0.85rem;margin-top:var(--s2)">Check your inbox. Link expires in 1
+              hour.</p>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Success Overlay ───────────────────────────────────────── -->
+  <div class="success-overlay" id="success-overlay">
+    <div class="success-icon" id="success-icon">🎉</div>
+    <div class="success-title" id="success-title">Welcome to CraftCycle!</div>
+    <div class="success-msg" id="success-msg">Redirecting…</div>
+    <div class="spinner" style="margin-top:var(--s6)"></div>
+  </div>
+
+  <script src="../assets/js/config.js?v=2"></script>
+  <script src="../assets/js/api.js?v=2"></script>
+  <script src="../assets/js/utils.js"></script>
+  <script>
+    // Redirect if already logged in
+    redirectIfLoggedIn("dashboard.html");
+
+    // ── Floating particles ──────────────────────────────────────
+    (function () {
+      const SYMBOLS = ["♻", "🔩", "🌱", "⚡", "🪵", "💚", "🔨", "🌿"];
+      const container = document.getElementById("particles");
+      for (let i = 0; i < 14; i++) {
+        const el = document.createElement("span");
+        el.className = "particle";
+        el.textContent = SYMBOLS[i % SYMBOLS.length];
+        Object.assign(el.style, {
+          left: `${Math.random() * 100}%`,
+          fontSize: `${Math.random() * 1.5 + 0.8}rem`,
+          animationDuration: `${Math.random() * 20 + 15}s`,
+          animationDelay: `-${Math.random() * 20}s`,
+        });
+        container.appendChild(el);
+      }
+    })();
+
+    // ── Tab switching ───────────────────────────────────────────
+    function showTab(name) {
+      document.querySelectorAll(".auth-panel").forEach(p => p.classList.remove("active"));
+      document.querySelectorAll(".auth-tab").forEach(t => t.classList.remove("active"));
+      document.getElementById(`panel-${name}`).classList.add("active");
+      document.getElementById(`tab-${name}`)?.classList.add("active");
+    }
+
+    // ── Role card selection ─────────────────────────────────────
+    document.querySelectorAll('input[name="role"]').forEach(radio => {
+      radio.addEventListener("change", () => {
+        document.querySelectorAll(".role-card").forEach(c => c.classList.remove("selected"));
+        radio.closest(".role-card").classList.add("selected");
+      });
+    });
+
+    // ── Password visibility toggle ──────────────────────────────
+    function togglePw(inputId, btn) {
+      const input = document.getElementById(inputId);
+      input.type = input.type === "password" ? "text" : "password";
+      btn.textContent = input.type === "password" ? "👁" : "🙈";
+    }
+
+    // ── Password strength ───────────────────────────────────────
+    function checkStrength(pw) {
+      let score = 0;
+      if (pw.length >= 8) score++;
+      if (pw.length >= 12) score++;
+      if (/[A-Z]/.test(pw)) score++;
+      if (/[0-9]/.test(pw)) score++;
+      if (/[^A-Za-z0-9]/.test(pw)) score++;
+
+      const levels = [
+        { label: "Very weak", color: "#FF4D4D", pct: "20" },
+        { label: "Weak", color: "#FF8C00", pct: "40" },
+        { label: "Fair", color: "#F59E0B", pct: "60" },
+        { label: "Strong", color: "#00D4FF", pct: "80" },
+        { label: "Very strong", color: "#00FF88", pct: "100" },
+      ];
+
+      const lvl = levels[Math.max(0, score - 1)] || levels[0];
+      const fill = document.getElementById("pw-bar-fill");
+      const label = document.getElementById("pw-label");
+
+      fill.style.width = pw.length ? lvl.pct + "%" : "0%";
+      fill.style.background = lvl.color;
+      label.textContent = pw.length ? lvl.label : "Enter a password";
+      label.style.color = pw.length ? lvl.color : "var(--text-3)";
+    }
+
+    // ── Show error under field ──────────────────────────────────
+    function showFieldError(id, msg) {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = msg; el.classList.add("visible"); }
+    }
+    function clearErrors(...ids) {
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.textContent = ""; el.classList.remove("visible"); }
+      });
+    }
+
+    // ── Show success overlay, then redirect ─────────────────────
+    function showSuccess(icon, title, msg, url) {
+      document.getElementById("success-icon").textContent = icon;
+      document.getElementById("success-title").textContent = title;
+      document.getElementById("success-msg").textContent = msg;
+      document.getElementById("success-overlay").classList.add("show");
+      setTimeout(() => { window.location.href = url; }, 2000);
+    }
+
+    // ── Set button loading state ────────────────────────────────
+    function setLoading(btnId, loading) {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+      btn.disabled = loading;
+      btn.textContent = loading ? "Please wait…" : btn.dataset.label || btn.textContent;
+      if (!btn.dataset.label) btn.dataset.label = btn.textContent;
+    }
+
+    // ── LOGIN ───────────────────────────────────────────────────
+    async function handleLogin(e) {
+      e.preventDefault();
+      clearErrors("login-email-error", "login-pw-error", "login-general-error");
+
+      const email = document.getElementById("login-email").value.trim();
+      const password = document.getElementById("login-password").value;
+
+      setLoading("login-btn", true);
+      try {
+        const data = await AuthAPI.login(email, password);
+        const user = data.user;
+        const dest = user.role === "admin" ? "admin.html" : "dashboard.html";
+        showSuccess("🎉", `Welcome back, ${user.full_name}!`, "Redirecting to your dashboard…", dest);
+      } catch (err) {
+        const msg = err.data?.error || err.message || "Login failed.";
+        showFieldError("login-general-error", msg);
+      } finally {
+        setLoading("login-btn", false);
+      }
+    }
+
+    // ── SIGNUP ──────────────────────────────────────────────────
+    async function handleSignup(e) {
+      e.preventDefault();
+      clearErrors("name-error", "username-error", "email-error", "pw-error", "signup-general-error");
+
+      const role = document.querySelector('input[name="role"]:checked').value;
+      const full_name = document.getElementById("signup-name").value.trim();
+      const username = document.getElementById("signup-username").value.trim();
+      const email = document.getElementById("signup-email").value.trim();
+      const password = document.getElementById("signup-password").value;
+
+      setLoading("signup-btn", true);
+      try {
+        const data = await AuthAPI.register({ role, full_name, username, email, password });
+        const dest = data.user.role === "admin" ? "admin.html" : "dashboard.html";
+        showSuccess(
+          "🌱",
+          `Welcome, ${data.user.full_name}! 🎉`,
+          `You received ${data.user.green_coins} Green Coins!`,
+          dest
+        );
+      } catch (err) {
+        if (err.data?.details) {
+          Object.entries(err.data.details).forEach(([field, msg]) => {
+            const map = { email: "email-error", password: "pw-error", username: "username-error", full_name: "name-error" };
+            if (map[field]) showFieldError(map[field], msg);
+          });
+        } else {
+          showFieldError("signup-general-error", err.data?.error || err.message || "Signup failed.");
+        }
+      } finally {
+        setLoading("signup-btn", false);
+      }
+    }
+
+    // ── FORGOT PASSWORD ─────────────────────────────────────────
+    async function handleForgot(e) {
+      e.preventDefault();
+      const email = document.getElementById("forgot-email").value.trim();
+      setLoading("forgot-btn", true);
+      try {
+        await AuthAPI.forgotPassword(email);
+        document.getElementById("forgot-success").style.display = "block";
+        document.getElementById("forgot-form").querySelector("button[type=submit]").style.display = "none";
+      } catch {
+        Toast.error("Error", "Could not send reset email. Try again.");
+      } finally {
+        setLoading("forgot-btn", false);
+      }
+    }
+  </script>
+  <script src="../assets/js/lang.js"></script>
+  <script src="../assets/js/chatbot.js?v=2"></script>
+</body>
+
+</html>

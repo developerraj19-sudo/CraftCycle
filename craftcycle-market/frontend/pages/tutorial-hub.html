@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>CraftCycle Market — Tutorial Hub</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♻️</text></svg>">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    /* ── Hero ── */
+    .diy-hero {
+      background: linear-gradient(135deg, rgba(0, 255, 136, 0.08) 0%, rgba(168, 85, 247, 0.06) 50%, rgba(0, 212, 255, 0.08) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: var(--s10) var(--s8);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .diy-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 30% 50%, rgba(0, 255, 136, 0.06) 0%, transparent 60%),
+        radial-gradient(ellipse at 70% 50%, rgba(168, 85, 247, 0.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-weight: 900;
+      line-height: 1.2;
+      margin-bottom: var(--s4);
+    }
+
+    .hero-search-bar {
+      display: flex;
+      max-width: 560px;
+      margin: var(--s6) auto 0;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-full);
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .hero-search-bar:focus-within {
+      border-color: var(--green);
+    }
+
+    .hero-search-bar input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      padding: 14px 20px;
+      color: var(--text-1);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+    }
+
+    .hero-search-bar input::placeholder {
+      color: var(--text-3);
+    }
+
+    .hero-search-bar button {
+      padding: 10px 24px;
+      border-radius: 0 var(--r-full) var(--r-full) 0;
+      margin: 4px 4px 4px 0;
+    }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: var(--s8);
+      margin-top: var(--s8);
+      flex-wrap: wrap;
+    }
+
+    .hstat-val {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 900;
+    }
+
+    .hstat-lbl {
+      font-size: 0.75rem;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Category pills ── */
+    .category-strip {
+      display: flex;
+      gap: var(--s3);
+      padding: var(--s5) var(--s8);
+      overflow-x: auto;
+      border-bottom: 1px solid var(--border);
+      scrollbar-width: none;
+    }
+
+    .category-strip::-webkit-scrollbar {
+      display: none;
+    }
+
+    .cat-pill {
+      display: flex;
+      align-items: center;
+      gap: var(--s2);
+      padding: 8px 18px;
+      border-radius: var(--r-full);
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-2);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .cat-pill:hover {
+      border-color: rgba(0, 255, 136, 0.3);
+      color: var(--green);
+    }
+
+    .cat-pill.active {
+      background: var(--green-glow);
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    /* ── Layout ── */
+    .diy-layout {
+      display: flex;
+      gap: var(--s6);
+      padding: var(--s6) var(--s8);
+      align-items: flex-start;
+    }
+
+    .diy-main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .diy-sidebar {
+      width: 280px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 80px;
+      display: flex;
+      flex-direction: column;
+      gap: var(--s5);
+    }
+
+    /* ── Tutorial Card ── */
+    .tutorial-card {
+      cursor: pointer;
+      overflow: hidden;
+      transition: all 0.25s;
+    }
+
+    .tutorial-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .tcard-thumb {
+      height: 180px;
+      background: var(--surface-3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tcard-thumb::after {
+      content: '▶';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      color: white;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .tutorial-card:hover .tcard-thumb::after {
+      opacity: 1;
+    }
+
+    .tcard-body {
+      padding: var(--s4);
+    }
+
+    .tcard-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--s2);
+      margin-bottom: var(--s2);
+      flex-wrap: wrap;
+    }
+
+    .tcard-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      margin-bottom: var(--s2);
+    }
+
+    .tcard-desc {
+      font-size: 0.8rem;
+      color: var(--text-2);
+      line-height: 1.6;
+      margin-bottom: var(--s3);
+    }
+
+    .tcard-stats {
+      display: flex;
+      gap: var(--s4);
+      font-size: 0.75rem;
+      color: var(--text-3);
+    }
+
+    .tcard-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--s3) var(--s4);
+      border-top: 1px solid var(--border);
+    }
+
+    .tcard-author {
+      display: flex;
+      align-items: center;
+      gap: var(--s2);
+      font-size: 0.78rem;
+    }
+
+    .tcard-author-av {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--green-glow);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--green);
+    }
+
+    /* ── Featured tutorial ── */
+    .featured-card {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      overflow: hidden;
+    }
+
+    .featured-thumb {
+      background: var(--surface-3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 7rem;
+      min-height: 260px;
+      position: relative;
+    }
+
+    .featured-tag {
+      position: absolute;
+      top: var(--s4);
+      left: var(--s4);
+    }
+
+    .featured-body {
+      padding: var(--s6);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .featured-title {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 900;
+      margin-bottom: var(--s3);
+      line-height: 1.4;
+    }
+
+    /* ── Tutorial Grid ── */
+    .tutorials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: var(--s5);
+    }
+
+    /* ── Full Tutorial Modal ── */
+    .tutorial-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 600;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      overflow-y: auto;
+      padding: var(--s6);
+    }
+
+    .tutorial-modal.open {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    .modal-inner {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: var(--r-2xl);
+      width: 100%;
+      max-width: 760px;
+      animation: fadeUp 0.3s ease;
+      margin: auto;
+    }
+
+    .modal-hero {
+      height: 280px;
+      background: var(--surface-3);
+      border-radius: var(--r-2xl) var(--r-2xl) 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .modal-body {
+      padding: var(--s8);
+    }
+
+    .modal-close-btn {
+      position: absolute;
+      top: var(--s4);
+      right: var(--s4);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid var(--border);
+      color: var(--text-1);
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+      z-index: 10;
+    }
+
+    .modal-close-btn:hover {
+      background: var(--red-glow);
+    }
+
+    /* Steps timeline */
+    .steps-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .step-row {
+      display: flex;
+      gap: var(--s4);
+      position: relative;
+      padding-bottom: var(--s5);
+    }
+
+    .step-row::before {
+      content: '';
+      position: absolute;
+      left: 19px;
+      top: 40px;
+      width: 2px;
+      height: calc(100% - 8px);
+      background: linear-gradient(to bottom, var(--green), transparent);
+    }
+
+    .step-row:last-child::before {
+      display: none;
+    }
+
+    .step-num-big {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--green-glow);
+      border: 2px solid var(--green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      font-weight: 900;
+      color: var(--green);
+    }
+
+    .step-content {
+      flex: 1;
+      padding-top: 8px;
+    }
+
+    .step-title {
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+    }
+
+    .step-desc {
+      font-size: 0.84rem;
+      color: var(--text-2);
+      line-height: 1.65;
+    }
+
+    /* Materials list */
+    .materials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: var(--s3);
+      margin-top: var(--s3);
+    }
+
+    .material-chip {
+      padding: var(--s3);
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      text-align: center;
+    }
+
+    .material-chip-icon {
+      font-size: 1.4rem;
+    }
+
+    .material-chip-name {
+      font-size: 0.72rem;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .material-chip-qty {
+      font-size: 0.65rem;
+      color: var(--text-3);
+    }
+
+    /* Quick save / bookmark */
+    .saved-ribbon {
+      position: absolute;
+      top: var(--s3);
+      right: var(--s3);
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid var(--border);
+      border-radius: var(--r-full);
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.15s;
+    }
+
+    .saved-ribbon:hover,
+    .saved-ribbon.saved {
+      background: var(--yellow);
+    }
+
+    /* Sidebar widgets */
+    .sidebar-widget {
+      padding: var(--s5);
+    }
+
+    .widget-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: var(--s4);
+    }
+
+    .progress-bar-wrap {
+      background: var(--surface-3);
+      border-radius: var(--r-full);
+      height: 8px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: var(--r-full);
+      background: linear-gradient(to right, var(--green), var(--cyan));
+      transition: width 1s ease;
+    }
+
+    .leaderboard-item {
+      display: flex;
+      align-items: center;
+      gap: var(--s3);
+      padding: var(--s2) 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .leaderboard-item:last-child {
+      border-bottom: none;
+    }
+
+    .rank-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+
+    .rank-1 {
+      background: linear-gradient(135deg, #FFD700, #FFA500);
+      color: #000;
+    }
+
+    .rank-2 {
+      background: linear-gradient(135deg, #C0C0C0, #A0A0A0);
+      color: #000;
+    }
+
+    .rank-3 {
+      background: linear-gradient(135deg, #CD7F32, #A0522D);
+      color: #fff;
+    }
+
+    .rank-n {
+      background: var(--surface-3);
+      color: var(--text-3);
+    }
+
+    /* Responsive */
+    @media (max-width: 1100px) {
+      .diy-sidebar {
+        display: none;
+      }
+
+      .diy-layout {
+        padding: var(--s5);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .featured-card {
+        grid-template-columns: 1fr;
+      }
+
+      .featured-thumb {
+        min-height: 180px;
+      }
+
+      .diy-hero {
+        padding: var(--s8) var(--s5);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="sidebar-overlay"></div>
+  <div class="app-shell">
+
+    <!-- ── App Sidebar ──────────────────────────────────────── -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-mark">
+          <div class="logo-icon">♻️</div>
+          <div>
+            <div class="logo-text">CraftCycle</div>
+            <div class="logo-sub">Market</div>
+          </div>
+        </div>
+      </div>
+      <nav class="sidebar-nav"></nav>
+      <div class="sidebar-footer"></div>
+    </aside>
+
+    <!-- ── Main Content ─────────────────────────────────────── -->
+    <div class="main-content">
+
+      <!-- Topbar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="hamburger"><span></span><span></span><span></span></button>
+          <div class="page-title">TUTORIAL HUB</div>
+        </div>
+        <div class="topbar-right">
+          <button class="notif-btn">🔔<span class="notif-dot"></span></button>
+          <div class="user-avatar" data-user-avatar></div>
+        </div>
+      </header>
+
+      <!-- ── Hero Section ─────────────────────────────────── -->
+      <section class="diy-hero">
+        <div style="position:relative;z-index:1">
+          <div class="badge badge-green" style="margin-bottom:var(--s4);display:inline-flex">
+            🎓 250+ FREE TUTORIALS
+          </div>
+          <h1 class="hero-title">
+            Learn to Build.<br>
+            <span class="text-green">Turn Waste</span> into
+            <span style="color:var(--purple)">Products.</span>
+          </h1>
+          <p class="text-secondary" style="max-width:520px;margin:0 auto;line-height:1.7;font-size:0.95rem">
+            Step-by-step tutorials from real creators. From beginner crafts to pro upcycling techniques — all free.
+          </p>
+          <div class="hero-search-bar">
+            <input type="text" id="hero-search" placeholder="Search tutorials (e.g. plastic bottles, wood, fabric…)"
+              oninput="debounce(doSearch,300)()" />
+            <button class="btn btn-primary" onclick="doSearch()">🔍 Search</button>
+          </div>
+          <div class="hero-stats">
+            <div>
+              <div class="hstat-val text-green">250+</div>
+              <div class="hstat-lbl">Tutorials</div>
+            </div>
+            <div>
+              <div class="hstat-val text-cyan">48K+</div>
+              <div class="hstat-lbl">Learners</div>
+            </div>
+            <div>
+              <div class="hstat-val text-purple">12K+</div>
+              <div class="hstat-lbl">Projects Built</div>
+            </div>
+            <div>
+              <div class="hstat-val text-yellow">4.8 ★</div>
+              <div class="hstat-lbl">Avg Rating</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Category Strip ───────────────────────────────── -->
+      <div class="category-strip">
+        <div class="cat-pill active" data-cat="" onclick="filterCat(this,'')">🌟 All</div>
+        <div class="cat-pill" data-cat="wood" onclick="filterCat(this,'wood')">🪵 Wood</div>
+        <div class="cat-pill" data-cat="plastic" onclick="filterCat(this,'plastic')">♻️ Plastic</div>
+        <div class="cat-pill" data-cat="fabric" onclick="filterCat(this,'fabric')">🧵 Fabric</div>
+        <div class="cat-pill" data-cat="metal" onclick="filterCat(this,'metal')">⚙️ Metal</div>
+        <div class="cat-pill" data-cat="glass" onclick="filterCat(this,'glass')">🫙 Glass</div>
+        <div class="cat-pill" data-cat="ewaste" onclick="filterCat(this,'ewaste')">💻 E-Waste</div>
+        <div class="cat-pill" data-cat="paper" onclick="filterCat(this,'paper')">📄 Paper</div>
+        <div class="cat-pill" data-cat="organic" onclick="filterCat(this,'organic')">🌿 Organic</div>
+      </div>
+
+      <!-- ── Difficulty / Sort bar ────────────────────────── -->
+      <div
+        style="display:flex;align-items:center;justify-content:space-between;padding:var(--s4) var(--s8);border-bottom:1px solid var(--border);flex-wrap:wrap;gap:var(--s3)">
+        <div style="display:flex;gap:var(--s2)">
+          <button class="btn btn-secondary btn-sm" id="diff-all" onclick="filterDiff('all',this)">All Levels</button>
+          <button class="btn btn-ghost btn-sm" id="diff-easy" onclick="filterDiff('easy',this)">🟢 Easy</button>
+          <button class="btn btn-ghost btn-sm" id="diff-medium" onclick="filterDiff('medium',this)">🟡 Medium</button>
+          <button class="btn btn-ghost btn-sm" id="diff-hard" onclick="filterDiff('hard',this)">🔴 Hard</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:var(--s3)">
+          <span style="font-size:0.78rem;color:var(--text-3)" id="result-count">Loading tutorials…</span>
+          <select class="form-input" style="width:auto;font-size:0.82rem" id="sort-select" onchange="renderTutorials()">
+            <option value="popular">Most Popular</option>
+            <option value="newest">Newest First</option>
+            <option value="duration">Shortest First</option>
+            <option value="earnings">Highest Earnings</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- ── Main Body ─────────────────────────────────────── -->
+      <div class="diy-layout">
+
+        <!-- TUTORIALS ─────────────────────────────────────── -->
+        <div class="diy-main">
+          <div class="tutorials-grid" id="tutorials-grid">
+            <!-- rendered by JS -->
+          </div>
+
+          <!-- Load More -->
+          <div style="text-align:center;margin-top:var(--s8)" id="load-more-wrap">
+            <button class="btn btn-ghost" onclick="loadMore()">
+              Load More Tutorials
+            </button>
+          </div>
+        </div>
+
+        <!-- SIDEBAR ──────────────────────────────────────── -->
+        <div class="diy-sidebar">
+
+          <!-- My Learning Progress -->
+          <div class="card sidebar-widget">
+            <div class="widget-title">📈 My Progress</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--s2)">
+              <span style="font-size:0.82rem">Tutorials Completed</span>
+              <span class="text-green mono" style="font-weight:700" id="progress-count">0 / 5</span>
+            </div>
+            <div class="progress-bar-wrap">
+              <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+            </div>
+            <div style="margin-top:var(--s4);display:grid;grid-template-columns:1fr 1fr;gap:var(--s3)">
+              <div style="text-align:center;background:var(--surface-3);border-radius:var(--r-md);padding:var(--s3)">
+                <div class="mono text-green" style="font-weight:700" id="my-saved-count">0</div>
+                <div style="font-size:0.65rem;color:var(--text-3)">Saved</div>
+              </div>
+              <div style="text-align:center;background:var(--surface-3);border-radius:var(--r-md);padding:var(--s3)">
+                <div class="mono text-cyan" style="font-weight:700" id="my-done-count">0</div>
+                <div style="font-size:0.65rem;color:var(--text-3)">Done</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top Creators -->
+          <div class="card sidebar-widget">
+            <div class="widget-title">🏆 Top Tutorial Creators</div>
+            <div id="creator-leaderboard"></div>
+          </div>
+
+          <!-- Material Tip of the Day -->
+          <div class="card sidebar-widget"
+            style="background:linear-gradient(135deg,rgba(168,85,247,0.08),rgba(0,212,255,0.04));border-color:rgba(168,85,247,0.3)">
+            <div class="widget-title" style="color:var(--purple)">💡 Tip of the Day</div>
+            <p style="font-size:0.82rem;color:var(--text-2);line-height:1.7" id="daily-tip">Loading…</p>
+            <div style="margin-top:var(--s3);font-size:0.72rem;color:var(--text-3)" id="tip-source">— CraftCycle Team
+            </div>
+          </div>
+
+          <!-- Quick Links -->
+          <div class="card sidebar-widget">
+            <div class="widget-title">🔗 Quick Links</div>
+            <div style="display:flex;flex-direction:column;gap:var(--s2)">
+              <a href="scanner.html" class="btn btn-secondary btn-sm">🔍 Scan My Material</a>
+              <a href="marketplace.html" class="btn btn-ghost btn-sm">🏪 Buy Scrap</a>
+              <a href="community.html" class="btn btn-ghost btn-sm">🌐 Share My Project</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+     FULL TUTORIAL MODAL
+══════════════════════════════════════════════════════════ -->
+  <div class="tutorial-modal" id="tutorial-modal" onclick="if(event.target===this)closeTutorial()">
+    <div class="modal-inner">
+      <div class="modal-hero" id="modal-hero">
+        <button class="modal-close-btn" onclick="closeTutorial()">✕</button>
+      </div>
+      <div class="modal-body" id="modal-body"><!-- filled by JS --></div>
+    </div>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/utils.js"></script>
+  <script src="../assets/js/lang.js"></script>
+  <script src="../assets/js/chatbot.js?v=2"></script>
+  <script>
+
+
+    // ── State ────────────────────────────────────────────────
+    let allTutorials = [];
+    let filtered = [];
+    let currentCat = "";
+    let currentDiff = "all";
+    let currentSearch = "";
+    let savedTuts = new Set(JSON.parse(localStorage.getItem("cc_saved_tuts") || "[]"));
+    let doneTuts = new Set(JSON.parse(localStorage.getItem("cc_done_tuts") || "[]"));
+    let displayed = 6;
+
+    // ── Tutorial Data ────────────────────────────────────────
+    function getTutorials() {
+      return [
+        {
+          id: "t1", image: "../assets/img/tut_wood_clock.jpg", emoji: "🕰️", category: "wood", difficulty: "easy",
+          title: "Reclaimed Wood Wall Clock",
+          desc: "Transform old teak/pine boards into a stunning wall clock. Perfect first wood project — no lathe needed!",
+          materials: [{ icon: "🪵", name: "Wood plank", qty: "1 piece" }, { icon: "⚙️", name: "Clock mechanism", qty: "1 set" }, { icon: "🪚", name: "Sandpaper", qty: "80/120/220 grit" }, { icon: "🎨", name: "Wood stain", qty: "100ml" }, { icon: "🔩", name: "Wall hook", qty: "1 pc" }],
+          tools: ["Jigsaw or hand saw", "Electric sander", "Drill + 10mm bit", "Paintbrush", "Ruler & pencil"],
+          duration: "3h", difficulty_label: "Easy", sells_for: "₹1,299", waste_saved: "1.5 kg",
+          views: 4820, rating: 4.8, completions: 892, author: "Riya Sharma", authorInitial: "R",
+          tags: ["wood", "clock", "beginner", "homedecor"],
+          videoUrl: "https://www.youtube.com/embed/GHpZ4MEp6zI?autoplay=1&mute=1",
+          steps: [
+            { title: "Cut the wood", desc: "Mark a 30cm circle (or square) on your plank using a compass or bowl as guide. Cut carefully with jigsaw. Sand edges smooth with 80-grit." },
+            { title: "Sand to perfection", desc: "Progress from 80 → 120 → 220 grit sandpaper. Always sand along the grain. Wipe clean with damp cloth after each pass." },
+            { title: "Apply stain/finish", desc: "Use a foam brush to apply wood stain in long even strokes. Let dry 30 min, apply second coat. Alternatively use clear varnish for natural look." },
+            { title: "Drill center hole", desc: "Mark exact center. Drill a 10mm hole for the clock shaft. Test fit the mechanism before gluing." },
+            { title: "Number placement", desc: "Use a compass to mark 12 equal positions around the edge. Apply number stickers, stamps, or paint hour markers." },
+            { title: "Assemble & hang", desc: "Insert clock mechanism from back, attach hands from front. Insert battery. Attach wall hook to back with wood glue + screw. Done!" },
+          ]
+        },
+        {
+          id: "t2", image: "../assets/img/tut_herb_garden.jpg", emoji: "🌿", category: "plastic", difficulty: "easy",
+          title: "Vertical Herb Garden from PET Bottles",
+          desc: "Build a beautiful wall-mounted herb garden from empty plastic bottles. No tools needed — just scissors and string!",
+          materials: [{ icon: "♻️", name: "PET bottles", qty: "6–8 bottles" }, { icon: "🧵", name: "Jute rope", qty: "3 meters" }, { icon: "🌱", name: "Potting mix", qty: "2kg bag" }, { icon: "💧", name: "Pebbles", qty: "small handful" }],
+          tools: ["Scissors / craft knife", "Drill or nail (for drainage)", "Marker pen"],
+          duration: "2h", difficulty_label: "Easy", sells_for: "₹450–800", waste_saved: "0.8 kg",
+          views: 6340, rating: 4.9, completions: 1240, author: "Suresh Kumar", authorInitial: "S",
+          tags: ["plastic", "garden", "beginner", "herb", "zero-cost"],
+          videoUrl: "https://www.youtube.com/embed/jZf6jL0qXn4?autoplay=1&mute=1",
+          steps: [
+            { title: "Clean the bottles", desc: "Rinse bottles thoroughly. Remove labels by soaking in warm water + dish soap for 10 minutes, then peel." },
+            { title: "Cut the opening", desc: "On the side of each bottle, cut a rectangular opening about 10cm × 6cm. This is where plants will grow out." },
+            { title: "Add drainage holes", desc: "Poke or drill 3–4 small holes in the bottom of each bottle to prevent waterlogging." },
+            { title: "Thread the rope", desc: "Punch two holes on opposite sides of the bottle neck. Thread rope through and knot. Space bottles 15–20cm apart." },
+            { title: "Add drainage layer", desc: "Add a 2cm layer of pebbles at the bottom of each bottle, then fill with potting mix 3/4 full." },
+            { title: "Plant & hang", desc: "Plant seedlings or seeds in each bottle. Hang the rope from a wall hook or balcony railing. Water gently every 2 days." },
+          ]
+        },
+        {
+          id: "t3", image: "https://loremflickr.com/800/600/speaker,electronics?lock=33", emoji: "💡", category: "ewaste", difficulty: "medium",
+          title: "E-Waste Bluetooth Speaker",
+          desc: "Build a working Bluetooth speaker from salvaged PCB, old speaker cones, and scrap wood. Electronics skills required.",
+          materials: [{ icon: "💻", name: "Old PCB/components", qty: "1 board" }, { icon: "🔊", name: "Speaker cone", qty: "2 pcs" }, { icon: "🪵", name: "Wood offcut", qty: "20×10×8cm" }, { icon: "🔋", name: "Li-ion battery", qty: "3.7V 2000mAh" }, { icon: "📱", name: "BT audio module", qty: "XY-BT-Mini" }],
+          tools: ["Soldering iron + solder", "Multimeter", "Jigsaw", "Drill", "Hot glue gun"],
+          duration: "8h", difficulty_label: "Medium", sells_for: "₹1,800–3,500", waste_saved: "1.2 kg",
+          views: 3210, rating: 4.6, completions: 324, author: "Raj Mehta", authorInitial: "R",
+          tags: ["ewaste", "electronics", "speaker", "bluetooth", "medium"],
+          videoUrl: "https://www.youtube.com/embed/H2qZ9F9K7I4?autoplay=1&mute=1",
+          steps: [
+            { title: "Test your speaker cones", desc: "Before anything — use a 9V battery briefly across speaker terminals. You should hear a pop. If not, the speaker is blown." },
+            { title: "Build the wooden enclosure", desc: "Cut wood to size. Drill circular holes matching speaker diameter. The enclosure size matters for bass — deeper = more bass." },
+            { title: "Wire the Bluetooth module", desc: "XY-BT-Mini module: VCC to 5V, GND to GND. Audio L/R outputs connect to your amplifier board (PAM8403 works great)." },
+            { title: "Add amplifier board", desc: "Wire PAM8403 amp between BT module output and speakers. Set volume pot to 70%. Connect power input to battery management circuit." },
+            { title: "Solder speaker connections", desc: "Solder speaker leads to amp output — check polarity (+/-). Incorrect polarity reduces bass and can cause phase cancellation." },
+            { title: "Assemble & test", desc: "Hot glue components inside the box. Mount speakers. Connect battery. Pair with your phone via Bluetooth. Test all frequencies." },
+          ]
+        },
+        {
+          id: "t4", image: "../assets/img/tut_braided_rug.jpg", emoji: "🧺", category: "fabric", difficulty: "easy",
+          title: "Fabric Scrap Braided Rug",
+          desc: "Turn fabric offcuts into a gorgeous, durable floor rug using simple braiding and coiling. Zero equipment needed!",
+          materials: [{ icon: "🧵", name: "Fabric strips", qty: "1.5kg mixed" }, { icon: "✂️", name: "Scissors", qty: "1 pair" }, { icon: "🪡", name: "Heavy needle", qty: "+ waxed thread" }],
+          tools: ["Large blunt needle", "Scissors", "Ruler"],
+          duration: "6h", difficulty_label: "Easy", sells_for: "₹600–1,200", waste_saved: "1.5 kg",
+          views: 5120, rating: 4.7, completions: 967, author: "Meera Krishnan", authorInitial: "M",
+          tags: ["fabric", "rug", "zero-cost", "beginner", "home"],
+          videoUrl: "https://www.youtube.com/embed/j_EltW1-A4w?autoplay=1&mute=1",
+          steps: [
+            { title: "Prepare fabric strips", desc: "Cut fabric into 3–4cm wide strips. Join strips by cutting a small slit at each end and linking them (no sewing). Aim for 3 long continuous strips." },
+            { title: "Start braiding", desc: "Knot 3 strips together at one end. Anchor to a heavy object. Braid tightly and evenly — keep same tension throughout." },
+            { title: "Coil the braid", desc: "When you have 50cm of braid, start coiling it flat. Use the heavy needle and thread to stitch coils together as you go." },
+            { title: "Expand the rug", desc: "Continue braiding and coiling outward. Mix colors intentionally — or randomly for a patchwork look." },
+            { title: "Taper the ending", desc: "To finish, gradually narrow each strip by trimming them to a point. Braid to the end, then tuck and stitch the tail under the rug." },
+            { title: "Flatten & finish", desc: "Dampen the rug slightly and press flat with a heavy book overnight. This sets the shape permanently." },
+          ]
+        },
+        {
+          id: "t5", image: "../assets/img/tut_jar_lanterns.jpg", emoji: "🫙", category: "glass", difficulty: "easy",
+          title: "Solar Jar Lanterns",
+          desc: "Turn old glass jars into beautiful solar-powered garden lanterns. Kids can make these too!",
+          materials: [{ icon: "🫙", name: "Glass jars", qty: "4–6 jars" }, { icon: "☀️", name: "Solar fairy lights", qty: "1 string" }, { icon: "🎨", name: "Glass paint", qty: "multi-color" }, { icon: "🧂", name: "Epsom salt", qty: "optional" }],
+          tools: ["Paintbrush", "Hot glue gun", "Wire cutter"],
+          duration: "1.5h", difficulty_label: "Easy", sells_for: "₹299–599", waste_saved: "0.4 kg",
+          views: 7800, rating: 4.9, completions: 2100, author: "Deepa Rao", authorInitial: "D",
+          tags: ["glass", "lantern", "solar", "garden", "kids", "beginner"],
+          videoUrl: "https://www.youtube.com/embed/c1i2j3G2VXE?autoplay=1&mute=1",
+          steps: [
+            { title: "Clean and dry jars", desc: "Wash jars in hot soapy water. Remove all labels and adhesive. Dry completely — any moisture will prevent paint adhesion." },
+            { title: "Paint the jars", desc: "Apply glass paint in thin coats. Try ombré effects, stained glass patterns, or simple color blocks. Let each coat dry 20 min." },
+            { title: "Epsom salt frost effect", desc: "Optional: Apply clear PVA glue to jar, roll in Epsom salt crystals. Creates beautiful frosted, sparkly texture when light shines through." },
+            { title: "Install solar lights", desc: "Cut solar fairy light string. Coil lights inside jar. Feed solar panel wire over the rim. Secure solar panel to the lid with hot glue." },
+            { title: "Seal the lid", desc: "If using metal lids, hot-glue the solar panel to the top. For open-top display, simply rest the lights inside and let the panel hang over the edge." },
+            { title: "Charge & enjoy", desc: "Place in direct sunlight for 6 hours to fully charge. Lights auto-activate at dusk — enjoy 6–8 hours of ambient light per charge!" },
+          ]
+        },
+        {
+          id: "t6", image: "https://loremflickr.com/800/600/table,rustic,wood?lock=66", emoji: "🪑", category: "wood", difficulty: "medium",
+          title: "Pallet Wood Coffee Table",
+          desc: "Build a rustic industrial coffee table from discarded shipping pallets. Beginner-friendly with proper guidance.",
+          materials: [{ icon: "🪵", name: "Shipping pallets", qty: "2 pallets" }, { icon: "🔩", name: "Screws", qty: "40x box" }, { icon: "🎨", name: "Wood stain", qty: "250ml" }, { icon: "⚫", name: "Caster wheels", qty: "4 pcs (optional)" }],
+          tools: ["Jigsaw / circular saw", "Electric sander", "Drill + bits", "Tape measure", "Level"],
+          duration: "5h", difficulty_label: "Medium", sells_for: "₹2,200–4,500", waste_saved: "15 kg",
+          views: 3900, rating: 4.7, completions: 501, author: "Raj Mehta", authorInitial: "R",
+          tags: ["wood", "pallet", "furniture", "table", "medium"],
+          videoUrl: "https://www.youtube.com/embed/K-uH2l-j6uM?autoplay=1&mute=1",
+          steps: [
+            { title: "Source and check pallets", desc: "Get heat-treated (HT stamped) pallets only — NOT chemically treated (MB stamp = methyl bromide, toxic). Sand a small patch to check for chemical smell." },
+            { title: "Disassemble carefully", desc: "Use a pry bar and hammer between boards. Work slowly to avoid splitting. A reciprocating saw through nails saves time." },
+            { title: "Prepare the boards", desc: "Sand all surfaces starting 60-grit (removes splinters), finishing 120-grit. Round all edges slightly for a finished look." },
+            { title: "Build the frame", desc: "Cut 4 legs from pallet lumber (each 40cm). Build a rectangular frame matching your desired table top size. Pre-drill all holes." },
+            { title: "Attach tabletop boards", desc: "Lay boards across the frame, leaving 3–5mm gaps for wood movement. Screw into the frame from below — no visible screws on top." },
+            { title: "Stain, seal & attach wheels", desc: "Apply stain in direction of grain, wipe excess after 5 min. Once dry, apply 2 coats polyurethane. Attach caster wheels to base." },
+          ]
+        },
+        {
+          id: "t7", image: "../assets/img/tut_denim_bag.jpg", emoji: "🪡", category: "fabric", difficulty: "medium",
+          title: "Denim Jeans Tote Bag",
+          desc: "Upcycle old denim jeans into a sturdy, stylish tote bag. Basic sewing skills needed.",
+          materials: [{ icon: "👖", name: "Old denim jeans", qty: "1 pair" }, { icon: "🧵", name: "Thread", qty: "matching" }, { icon: "✂️", name: "Scissors", qty: "" }, { icon: "🔲", name: "Iron-on patches", qty: "optional" }],
+          tools: ["Sewing machine (or needle)", "Scissors", "Tailor's chalk", "Iron"],
+          duration: "3h", difficulty_label: "Medium", sells_for: "₹350–750", waste_saved: "0.6 kg",
+          views: 4250, rating: 4.6, completions: 720, author: "Meera Krishnan", authorInitial: "M",
+          tags: ["fabric", "denim", "bag", "sewing", "upcycled"],
+          videoUrl: "https://www.youtube.com/embed/w7p0F83h9Jk?autoplay=1&mute=1",
+          steps: [
+            { title: "Cut the jeans", desc: "Cut the legs off the jeans just below the crotch seam. Turn inside-out. This bottom seam will become the base of your bag." },
+            { title: "Sew the bottom closed", desc: "Sew across the open bottom (former waist) in a straight line. Sew twice for strength. Trim excess fabric 1cm from seam." },
+            { title: "Make box corners", desc: "For a flat bottom, pinch each bottom corner into a triangle, sew across 4cm from the point. This creates bag depth." },
+            { title: "Create the handles", desc: "Cut two 60×8cm strips from the legs. Fold long edges to center, fold again, sew along edges. Gives strong 2cm wide straps." },
+            { title: "Attach handles", desc: "Pin handles to inside of bag, 8cm from side seams. Sew a rectangle + X pattern for maximum strength — these carry real weight." },
+            { title: "Finish and customize", desc: "Turn right-side-out. Press with iron. Add patches, embroidery, or bleach splatter patterns to personalize. Your bag is done!" },
+          ]
+        },
+        {
+          id: "t8", image: "../assets/img/tut_seed_pots.jpg", emoji: "📰", category: "paper", difficulty: "easy",
+          title: "Newspaper Seed Pots",
+          desc: "Make biodegradable seed-starting pots from newspaper. Plant them directly in the ground — zero waste!",
+          materials: [{ icon: "📰", name: "Newspapers", qty: "8–10 sheets" }, { icon: "🌱", name: "Potting mix", qty: "small bag" }, { icon: "💧", name: "Water", qty: "" }],
+          tools: ["Small can or bottle (mold)", "Scissors"],
+          duration: "30 min", difficulty_label: "Easy", sells_for: "₹50–150 (set of 10)", waste_saved: "0.2 kg",
+          views: 9200, rating: 4.9, completions: 3400, author: "Priya Nair", authorInitial: "P",
+          tags: ["paper", "seedpot", "garden", "zerowaste", "kids", "easy"],
+          videoUrl: "https://www.youtube.com/embed/3A-zJ3uP9XU?autoplay=1&mute=1",
+          steps: [
+            { title: "Cut newspaper strips", desc: "Cut newspaper into strips approximately 25cm × 10cm. You need 2–3 strips per pot." },
+            { title: "Wrap around mold", desc: "Wrap strip around a small can or bottle, leaving 4cm hanging below the base. Crease firmly as you wrap." },
+            { title: "Fold the base", desc: "Fold the overhanging paper inward to form the pot base. Press firmly and fold multiple times to seal. Remove from mold." },
+            { title: "Test the pot", desc: "The pot should hold its shape and sit flat. If it unfolds, add one more strip around the outside." },
+            { title: "Fill with soil", desc: "Fill pot with potting mix to 1cm below the rim. Plant seeds at recommended depth. Water gently." },
+            { title: "Plant pot and all", desc: "When seedling is ready, plant the entire pot into the ground or larger container. The newspaper decomposes in 2–4 weeks." },
+          ]
+        },
+        {
+          id: "t9", image: "https://loremflickr.com/800/600/metal,art,sculpture?lock=99", emoji: "🖼️", category: "metal", difficulty: "hard",
+          title: "Copper Wire Wall Art",
+          desc: "Create stunning geometric wire sculptures and wall art using salvaged copper electrical wire.",
+          materials: [{ icon: "🔌", name: "Copper wire", qty: "2–3mm gauge, 5m" }, { icon: "🪵", name: "Wood backing", qty: "30×40cm" }, { icon: "🔨", name: "Small nails", qty: "30 pcs" }, { icon: "🎨", name: "Black paint", qty: "for backing" }],
+          tools: ["Wire cutters", "Needle-nose pliers", "Hammer", "Ruler + pencil"],
+          duration: "10h", difficulty_label: "Hard", sells_for: "₹3,500–8,000", waste_saved: "0.8 kg",
+          views: 2150, rating: 4.8, completions: 180, author: "Raj Mehta", authorInitial: "R",
+          tags: ["metal", "copper", "art", "walldecor", "hard", "advanced"],
+          videoUrl: "https://www.youtube.com/embed/e1Xo4iO2N8Y?autoplay=1&mute=1",
+          steps: [
+            { title: "Plan your design", desc: "Sketch geometric pattern on paper first. Simple designs: triangles, hexagons, abstract lines. Complex: cityscapes, portraits. Start simple." },
+            { title: "Prepare the backing", desc: "Sand wood smooth. Paint matte black — this makes copper shine dramatically. Let dry fully (2 hours minimum)." },
+            { title: "Transfer design", desc: "Lightly sketch your pattern on the painted board with a white pencil. Mark nail positions at every bend/corner point." },
+            { title: "Hammer nails", desc: "Hammer small nails at each marked point — push in about halfway, leaving 1.5cm exposed. Keep them straight and even depth." },
+            { title: "Wind the wire", desc: "Attach wire start with a twist. Wrap wire around nails following your pattern. Pull wire taut between nails. Wire should sing when plucked." },
+            { title: "Finish and layer", desc: "For depth, add 2–3 layers with different wire gauges. Secure end with tight twist behind a nail. Spray with clear lacquer to prevent tarnishing." },
+          ]
+        },
+        {
+          id: "t10", image: "https://loremflickr.com/800/600/coffee,spa,scrub?lock=101", emoji: "🧪", category: "organic", difficulty: "easy",
+          title: "Coffee Ground Face Scrub",
+          desc: "Turn used coffee grounds into a premium face scrub and body exfoliant. Sells fantastically at markets!",
+          materials: [{ icon: "☕", name: "Used coffee grounds", qty: "100g dried" }, { icon: "🥥", name: "Coconut oil", qty: "50ml" }, { icon: "🍯", name: "Raw honey", qty: "1 tbsp" }, { icon: "🌿", name: "Essential oil", qty: "5 drops lavender" }, { icon: "🫙", name: "Glass jar", qty: "100ml" }],
+          tools: ["Mixing bowl", "Spoon", "Glass jars with lids", "Labels"],
+          duration: "30 min", difficulty_label: "Easy", sells_for: "₹200–450 per jar", waste_saved: "0.15 kg",
+          views: 8900, rating: 4.9, completions: 2800, author: "Priya Nair", authorInitial: "P",
+          tags: ["organic", "beauty", "scrub", "zerowaste", "easy", "cosmetics"],
+          videoUrl: "https://www.youtube.com/embed/O-Ld9n8V8W4?autoplay=1&mute=1",
+          steps: [
+            { title: "Dry the coffee grounds", desc: "Spread used coffee grounds on a baking tray. Dry in oven at 100°C for 15 minutes or air dry for 24 hours. Damp grounds cause mold." },
+            { title: "Warm the coconut oil", desc: "Gently warm coconut oil until just liquid (don't overheat). Remove from heat." },
+            { title: "Mix ingredients", desc: "Combine dried grounds, melted coconut oil, honey, and essential oils in a bowl. Mix thoroughly until well combined." },
+            { title: "Test consistency", desc: "Rub a small amount between fingers. Should feel gritty but spreadable. Too thick: add more oil. Too loose: add more grounds." },
+            { title: "Jar and label", desc: "Spoon mixture into clean glass jars. Label with ingredients, date, and 'use within 3 months'. Include usage instructions." },
+            { title: "Usage instructions to include", desc: "Apply to damp skin in circular motions, focus on rough areas. Rinse thoroughly. Use 2–3x per week. Avoid on sensitive/broken skin." },
+          ]
+        },
+        {
+          id: "t11", image: "https://loremflickr.com/800/600/colorful,plastic,craft?lock=111", emoji: "🔆", category: "plastic", difficulty: "medium",
+          title: "Melted Plastic Mosaic Coasters",
+          desc: "Melt and press colorful HDPE plastic bags into beautiful mosaic coaster sets worth ₹400 each.",
+          materials: [{ icon: "🛍️", name: "Plastic bags (HDPE)", qty: "lots of colors" }, { icon: "🧻", name: "Parchment paper", qty: "4 sheets" }, { icon: "🔲", name: "Metal cookie cutter", qty: "molds" }],
+          tools: ["Iron", "Parchment paper", "Metal molds or cookie cutters", "Scissors"],
+          duration: "2h", difficulty_label: "Medium", sells_for: "₹400–700 (set of 4)", waste_saved: "0.3 kg",
+          views: 5600, rating: 4.7, completions: 830, author: "Deepa Rao", authorInitial: "D",
+          tags: ["plastic", "mosaic", "coasters", "medium", "colorful"],
+          videoUrl: "https://www.youtube.com/embed/_0m2yFqY24c?autoplay=1&mute=1",
+          steps: [
+            { title: "Sort plastic by type", desc: "Use ONLY HDPE (check for #2 recycling symbol). NEVER heat PVC or polystyrene — toxic fumes. HDPE bags from grocery stores are perfect." },
+            { title: "Cut into small pieces", desc: "Cut bags into 2×2cm squares. Sort by color for intentional patterns — or mix for random mosaic look." },
+            { title: "Layer in mold", desc: "Place parchment paper on ironing board. Place metal mold. Fill with 4–5 layers of plastic pieces. Top with another parchment sheet." },
+            { title: "Iron slowly", desc: "Iron on medium heat (no steam). Move in slow circles. Plastic will melt and fuse in 2–3 minutes. Check progress every 30 seconds by lifting paper." },
+            { title: "Check fusion", desc: "Lift parchment. Plastic should be fused into a solid sheet — no loose pieces. If gaps exist, re-cover and iron more." },
+            { title: "Cool and pop out", desc: "Let cool completely (5 min). Pop coaster out of mold. Edges can be trimmed with scissors while still slightly warm for clean lines." },
+          ]
+        },
+        {
+          id: "t12", image: "../assets/img/tut_quilled_art.jpg", emoji: "🌸", category: "paper", difficulty: "medium",
+          title: "Quilled Paper Wall Art",
+          desc: "Create intricate floral wall art using paper quilling technique from newspaper and magazine strips.",
+          materials: [{ icon: "📰", name: "Newspaper/magazine", qty: "lots" }, { icon: "🖊️", name: "Toothpick", qty: "quilling tool" }, { icon: "🖇️", name: "White glue", qty: "small bottle" }, { icon: "🖼️", name: "Canvas / backing", qty: "A3 size" }],
+          tools: ["Toothpick or quilling tool", "Scissors", "Ruler", "Small bowl for glue"],
+          duration: "12h", difficulty_label: "Medium", sells_for: "₹800–2,500", waste_saved: "0.1 kg",
+          views: 3800, rating: 4.8, completions: 290, author: "Riya Sharma", authorInitial: "R",
+          tags: ["paper", "quilling", "art", "walldecor", "flowers", "medium"],
+          videoUrl: "https://www.youtube.com/embed/fD3lM-1gWZw?autoplay=1&mute=1",
+          steps: [
+            { title: "Cut paper strips", desc: "Cut newspaper/magazine into 0.5cm wide strips. Mix colors intentionally. Glossy magazine pages give more vibrant results." },
+            { title: "Learn basic coils", desc: "Wrap a strip tightly around a toothpick. Slide off and let expand slightly. Pinch into shapes: circles, teardrops, marquise, squares." },
+            { title: "Practice shapes", desc: "Master these 5 shapes: open circle, tight coil, teardrop, marquise (eye), and scroll. These build 90% of quilling designs." },
+            { title: "Plan your composition", desc: "Sketch flower arrangement on canvas lightly in pencil. Plan larger flowers as focal points, smaller as fillers, leaves for balance." },
+            { title: "Glue shapes to canvas", desc: "Apply tiny dab of glue to edge of each coil and press to canvas. Work from background to foreground. Hold 10 seconds each." },
+            { title: "Fill gaps and finish", desc: "Fill all gaps with small coils or paper strips. Spray entire piece lightly with hairspray or clear lacquer to prevent uncoiling." },
+          ]
+        },
+      ];
+    }
+
+    // ── Init ─────────────────────────────────────────────────
+    document.addEventListener("DOMContentLoaded", () => {
+      updatePublicNav();
+      allTutorials = getTutorials();
+      filtered = [...allTutorials];
+      renderTutorials();
+      renderLeaderboard();
+      setDailyTip();
+      updateProgress();
+    });
+
+    // ── Render tutorials grid ─────────────────────────────────
+    function renderTutorials() {
+      const sort = document.getElementById("sort-select").value;
+
+      // Apply filters
+      let list = allTutorials.filter(t => {
+        const matchCat = !currentCat || t.category === currentCat;
+        const matchDiff = currentDiff === "all" || t.difficulty === currentDiff;
+        const matchSearch = !currentSearch || t.title.toLowerCase().includes(currentSearch) || t.tags.some(g => g.includes(currentSearch));
+        return matchCat && matchDiff && matchSearch;
+      });
+
+      // Sort
+      if (sort === "popular") list.sort((a, b) => b.views - a.views);
+      if (sort === "newest") list.sort((a, b) => b.id.localeCompare(a.id));
+      if (sort === "duration") list.sort((a, b) => parseFloat(a.duration) - parseFloat(b.duration));
+      if (sort === "earnings") list.sort((a, b) => parseInt(b.sells_for.replace(/[₹,+–-]/g, "").split("–").pop()) - parseInt(a.sells_for.replace(/[₹,+–-]/g, "").split("–").pop()));
+
+      filtered = list;
+      document.getElementById("result-count").textContent = `${list.length} tutorial${list.length !== 1 ? "s" : ""} found`;
+
+      const grid = document.getElementById("tutorials-grid");
+      grid.innerHTML = "";
+
+      if (!list.length) {
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:var(--s12)">
+        <div style="font-size:3rem;margin-bottom:var(--s4)">🔍</div>
+        <div class="text-muted">No tutorials match your filters.</div>
+        <button class="btn btn-ghost" style="margin-top:var(--s4)" onclick="resetFilters()">Reset Filters</button>
+      </div>`;
+        return;
+      }
+
+      // First card is featured
+      list.slice(0, displayed).forEach((t, i) => {
+        if (i === 0) {
+          grid.appendChild(renderFeaturedCard(t));
+        } else {
+          grid.appendChild(renderTutorialCard(t));
+        }
+      });
+
+      document.getElementById("load-more-wrap").style.display = displayed >= list.length ? "none" : "block";
+      setTimeout(initScrollReveal, 100);
+    }
+
+    function renderFeaturedCard(t) {
+      const isSaved = savedTuts.has(t.id);
+      const isDone = doneTuts.has(t.id);
+      const el = document.createElement("div");
+      el.className = "card featured-card reveal";
+      el.innerHTML = `
+      <div class="featured-thumb">
+        ${t.image ? `<img src="${t.image}" alt="${t.title}" style="width:100%;height:100%;object-fit:cover;">` : `<span>${t.emoji}</span>`}
+        <button class="saved-ribbon ${isSaved ? "saved" : ""}" id="save-${t.id}" onclick="event.stopPropagation();toggleSave('${t.id}')" title="${isSaved ? "Unsave" : "Save"}">
+          ${isSaved ? "🔖" : "📌"}
+        </button>
+        <div class="featured-tag badge badge-green">⭐ Featured</div>
+      </div>
+      <div class="featured-body">
+        <div style="display:flex;gap:var(--s2);flex-wrap:wrap;margin-bottom:var(--s4)">
+          <span class="badge badge-${diffColor(t.difficulty)}">${diffIcon(t.difficulty)} ${t.difficulty_label}</span>
+          <span class="badge badge-cyan">🏷️ ${t.category}</span>
+          ${isDone ? '<span class="badge badge-green">✅ Completed</span>' : ""}
+        </div>
+        <div class="featured-title">${t.title}</div>
+        <p style="font-size:0.875rem;color:var(--text-2);line-height:1.7;margin-bottom:var(--s5)">${t.desc}</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--s3);margin-bottom:var(--s5)">
+          <div style="background:var(--surface-3);padding:var(--s3);border-radius:var(--r-md);text-align:center">
+            <div class="mono text-green" style="font-weight:700;font-size:0.95rem">${t.sells_for}</div>
+            <div style="font-size:0.65rem;color:var(--text-3)">Sells For</div>
+          </div>
+          <div style="background:var(--surface-3);padding:var(--s3);border-radius:var(--r-md);text-align:center">
+            <div class="mono" style="font-weight:700;font-size:0.95rem;color:var(--cyan)">⏱ ${t.duration}</div>
+            <div style="font-size:0.65rem;color:var(--text-3)">Duration</div>
+          </div>
+          <div style="background:var(--surface-3);padding:var(--s3);border-radius:var(--r-md);text-align:center">
+            <div class="mono text-green" style="font-weight:700">🌿 ${t.waste_saved}</div>
+            <div style="font-size:0.65rem;color:var(--text-3)">Waste Saved</div>
+          </div>
+          <div style="background:var(--surface-3);padding:var(--s3);border-radius:var(--r-md);text-align:center">
+            <div class="mono" style="font-weight:700;color:var(--yellow)">★ ${t.rating}</div>
+            <div style="font-size:0.65rem;color:var(--text-3)">${t.completions} built</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:var(--s3)">
+          <button class="btn btn-primary" onclick="openTutorial('${t.id}')">📖 Start Tutorial</button>
+          <button class="btn btn-secondary btn-sm" onclick="toggleDone('${t.id}')">
+            ${isDone ? "✅ Mark Undone" : "☑ Mark Done"}
+          </button>
+        </div>
+      </div>
+    `;
+      return el;
+    }
+
+    function renderTutorialCard(t) {
+      const isSaved = savedTuts.has(t.id);
+      const isDone = doneTuts.has(t.id);
+      const el = document.createElement("div");
+      el.className = "card tutorial-card reveal";
+      el.onclick = () => openTutorial(t.id);
+      el.innerHTML = `
+      <div class="tcard-thumb">
+        ${t.image ? `<img src="${t.image}" alt="${t.title}" style="width:100%;height:100%;object-fit:cover;transition:transform 0.4s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">` : t.emoji}
+        <button class="saved-ribbon ${isSaved ? "saved" : ""}" id="save-${t.id}" onclick="event.stopPropagation();toggleSave('${t.id}')">${isSaved ? "🔖" : "📌"}</button>
+        ${isDone ? '<div style="position:absolute;bottom:var(--s3);left:var(--s3)"><span class="badge badge-green" style="font-size:0.65rem">✅ Done</span></div>' : ""}
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-meta">
+          <span class="badge badge-${diffColor(t.difficulty)}" style="font-size:0.65rem">${diffIcon(t.difficulty)} ${t.difficulty_label}</span>
+          <span class="badge badge-gray" style="font-size:0.65rem">⏱ ${t.duration}</span>
+        </div>
+        </div>
+        <div class="tcard-title">
+          ${t.title}
+          ${t.videoUrl ? '<span style="margin-left:5px;font-size:0.8rem;background:var(--red);color:white;padding:2px 6px;border-radius:var(--r-full);">▶ Video</span>' : ''}
+        </div>
+        <div class="tcard-desc">${t.desc}</div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:var(--s3)">
+          <span style="font-size:0.8rem;font-weight:700;color:var(--green)">${t.sells_for}</span>
+          <span style="font-size:0.78rem;color:var(--cyan)">🌿 ${t.waste_saved}</span>
+        </div>
+        <div class="tcard-stats">
+          <span>★ ${t.rating}</span>
+          <span>👁 ${t.views.toLocaleString()}</span>
+          <span>✅ ${t.completions}</span>
+        </div>
+      </div>
+      <div class="tcard-footer">
+        <div class="tcard-author">
+          <div class="tcard-author-av">${t.authorInitial}</div>
+          <span>${t.author}</span>
+        </div>
+        <button class="btn btn-primary btn-sm">Start →</button>
+      </div>
+    `;
+      return el;
+    }
+
+    // ── Open Full Tutorial ────────────────────────────────────
+    function openTutorial(id) {
+      const t = allTutorials.find(x => x.id === id);
+      if (!t) return;
+      const isDone = doneTuts.has(t.id);
+
+      document.getElementById("modal-hero").innerHTML = t.videoUrl ? `
+        <iframe src="${t.videoUrl}" style="width:100%;height:100%;border:none;border-radius:var(--r-2xl) var(--r-2xl) 0 0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        <button class="modal-close-btn" onclick="closeTutorial()">✕</button>
+      ` : (t.image ? `
+        <img src="${t.image}" alt="${t.title}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--r-2xl) var(--r-2xl) 0 0;">
+        <button class="modal-close-btn" onclick="closeTutorial()">✕</button>
+      ` : `
+        <div style="font-size:9rem">${t.emoji}</div>
+        <button class="modal-close-btn" onclick="closeTutorial()">✕</button>
+      `);
+
+      document.getElementById("modal-body").innerHTML = `
+      <!-- Header -->
+      <div style="display:flex;gap:var(--s3);flex-wrap:wrap;margin-bottom:var(--s4)">
+        <span class="badge badge-${diffColor(t.difficulty)}">${diffIcon(t.difficulty)} ${t.difficulty_label}</span>
+        <span class="badge badge-cyan">🏷️ ${t.category}</span>
+        <span class="badge badge-gray">⏱ ${t.duration}</span>
+        <span class="badge badge-green">🌿 ${t.waste_saved} saved</span>
+      </div>
+      <h2 style="font-family:var(--font-display);font-size:1.3rem;font-weight:900;margin-bottom:var(--s3)">${t.title}</h2>
+      <p style="color:var(--text-2);line-height:1.75;margin-bottom:var(--s6)">${t.desc}</p>
+
+      <!-- Stats Row -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s3);margin-bottom:var(--s6)">
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:var(--s3);text-align:center">
+          <div class="mono text-green" style="font-weight:700">${t.sells_for}</div>
+          <div style="font-size:0.65rem;color:var(--text-3)">Sells For</div>
+        </div>
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:var(--s3);text-align:center">
+          <div class="mono" style="font-weight:700;color:var(--yellow)">★ ${t.rating}</div>
+          <div style="font-size:0.65rem;color:var(--text-3)">Rating</div>
+        </div>
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:var(--s3);text-align:center">
+          <div class="mono" style="font-weight:700;color:var(--cyan)">${t.completions.toLocaleString()}</div>
+          <div style="font-size:0.65rem;color:var(--text-3)">Completed</div>
+        </div>
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:var(--s3);text-align:center">
+          <div class="mono" style="font-weight:700;color:var(--purple)">${t.views.toLocaleString()}</div>
+          <div style="font-size:0.65rem;color:var(--text-3)">Views</div>
+        </div>
+      </div>
+
+      <!-- Materials -->
+      <div style="margin-bottom:var(--s6)">
+        <h3 style="font-family:var(--font-display);font-size:0.82rem;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:var(--s3)">🧰 Materials Needed</h3>
+        <div class="materials-grid">
+          ${t.materials.map(m => `
+            <div class="material-chip">
+              <div class="material-chip-icon">${m.icon}</div>
+              <div class="material-chip-name">${m.name}</div>
+              <div class="material-chip-qty">${m.qty}</div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+
+      <!-- Tools -->
+      <div style="margin-bottom:var(--s6)">
+        <h3 style="font-family:var(--font-display);font-size:0.82rem;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:var(--s3)">🔧 Tools Required</h3>
+        <div style="display:flex;flex-wrap:wrap;gap:var(--s2)">
+          ${t.tools.map(tool => `<span class="badge badge-gray">${tool}</span>`).join("")}
+        </div>
+      </div>
+
+      <!-- Steps -->
+      <div style="margin-bottom:var(--s6)">
+        <h3 style="font-family:var(--font-display);font-size:0.82rem;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:var(--s5)">
+          📋 Step-by-Step Instructions
+        </h3>
+        <div class="steps-list">
+          ${t.steps.map((step, i) => `
+            <div class="step-row">
+              <div class="step-num-big">${String(i + 1).padStart(2, "0")}</div>
+              <div class="step-content">
+                <div class="step-title">${step.title}</div>
+                <div class="step-desc">${step.desc}</div>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+
+      <!-- CTA row -->
+      <div style="display:flex;gap:var(--s3);flex-wrap:wrap;padding-top:var(--s5);border-top:1px solid var(--border)">
+        <button class="btn btn-primary" onclick="toggleDone('${t.id}');closeTutorial()" id="modal-done-btn">
+          ${isDone ? "✅ Mark as Undone" : "✅ Mark as Done"}
+        </button>
+        <button class="btn btn-secondary" onclick="toggleSave('${t.id}')">📌 Save Tutorial</button>
+        <a href="community.html" class="btn btn-ghost">🌐 Share My Project</a>
+        <a href="marketplace.html" class="btn btn-ghost">🏪 Buy Materials</a>
+      </div>
+    `;
+
+      document.getElementById("tutorial-modal").classList.add("open");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeTutorial() {
+      document.getElementById("tutorial-modal").classList.remove("open");
+      document.body.style.overflow = "";
+    }
+
+    // ── Save / Done ───────────────────────────────────────────
+    function toggleSave(id) {
+      if (!requireAuthForAction("Login to save tutorials to your learning list.")) return;
+      if (savedTuts.has(id)) {
+        savedTuts.delete(id);
+        Toast.info("Unsaved", "Tutorial removed from saved.");
+      } else {
+        savedTuts.add(id);
+        Toast.success("Saved!", "Tutorial added to your learning list.");
+      }
+      localStorage.setItem("cc_saved_tuts", JSON.stringify([...savedTuts]));
+      updateProgress();
+      renderTutorials();
+    }
+
+    function toggleDone(id) {
+      if (!requireAuthForAction("Login to track your tutorial progress.")) return;
+      if (doneTuts.has(id)) {
+        doneTuts.delete(id);
+        Toast.info("Unmarked", "Tutorial marked as not done.");
+      } else {
+        doneTuts.add(id);
+        Toast.success("🎉 Completed!", "Great work! Tutorial marked as done.");
+      }
+      localStorage.setItem("cc_done_tuts", JSON.stringify([...doneTuts]));
+      updateProgress();
+      renderTutorials();
+    }
+
+    // ── Progress bar ──────────────────────────────────────────
+    function updateProgress() {
+      const total = allTutorials.length;
+      const done = doneTuts.size;
+      const pct = total ? Math.round((done / total) * 100) : 0;
+      document.getElementById("progress-count").textContent = `${done} / ${total}`;
+      document.getElementById("progress-fill").style.width = pct + "%";
+      document.getElementById("my-saved-count").textContent = savedTuts.size;
+      document.getElementById("my-done-count").textContent = done;
+    }
+
+    // ── Filter helpers ────────────────────────────────────────
+    function filterCat(el, cat) {
+      currentCat = cat;
+      document.querySelectorAll(".cat-pill").forEach(p => p.classList.remove("active"));
+      el.classList.add("active");
+      renderTutorials();
+    }
+
+    function filterDiff(diff, btn) {
+      currentDiff = diff;
+      ["all", "easy", "medium", "hard"].forEach(d => {
+        const el = document.getElementById(`diff-${d}`);
+        el.className = d === diff ? "btn btn-secondary btn-sm" : "btn btn-ghost btn-sm";
+      });
+      renderTutorials();
+    }
+
+    function doSearch() {
+      currentSearch = document.getElementById("hero-search").value.trim().toLowerCase();
+      renderTutorials();
+    }
+
+    function resetFilters() {
+      currentCat = ""; currentDiff = "all"; currentSearch = "";
+      document.querySelectorAll(".cat-pill").forEach(p => p.classList.remove("active"));
+      document.querySelector('.cat-pill[data-cat=""]').classList.add("active");
+      document.getElementById("hero-search").value = "";
+      filterDiff("all", document.getElementById("diff-all"));
+    }
+
+    function loadMore() {
+      displayed += 6;
+      renderTutorials();
+    }
+
+    // ── Helpers ───────────────────────────────────────────────
+    function diffColor(d) { return d === "easy" ? "green" : d === "medium" ? "orange" : "red"; }
+    function diffIcon(d) { return d === "easy" ? "🟢" : d === "medium" ? "🟡" : "🔴"; }
+
+    // ── Leaderboard ───────────────────────────────────────────
+    function renderLeaderboard() {
+      const creators = [
+        { name: "Riya Sharma", initial: "R", tutorials: 4, color: "rank-1" },
+        { name: "Raj Mehta", initial: "R", tutorials: 3, color: "rank-2" },
+        { name: "Priya Nair", initial: "P", tutorials: 2, color: "rank-3" },
+        { name: "Meera Krishnan", initial: "M", tutorials: 2, color: "rank-n" },
+        { name: "Deepa Rao", initial: "D", tutorials: 2, color: "rank-n" },
+        { name: "Suresh Kumar", initial: "S", tutorials: 1, color: "rank-n" },
+      ];
+      document.getElementById("creator-leaderboard").innerHTML = creators.map((c, i) => `
+      <div class="leaderboard-item">
+        <div class="rank-badge ${c.color}">${i + 1}</div>
+        <div style="width:32px;height:32px;border-radius:50%;background:var(--green-glow);border:1px solid rgba(0,255,136,0.3);
+                    display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:var(--green)">${c.initial}</div>
+        <div style="flex:1">
+          <div style="font-size:0.82rem;font-weight:700">${c.name}</div>
+          <div style="font-size:0.68rem;color:var(--text-3)">${c.tutorials} tutorial${c.tutorials > 1 ? "s" : ""}</div>
+        </div>
+      </div>
+    `).join("");
+    }
+
+    // ── Daily tip ─────────────────────────────────────────────
+    function setDailyTip() {
+      const tips = [
+        { text: "Lightly wetting wood before staining opens the grain and leads to deeper, more even color absorption.", src: "— Raj Mehta, Pro Woodworker" },
+        { text: "Always sort plastics by recycling number before any project. Mixing plastic types leads to weak, brittle results.", src: "— CraftCycle Safety Guide" },
+        { text: "Use beeswax to lubricate stiff screws on reclaimed wood. It penetrates and prevents future seizing.", src: "— Suresh Kumar, Scrap Expert" },
+        { text: "Heat copper wire briefly with a torch to make it more malleable before bending. Let cool naturally — don't quench.", src: "— Raj Mehta, Metal Artist" },
+        { text: "Store fabric scraps by color, not material type. You'll find matching pieces 10x faster when creating.", src: "— Meera Krishnan, Textile Artist" },
+        { text: "Coffee grounds must be fully dry before using in cosmetics. Even 5% moisture content causes mold within days.", src: "— Priya Nair, Natural Beauty" },
+        { text: "Sand reclaimed glass bottle rims with wet 400-grit sandpaper for a smooth, professional edge. Always wear gloves.", src: "— Deepa Rao, Glass Crafter" },
+      ];
+      const day = new Date().getDay();
+      const tip = tips[day];
+      document.getElementById("daily-tip").textContent = `"${tip.text}"`;
+      document.getElementById("tip-source").textContent = tip.src;
+    }
+
+    // Keyboard shortcut: Escape closes modal
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closeTutorial(); });
+  </script>
+</body>
+
+</html>

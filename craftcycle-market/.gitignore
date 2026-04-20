@@ -1,0 +1,14 @@
+# .gitignore (place in project root)
+.env
+.env.local
+__pycache__/
+*.pyc
+*.pyo
+instance/
+.flask_session/
+venv/
+env/
+node_modules/
+.DS_Store
+Thumbs.db
+*.log

@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CraftCycle Market — Admin Panel</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♻️</text></svg>">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+  <div class="sidebar-overlay"></div>
+  <div class="app-shell">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-mark">
+          <div class="logo-icon">♻️</div>
+          <div>
+            <div class="logo-text">CraftCycle</div>
+            <div class="logo-sub" style="color:var(--orange)">Admin</div>
+          </div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Admin</div>
+        <a href="admin.html" class="nav-item active"><span class="nav-icon">📊</span> Dashboard</a>
+        <a href="#" class="nav-item" onclick="showTab('users');return false"><span class="nav-icon">👥</span> Users</a>
+        <a href="#" class="nav-item" onclick="showTab('products');return false"><span class="nav-icon">📦</span>
+          Products</a>
+        <a href="#" class="nav-item" onclick="showTab('analytics');return false"><span class="nav-icon">📈</span>
+          Analytics</a>
+        <div class="nav-section-label" style="margin-top:var(--s4)">Platform</div>
+        <a href="dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> Back to App</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="user-avatar" data-user-avatar style="border-color:var(--orange)"></div>
+          <div>
+            <div style="font-size:0.875rem;font-weight:600" data-user-name>Admin</div>
+            <div style="font-size:0.72rem;color:var(--orange)">ADMIN ACCESS</div>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm w-full" style="margin-top:var(--s3)" data-logout>🚪 Logout</button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="hamburger"><span></span><span></span><span></span></button>
+          <div class="page-title">ADMIN PANEL</div>
+          <span class="badge badge-orange">ADMIN</span>
+        </div>
+        <div class="topbar-right">
+          <button class="notif-btn">🔔<span class="notif-dot"></span></button>
+          <div class="user-avatar" data-user-avatar style="border-color:var(--orange)"></div>
+        </div>
+      </header>
+
+      <main class="dash-content">
+
+        <!-- KPI Cards -->
+        <div class="stats-grid">
+          <div class="card stat-card reveal">
+            <div class="stat-label">👥 Total Users</div>
+            <div class="stat-value" id="kpi-users">—</div>
+            <div class="stat-change up" id="kpi-users-new">Loading…</div>
+          </div>
+          <div class="card stat-card reveal">
+            <div class="stat-label">📦 Active Products</div>
+            <div class="stat-value cyan" id="kpi-products">—</div>
+            <div class="stat-change" id="kpi-pending" style="color:var(--orange)">Pending approval</div>
+          </div>
+          <div class="card stat-card reveal">
+            <div class="stat-label">🌿 Waste Saved</div>
+            <div class="stat-value green" id="kpi-waste">—</div>
+            <div class="stat-change" id="kpi-co2">CO₂ offset</div>
+          </div>
+          <div class="card stat-card reveal">
+            <div class="stat-label">👨‍🔧 Total Sellers</div>
+            <div class="stat-value" id="kpi-sellers">—</div>
+            <div class="stat-change">Active creators</div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tab-bar">
+          <button class="tab-btn active" id="tab-overview" onclick="showTab('overview')">📊 Overview</button>
+          <button class="tab-btn" id="tab-users" onclick="showTab('users')">👥 Users</button>
+          <button class="tab-btn" id="tab-products" onclick="showTab('products')">📦 Products</button>
+          <button class="tab-btn" id="tab-analytics" onclick="showTab('analytics')">📈 Analytics</button>
+        </div>
+
+        <!-- ── Overview Tab ──────────────────────────────────────── -->
+        <div class="tab-panel active" id="panel-overview">
+          <div class="dash-grid-2">
+
+            <!-- Signups Chart -->
+            <div class="card chart-container">
+              <div class="chart-header">
+                <div>
+                  <div class="chart-title">New Signups</div>
+                  <div class="chart-subtitle">Last 30 days</div>
+                </div>
+              </div>
+              <div class="chart-canvas-wrap"><canvas id="chart-signups"></canvas></div>
+            </div>
+
+            <!-- Revenue Chart -->
+            <div class="card chart-container">
+              <div class="chart-header">
+                <div>
+                  <div class="chart-title">Revenue Trend</div>
+                  <div class="chart-subtitle">Last 30 days</div>
+                </div>
+              </div>
+              <div class="chart-canvas-wrap"><canvas id="chart-revenue"></canvas></div>
+            </div>
+          </div>
+
+          <!-- Recent Users Table -->
+          <div class="card">
+            <div class="chart-header" style="padding:var(--s5) var(--s6) 0">
+              <div class="chart-title">Recent Signups</div>
+              <button class="btn btn-ghost btn-sm" onclick="showTab('users')">View All →</button>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Coins</th>
+                    <th>Joined</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="recent-users-body">
+                  <tr>
+                    <td colspan="7" style="text-align:center;padding:var(--s8)">
+                      <div class="spinner" style="margin:0 auto"></div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Users Tab ─────────────────────────────────────────── -->
+        <div class="tab-panel" id="panel-users">
+          <!-- Filters -->
+          <div style="display:flex;align-items:center;gap:var(--s3);margin-bottom:var(--s5);flex-wrap:wrap">
+            <input class="form-input" type="text" id="user-search" placeholder="Search name, email, username…"
+              style="max-width:240px" oninput="debouncedLoadUsers()" />
+            <select class="form-input" id="user-role-filter" style="width:auto" onchange="loadUsers()">
+              <option value="">All Roles</option>
+              <option value="buyer">Buyers</option>
+              <option value="seller">Sellers</option>
+              <option value="admin">Admins</option>
+            </select>
+            <select class="form-input" id="user-status-filter" style="width:auto" onchange="loadUsers()">
+              <option value="">All Status</option>
+              <option value="true">Active</option>
+              <option value="false">Suspended</option>
+            </select>
+            <span class="text-muted" id="user-count" style="font-size:0.8rem;margin-left:auto"></span>
+          </div>
+
+          <div class="card table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>User</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Coins</th>
+                  <th>Joined</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="users-body">
+                <tr>
+                  <td colspan="8" style="text-align:center;padding:var(--s8)">
+                    <div class="spinner" style="margin:0 auto"></div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="users-pagination" style="display:flex;justify-content:center;gap:var(--s2);margin-top:var(--s5)">
+          </div>
+        </div>
+
+        <!-- ── Products Tab ──────────────────────────────────────── -->
+        <div class="tab-panel" id="panel-products">
+          <div style="display:flex;gap:var(--s3);margin-bottom:var(--s5)">
+            <button class="btn btn-secondary btn-sm" id="filter-pending" onclick="loadProducts('pending')">⏳
+              Pending</button>
+            <button class="btn btn-ghost btn-sm" id="filter-active" onclick="loadProducts('active')">✅ Active</button>
+            <button class="btn btn-ghost btn-sm" id="filter-suspended" onclick="loadProducts('suspended')">🚫
+              Suspended</button>
+          </div>
+
+          <div class="card table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Product</th>
+                  <th>Seller</th>
+                  <th>Price</th>
+                  <th>Waste Saved</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="products-body">
+                <tr>
+                  <td colspan="8" style="text-align:center;padding:var(--s8)">
+                    <div class="spinner" style="margin:0 auto"></div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ── Analytics Tab ─────────────────────────────────────── -->
+        <div class="tab-panel" id="panel-analytics">
+          <div class="dash-grid-2">
+            <div class="card chart-container">
+              <div class="chart-header">
+                <div>
+                  <div class="chart-title">Daily Revenue</div>
+                  <div class="chart-subtitle">30-day trend</div>
+                </div>
+              </div>
+              <div style="height:260px;padding:var(--s4)"><canvas id="a-revenue"></canvas></div>
+            </div>
+            <div class="card chart-container">
+              <div class="chart-header">
+                <div>
+                  <div class="chart-title">Daily Signups</div>
+                  <div class="chart-subtitle">30-day trend</div>
+                </div>
+              </div>
+              <div style="height:260px;padding:var(--s4)"><canvas id="a-signups"></canvas></div>
+            </div>
+          </div>
+          <div class="stats-grid" style="margin-top:var(--s6)">
+            <div class="card stat-card">
+              <div class="stat-label">📈 Avg Daily Revenue</div>
+              <div class="stat-value green" id="avg-revenue">—</div>
+            </div>
+            <div class="card stat-card">
+              <div class="stat-label">👤 Avg Daily Signups</div>
+              <div class="stat-value" id="avg-signups">—</div>
+            </div>
+            <div class="card stat-card">
+              <div class="stat-label">🌿 Total CO₂ Offset</div>
+              <div class="stat-value cyan" id="total-co2">—</div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/utils.js"></script>
+  <script>
+    requireAuth();
+    requireAdmin();
+
+    let userPage = 1;
+    const debouncedLoadUsers = debounce(loadUsers, 400);
+
+    // ── Tab switching ──────────────────────────────────────────
+    function showTab(name) {
+      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.getElementById(`panel-${name}`).classList.add("active");
+      document.getElementById(`tab-${name}`)?.classList.add("active");
+
+      if (name === "users") loadUsers();
+      if (name === "products") loadProducts("pending");
+      if (name === "analytics") loadAnalytics();
+    }
+
+    // ── Load KPIs ──────────────────────────────────────────────
+    async function loadDashboard() {
+      try {
+        const data = await AdminAPI.dashboard();
+        const k = data.kpis;
+        document.getElementById("kpi-users").textContent = (k.total_users || 0).toLocaleString();
+        document.getElementById("kpi-users-new").textContent = `+${k.new_users_this_month || 0} this month`;
+        document.getElementById("kpi-products").textContent = (k.total_active_products || 0).toLocaleString();
+        document.getElementById("kpi-pending").textContent = `${k.pending_approval || 0} pending`;
+        document.getElementById("kpi-waste").textContent = formatKg(k.total_waste_kg || 0);
+        document.getElementById("kpi-co2").textContent = formatKg(k.total_co2_kg || 0);
+        document.getElementById("kpi-sellers").textContent = (k.total_sellers || 0).toLocaleString();
+        renderUsersTable(data.recent_users || [], "recent-users-body");
+      } catch {
+        loadDemoData();
+      }
+      buildOverviewCharts();
+    }
+
+    function loadDemoData() {
+      document.getElementById("kpi-users").textContent = "1,247";
+      document.getElementById("kpi-users-new").textContent = "+38 this month";
+      document.getElementById("kpi-products").textContent = "342";
+      document.getElementById("kpi-pending").textContent = "14 pending";
+      document.getElementById("kpi-waste").textContent = "2.3 tonnes";
+      document.getElementById("kpi-co2").textContent = "1.8 tonnes";
+      document.getElementById("kpi-sellers").textContent = "189";
+
+      const demoUsers = [
+        { id: 1, username: "riya_creates", full_name: "Riya Sharma", email: "riya@test.com", role: "seller", green_coins: 240, is_active: true, created_at: new Date(Date.now() - 172800000).toISOString() },
+        { id: 2, username: "suresh_scrap", full_name: "Suresh Kumar", email: "suresh@test.com", role: "seller", green_coins: 180, is_active: true, created_at: new Date(Date.now() - 259200000).toISOString() },
+        { id: 3, username: "eco_priya", full_name: "Priya Nair", email: "priya@test.com", role: "buyer", green_coins: 50, is_active: true, created_at: new Date(Date.now() - 345600000).toISOString() },
+        { id: 4, username: "raj_maker", full_name: "Raj Mehta", email: "raj@test.com", role: "seller", green_coins: 320, is_active: true, created_at: new Date(Date.now() - 432000000).toISOString() },
+        { id: 5, username: "deepa_crafts", full_name: "Deepa Rao", email: "deepa@test.com", role: "seller", green_coins: 95, is_active: false, created_at: new Date(Date.now() - 518400000).toISOString() },
+      ];
+      renderUsersTable(demoUsers, "recent-users-body");
+    }
+
+    // ── Overview Charts ────────────────────────────────────────
+    function buildOverviewCharts() {
+      const labels = Array.from({ length: 30 }, (_, i) => {
+        const d = new Date(); d.setDate(d.getDate() - (29 - i));
+        return d.toLocaleDateString("en-IN", { month: "short", day: "numeric" });
+      });
+      const signups = labels.map(() => Math.floor(Math.random() * 8) + 1);
+      const revenue = signups.map(s => s * Math.floor(Math.random() * 1200 + 800));
+
+      const CHART_OPTS = {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: "rgba(30,48,80,0.6)" }, ticks: { color: "#4A6080", font: { size: 9 }, maxTicksLimit: 8 } },
+          y: { grid: { color: "rgba(30,48,80,0.6)" }, ticks: { color: "#4A6080", font: { size: 9 } } },
+        },
+        animation: { duration: 700 },
+      };
+
+      const sigCtx = document.getElementById("chart-signups").getContext("2d");
+      new Chart(sigCtx, {
+        type: "bar",
+        data: { labels, datasets: [{ data: signups, backgroundColor: "rgba(168,85,247,0.4)", borderColor: "#A855F7", borderWidth: 1, borderRadius: 3 }] },
+        options: CHART_OPTS,
+      });
+
+      const revCtx = document.getElementById("chart-revenue").getContext("2d");
+      const revGrad = revCtx.createLinearGradient(0, 0, 0, 220);
+      revGrad.addColorStop(0, "rgba(0,255,136,0.3)"); revGrad.addColorStop(1, "rgba(0,255,136,0.01)");
+      new Chart(revCtx, {
+        type: "line",
+        data: { labels, datasets: [{ data: revenue, borderColor: "#00FF88", backgroundColor: revGrad, borderWidth: 2, fill: true, tension: 0.4, pointRadius: 2 }] },
+        options: { ...CHART_OPTS, scales: { ...CHART_OPTS.scales, y: { ...CHART_OPTS.scales.y, ticks: { ...CHART_OPTS.scales.y.ticks, callback: v => "₹" + (v / 1000).toFixed(0) + "k" } } } },
+      });
+    }
+
+    // ── Render users table ─────────────────────────────────────
+    function renderUsersTable(users, tbodyId) {
+      const tbody = document.getElementById(tbodyId);
+      if (!users.length) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:var(--s8);color:var(--text-3)">No users found</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = users.map(u => `
+      <tr>
+        <td><span class="mono" style="color:var(--text-3)">#${u.id}</span></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:var(--s3)">
+            <div class="user-avatar" style="width:30px;height:30px;font-size:0.75rem">
+              ${u.full_name[0].toUpperCase()}
+            </div>
+            <div>
+              <div style="font-weight:600;font-size:0.875rem">${u.full_name}</div>
+              <div style="font-size:0.72rem;color:var(--text-3)">@${u.username}</div>
+            </div>
+          </div>
+        </td>
+        <td style="font-size:0.82rem;color:var(--text-2)">${u.email}</td>
+        <td><span class="badge badge-${u.role === 'admin' ? 'orange' : u.role === 'seller' ? 'green' : 'cyan'}">${u.role}</span></td>
+        <td><span class="mono text-green">🪙 ${(u.green_coins || 0).toLocaleString()}</span></td>
+        <td class="mono text-muted" style="font-size:0.75rem">${timeAgo(u.created_at)}</td>
+        <td><span class="badge badge-${u.is_active ? 'green' : 'red'}">${u.is_active ? 'Active' : 'Suspended'}</span></td>
+        <td>
+          <div class="dropdown">
+            <button class="btn btn-ghost btn-sm">⋯ ▾</button>
+            <div class="dropdown-menu">
+              <button class="dropdown-item" onclick="updateUser(${u.id},{is_verified:true})">✅ Verify</button>
+              <button class="dropdown-item" onclick="updateUser(${u.id},{role:'seller'})">🔨 Make Seller</button>
+              <button class="dropdown-item ${u.is_active ? 'danger' : ''}"
+                      onclick="updateUser(${u.id},{is_active:${!u.is_active}})">
+                ${u.is_active ? "🚫 Suspend" : "✅ Activate"}
+              </button>
+              <button class="dropdown-item" onclick="updateUser(${u.id},{coin_adjustment:100,coin_reason:'Admin bonus'})">🪙 +100 Coins</button>
+            </div>
+          </div>
+        </td>
+      </tr>
+    `).join("");
+    }
+
+    // ── Load users ─────────────────────────────────────────────
+    async function loadUsers(page = 1) {
+      userPage = page;
+      const params = {
+        page,
+        per_page: 15,
+        search: document.getElementById("user-search")?.value || "",
+        role: document.getElementById("user-role-filter")?.value || "",
+        active: document.getElementById("user-status-filter")?.value || "",
+      };
+      try {
+        const data = await AdminAPI.users(params);
+        renderUsersTable(data.users || [], "users-body");
+        document.getElementById("user-count").textContent = `${data.pagination?.total || 0} total`;
+        renderPagination("users-pagination", data.pagination, loadUsers);
+      } catch {
+        document.getElementById("user-count").textContent = "Demo mode";
+      }
+    }
+
+    async function updateUser(id, changes) {
+      try {
+        await AdminAPI.updateUser(id, changes);
+        Toast.success("Updated", "User changes saved.");
+        loadUsers(userPage);
+      } catch (err) {
+        Toast.error("Failed", err.data?.error || err.message);
+      }
+    }
+
+    // ── Load products ──────────────────────────────────────────
+    async function loadProducts(status = "pending") {
+      ["pending", "active", "suspended"].forEach(s => {
+        const btn = document.getElementById(`filter-${s}`);
+        btn.className = s === status ? "btn btn-secondary btn-sm" : "btn btn-ghost btn-sm";
+      });
+
+      try {
+        const data = await AdminAPI.products({ status });
+        renderProductsTable(data.products || []);
+      } catch {
+        renderProductsTable(getDemoProducts(status));
+      }
+    }
+
+    function getDemoProducts(status) {
+      return [
+        { id: 1, title: "Reclaimed Wood Clock", seller_id: 2, price: 1299, waste_kg_saved: 1.5, status, created_at: new Date(Date.now() - 86400000).toISOString() },
+        { id: 2, title: "Plastic Bottle Garden", seller_id: 2, price: 450, waste_kg_saved: 0.8, status, created_at: new Date(Date.now() - 172800000).toISOString() },
+        { id: 3, title: "E-Waste Art Lamp", seller_id: 4, price: 850, waste_kg_saved: 0.5, status, created_at: new Date(Date.now() - 259200000).toISOString() },
+        { id: 4, title: "Copper Wire Sculpture", seller_id: 4, price: 2200, waste_kg_saved: 3.0, status, created_at: new Date(Date.now() - 345600000).toISOString() },
+      ];
+    }
+
+    function renderProductsTable(products) {
+      const tbody = document.getElementById("products-body");
+      if (!products.length) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:var(--s8);color:var(--text-3)">No products found</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = products.map(p => `
+      <tr>
+        <td><span class="mono text-muted">#${p.id}</span></td>
+        <td style="font-weight:600;max-width:180px" class="truncate">${p.title}</td>
+        <td class="text-secondary" style="font-size:0.82rem">Seller #${p.seller_id}</td>
+        <td><span class="mono text-green">₹${parseFloat(p.price).toLocaleString()}</span></td>
+        <td><span style="color:var(--cyan)">${p.waste_kg_saved} kg</span></td>
+        <td><span class="badge badge-${p.status === 'active' ? 'green' : p.status === 'pending' ? 'orange' : 'red'}">${p.status}</span></td>
+        <td class="mono text-muted" style="font-size:0.75rem">${timeAgo(p.created_at)}</td>
+        <td>
+          <div style="display:flex;gap:var(--s2)">
+            <button class="btn btn-primary btn-sm" onclick="moderateProduct(${p.id},'active')">✅ Approve</button>
+            <button class="btn btn-danger btn-sm"  onclick="moderateProduct(${p.id},'suspended')">🚫</button>
+          </div>
+        </td>
+      </tr>
+    `).join("");
+    }
+
+    async function moderateProduct(id, status) {
+      try {
+        await AdminAPI.moderateProduct(id, status);
+        Toast.success("Done", `Product ${status === "active" ? "approved" : "suspended"}.`);
+        loadProducts(status === "active" ? "pending" : "active");
+      } catch (err) {
+        Toast.error("Failed", err.data?.error || err.message);
+      }
+    }
+
+    // ── Analytics ──────────────────────────────────────────────
+    function loadAnalytics() {
+      const labels = Array.from({ length: 30 }, (_, i) => {
+        const d = new Date(); d.setDate(d.getDate() - (29 - i));
+        return d.toLocaleDateString("en-IN", { month: "short", day: "numeric" });
+      });
+      const sig = labels.map(() => Math.floor(Math.random() * 10) + 1);
+      const rev = sig.map(s => s * Math.floor(Math.random() * 1500 + 600));
+
+      const BASE_OPTS = {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: "rgba(30,48,80,0.6)" }, ticks: { color: "#4A6080", font: { size: 9 }, maxTicksLimit: 10 } },
+          y: { grid: { color: "rgba(30,48,80,0.6)" }, ticks: { color: "#4A6080", font: { size: 9 } } },
+        },
+        animation: { duration: 600 },
+      };
+
+      const rc = document.getElementById("a-revenue");
+      if (rc && !rc._chart) {
+        const g = rc.getContext("2d").createLinearGradient(0, 0, 0, 260);
+        g.addColorStop(0, "rgba(0,255,136,0.3)"); g.addColorStop(1, "rgba(0,255,136,0)");
+        rc._chart = new Chart(rc, {
+          type: "line",
+          data: { labels, datasets: [{ data: rev, borderColor: "#00FF88", backgroundColor: g, borderWidth: 2, fill: true, tension: 0.4, pointRadius: 2 }] },
+          options: { ...BASE_OPTS, scales: { ...BASE_OPTS.scales, y: { ...BASE_OPTS.scales.y, ticks: { ...BASE_OPTS.scales.y.ticks, callback: v => "₹" + (v / 1000).toFixed(0) + "k" } } } },
+        });
+      }
+
+      const sc = document.getElementById("a-signups");
+      if (sc && !sc._chart) {
+        sc._chart = new Chart(sc, {
+          type: "bar",
+          data: { labels, datasets: [{ data: sig, backgroundColor: "rgba(168,85,247,0.4)", borderColor: "#A855F7", borderWidth: 1, borderRadius: 3 }] },
+          options: BASE_OPTS,
+        });
+      }
+
+      const avgRev = rev.reduce((a, b) => a + b, 0) / rev.length;
+      const avgSig = sig.reduce((a, b) => a + b, 0) / sig.length;
+      document.getElementById("avg-revenue").textContent = formatINR(avgRev);
+      document.getElementById("avg-signups").textContent = avgSig.toFixed(1) + "/day";
+      document.getElementById("total-co2").textContent = "1.8 tonnes";
+    }
+
+    // ── Pagination helper ──────────────────────────────────────
+    function renderPagination(containerId, pagination, loadFn) {
+      const container = document.getElementById(containerId);
+      if (!container || !pagination || pagination.pages <= 1) return;
+      container.innerHTML = "";
+      for (let p = 1; p <= pagination.pages; p++) {
+        const btn = document.createElement("button");
+        btn.className = `btn btn-sm ${p === pagination.page ? "btn-primary" : "btn-ghost"}`;
+        btn.textContent = p;
+        btn.onclick = () => loadFn(p);
+        container.appendChild(btn);
+      }
+    }
+
+    // ── Init ───────────────────────────────────────────────────
+    document.addEventListener("DOMContentLoaded", () => {
+      loadDashboard();
+    });
+  </script>
+  <script src="../assets/js/lang.js"></script>
+  <script src="../assets/js/chatbot.js?v=2"></script>
+</body>
+
+</html>

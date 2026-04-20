@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>CraftCycle Market — Community</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♻️</text></svg>">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    /* ── Feed layout ── */
+    .community-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr 260px;
+      gap: var(--s6);
+      padding: var(--s6);
+      align-items: start;
+    }
+
+    .side-panel {
+      position: sticky;
+      top: 80px;
+      display: flex;
+      flex-direction: column;
+      gap: var(--s4);
+    }
+
+    /* ── Create Post ── */
+    .create-post {
+      padding: var(--s5);
+      display: flex;
+      flex-direction: column;
+      gap: var(--s4);
+    }
+
+    .create-post-header {
+      display: flex;
+      align-items: center;
+      gap: var(--s3);
+    }
+
+    .post-input {
+      width: 100%;
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 12px 16px;
+      color: var(--text-1);
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      resize: none;
+      outline: none;
+      min-height: 80px;
+      transition: border-color 0.2s;
+    }
+
+    .post-input:focus {
+      border-color: var(--green);
+    }
+
+    .post-input::placeholder {
+      color: var(--text-3);
+    }
+
+    .post-type-tabs {
+      display: flex;
+      gap: var(--s2);
+    }
+
+    .post-type-tab {
+      padding: 6px 14px;
+      border-radius: var(--r-full);
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-2);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .post-type-tab.active {
+      background: var(--green-glow);
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .post-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .post-media-btn {
+      display: flex;
+      gap: var(--s2);
+    }
+
+    .media-btn {
+      padding: 6px 10px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      color: var(--text-2);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .media-btn:hover {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    /* ── Post Card ── */
+    .post-card {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .post-header {
+      display: flex;
+      align-items: center;
+      gap: var(--s3);
+      padding: var(--s4) var(--s5) 0;
+    }
+
+    .post-author-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 2px solid var(--green);
+      background: var(--surface-3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--green);
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .post-author-name {
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .post-author-meta {
+      font-size: 0.75rem;
+      color: var(--text-3);
+      margin-top: 2px;
+      display: flex;
+      gap: var(--s3);
+    }
+
+    .post-category-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: var(--r-full);
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .post-body {
+      padding: var(--s3) var(--s5);
+    }
+
+    .post-body p {
+      font-size: 0.9rem;
+      line-height: 1.75;
+      color: var(--text-1);
+    }
+
+    .post-image {
+      width: 100%;
+      max-height: 320px;
+      object-fit: cover;
+      margin-top: var(--s3);
+    }
+
+    .post-image-placeholder {
+      width: 100%;
+      height: 200px;
+      background: var(--surface-3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4rem;
+      color: var(--text-3);
+      margin-top: var(--s3);
+    }
+
+    /* Tags */
+    .post-tags {
+      padding: 0 var(--s5);
+      display: flex;
+      gap: var(--s2);
+      flex-wrap: wrap;
+      margin-top: var(--s2);
+    }
+
+    .tag-chip {
+      padding: 3px 10px;
+      background: rgba(0, 212, 255, 0.08);
+      border: 1px solid rgba(0, 212, 255, 0.2);
+      border-radius: var(--r-full);
+      font-size: 0.72rem;
+      color: var(--cyan);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tag-chip:hover {
+      background: rgba(0, 212, 255, 0.15);
+    }
+
+    /* Post footer */
+    .post-footer {
+      display: flex;
+      align-items: center;
+      gap: var(--s1);
+      padding: var(--s3) var(--s4);
+      border-top: 1px solid var(--border);
+      margin-top: var(--s3);
+    }
+
+    .post-action-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: var(--r-md);
+      background: none;
+      border: none;
+      color: var(--text-2);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .post-action-btn:hover {
+      background: var(--surface-3);
+      color: var(--text-1);
+    }
+
+    .post-action-btn.liked {
+      color: #FF4D4D;
+    }
+
+    .post-action-btn.liked:hover {
+      background: rgba(255, 77, 77, 0.1);
+    }
+
+    .post-action-btn.saved {
+      color: var(--yellow);
+    }
+
+    /* Comments section */
+    .comments-section {
+      padding: 0 var(--s5) var(--s4);
+      border-top: 1px solid var(--border);
+      display: none;
+    }
+
+    .comments-section.open {
+      display: block;
+    }
+
+    .comment-input-row {
+      display: flex;
+      gap: var(--s3);
+      align-items: center;
+      padding: var(--s3) 0;
+    }
+
+    .comment-input {
+      flex: 1;
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      border-radius: var(--r-full);
+      padding: 8px 16px;
+      color: var(--text-1);
+      font-size: 0.82rem;
+      outline: none;
+      font-family: var(--font-body);
+      transition: border-color 0.15s;
+    }
+
+    .comment-input:focus {
+      border-color: var(--green);
+    }
+
+    .comment {
+      display: flex;
+      gap: var(--s3);
+      padding: var(--s2) 0;
+      border-bottom: 1px solid rgba(0, 212, 255, 0.06);
+      animation: fadeIn 0.2s ease;
+    }
+
+    .comment:last-child {
+      border-bottom: none;
+    }
+
+    .comment-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .comment-author {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--green);
+    }
+
+    .comment-text {
+      font-size: 0.82rem;
+      color: var(--text-2);
+      margin-top: 2px;
+      line-height: 1.5;
+    }
+
+    .comment-time {
+      font-size: 0.68rem;
+      color: var(--text-3);
+      margin-top: 3px;
+    }
+
+    /* ── Left sidebar ── */
+    .community-nav-item {
+      display: flex;
+      align-items: center;
+      gap: var(--s3);
+      padding: 10px var(--s4);
+      border-radius: var(--r-md);
+      color: var(--text-2);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .community-nav-item:hover {
+      background: var(--surface-3);
+      color: var(--text-1);
+    }
+
+    .community-nav-item.active {
+      background: var(--green-glow);
+      color: var(--green);
+    }
+
+    .trending-tag {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+
+    .trending-tag:last-child {
+      border-bottom: none;
+    }
+
+    .trending-tag:hover .tag-name {
+      color: var(--green);
+    }
+
+    .tag-name {
+      color: var(--text-2);
+      font-weight: 600;
+    }
+
+    .tag-count {
+      color: var(--text-3);
+      font-size: 0.72rem;
+    }
+
+    /* Creator card */
+    .creator-card {
+      display: flex;
+      align-items: center;
+      gap: var(--s3);
+      padding: var(--s3) 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .creator-card:last-child {
+      border-bottom: none;
+    }
+
+    .creator-info {
+      flex: 1;
+    }
+
+    .creator-name {
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .creator-tag {
+      font-size: 0.72rem;
+      color: var(--text-3);
+    }
+
+    .follow-btn {
+      padding: 5px 12px;
+      border-radius: var(--r-full);
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .follow-btn.following {
+      background: var(--surface-3);
+      border-color: var(--border);
+      color: var(--text-2);
+    }
+
+    /* Challenge banner */
+    .challenge-banner {
+      padding: var(--s5);
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(0, 212, 255, 0.06));
+      border-color: rgba(168, 85, 247, 0.3);
+    }
+
+    .challenge-prize {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      color: var(--purple);
+      font-weight: 900;
+      margin: var(--s2) 0;
+    }
+
+    /* Filter bar */
+    .feed-filter {
+      display: flex;
+      gap: var(--s2);
+      margin-bottom: var(--s5);
+      flex-wrap: wrap;
+    }
+
+    /* Responsive */
+    @media (max-width: 1100px) {
+      .community-layout {
+        grid-template-columns: 220px 1fr;
+      }
+
+      .side-panel:last-child {
+        display: none;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .community-layout {
+        grid-template-columns: 1fr;
+        padding: var(--s4);
+      }
+
+      .side-panel:first-child {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="sidebar-overlay"></div>
+  <div class="app-shell">
+
+    <!-- ── App Sidebar ──────────────────────────────────────── -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-mark">
+          <div class="logo-icon">♻️</div>
+          <div>
+            <div class="logo-text">CraftCycle</div>
+            <div class="logo-sub">Market</div>
+          </div>
+        </div>
+      </div>
+      <nav class="sidebar-nav"></nav>
+      <div class="sidebar-footer"></div>
+    </aside>
+
+    <!-- ── Main Content ─────────────────────────────────────── -->
+    <div class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="hamburger"><span></span><span></span><span></span></button>
+          <div class="page-title">COMMUNITY</div>
+        </div>
+        <div class="topbar-right">
+          <input type="text" class="form-input" id="community-search" placeholder="Search posts, creators…"
+            style="width:200px" oninput="filterPosts(this.value)" />
+          <button class="notif-btn">🔔<span class="notif-dot"></span></button>
+          <div class="user-avatar" data-user-avatar></div>
+        </div>
+      </header>
+
+      <main>
+        <div class="community-layout">
+
+          <!-- ── LEFT SIDEBAR ───────────────────────────────── -->
+          <div class="side-panel">
+
+            <!-- Navigation -->
+            <div class="card" style="padding:var(--s4)">
+              <div
+                style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);margin-bottom:var(--s3)">
+                Browse</div>
+              <button class="community-nav-item active" onclick="setFilter('all',this)">🏠 All Posts</button>
+              <button class="community-nav-item" onclick="setFilter('showcase',this)">🎨 Showcases</button>
+              <button class="community-nav-item" onclick="setFilter('tutorial',this)">📖 Tutorials</button>
+              <button class="community-nav-item" onclick="setFilter('question',this)">❓ Questions</button>
+              <button class="community-nav-item" onclick="setFilter('tip',this)">💡 Tips & Tricks</button>
+              <button class="community-nav-item" onclick="setFilter('challenge',this)">🏆 Challenge Entries</button>
+            </div>
+
+            <!-- My Stats -->
+            <div class="card" style="padding:var(--s5)">
+              <div
+                style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);margin-bottom:var(--s4)">
+                My Community Stats</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--s3);text-align:center">
+                <div style="background:var(--surface-3);border-radius:var(--r-md);padding:var(--s3)">
+                  <div style="font-family:var(--font-display);font-size:1.1rem;color:var(--green)" id="my-posts-count">0
+                  </div>
+                  <div style="font-size:0.68rem;color:var(--text-3)">Posts</div>
+                </div>
+                <div style="background:var(--surface-3);border-radius:var(--r-md);padding:var(--s3)">
+                  <div style="font-family:var(--font-display);font-size:1.1rem;color:var(--cyan)" id="my-likes-count">0
+                  </div>
+                  <div style="font-size:0.68rem;color:var(--text-3)">Likes</div>
+                </div>
+                <div style="background:var(--surface-3);border-radius:var(--r-md);padding:var(--s3)">
+                  <div style="font-family:var(--font-display);font-size:1.1rem;color:var(--purple)"
+                    id="my-followers-count">0</div>
+                  <div style="font-size:0.68rem;color:var(--text-3)">Followers</div>
+                </div>
+                <div style="background:var(--surface-3);border-radius:var(--r-md);padding:var(--s3)">
+                  <div style="font-family:var(--font-display);font-size:1.1rem;color:var(--yellow)"
+                    id="my-following-count">0</div>
+                  <div style="font-size:0.68rem;color:var(--text-3)">Following</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Trending Tags -->
+            <div class="card" style="padding:var(--s5)">
+              <div
+                style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);margin-bottom:var(--s3)">
+                🔥 Trending Tags</div>
+              <div id="trending-tags"></div>
+            </div>
+
+          </div>
+
+          <!-- ── MAIN FEED ──────────────────────────────────── -->
+          <div>
+
+            <!-- Create Post -->
+            <div class="card create-post reveal" style="margin-bottom:var(--s5)">
+              <div class="create-post-header">
+                <div class="user-avatar" data-user-avatar></div>
+                <div style="flex:1">
+                  <div style="font-size:0.875rem;font-weight:600" data-user-name>Creator</div>
+                  <div style="font-size:0.72rem;color:var(--text-3)">Share with the community</div>
+                </div>
+              </div>
+
+              <!-- Post type selector -->
+              <div class="post-type-tabs">
+                <button class="post-type-tab active" data-type="showcase" onclick="selectType(this)">🎨
+                  Showcase</button>
+                <button class="post-type-tab" data-type="tutorial" onclick="selectType(this)">📖 Tutorial</button>
+                <button class="post-type-tab" data-type="question" onclick="selectType(this)">❓ Question</button>
+                <button class="post-type-tab" data-type="tip" onclick="selectType(this)">💡 Tip</button>
+              </div>
+
+              <textarea class="post-input" id="post-content" rows="3"
+                placeholder="Share your project, ask a question, post a tip…"></textarea>
+
+              <!-- Tags input -->
+              <div style="display:flex;gap:var(--s2);align-items:center">
+                <input class="form-input" id="post-tags-input" type="text"
+                  placeholder="Tags: wood, upcycling, beginner (comma separated)" style="flex:1;font-size:0.82rem" />
+              </div>
+
+              <div class="post-actions">
+                <div class="post-media-btn">
+                  <button class="media-btn">📷 Photo</button>
+                  <button class="media-btn">🔗 Link</button>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="submitPost()">
+                  📤 Post to Community
+                </button>
+              </div>
+            </div>
+
+            <!-- Feed Filter -->
+            <div class="feed-filter">
+              <button class="btn btn-secondary btn-sm" onclick="setSortFilter('latest',this)" id="sort-latest">🕐
+                Latest</button>
+              <button class="btn btn-ghost btn-sm" onclick="setSortFilter('trending',this)" id="sort-trending">🔥
+                Trending</button>
+              <button class="btn btn-ghost btn-sm" onclick="setSortFilter('following',this)" id="sort-following">👥
+                Following</button>
+            </div>
+
+            <!-- Feed -->
+            <div id="community-feed" style="display:flex;flex-direction:column;gap:var(--s5)">
+              <!-- Posts rendered by JS -->
+            </div>
+
+            <!-- Load More -->
+            <div style="text-align:center;margin-top:var(--s8)" id="load-more-wrap">
+              <button class="btn btn-ghost" onclick="loadMorePosts()">Load More Posts</button>
+            </div>
+
+          </div>
+
+          <!-- ── RIGHT SIDEBAR ──────────────────────────────── -->
+          <div class="side-panel">
+
+            <!-- Active Challenge Banner -->
+            <div class="card challenge-banner reveal">
+              <div
+                style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--purple)">
+                🏆 Active Challenge</div>
+              <div class="challenge-prize">E-Waste Innovation</div>
+              <p style="font-size:0.8rem;color:var(--text-2);margin-bottom:var(--s4);line-height:1.6">
+                Transform e-waste into functional art. Top 3 entries win Green Coins!
+              </p>
+              <div style="display:flex;justify-content:space-between;margin-bottom:var(--s4)">
+                <div style="text-align:center">
+                  <div style="font-family:var(--font-mono);font-size:0.9rem;color:var(--purple)" id="challenge-timer">5d
+                    12h</div>
+                  <div style="font-size:0.68rem;color:var(--text-3)">Time Left</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="font-family:var(--font-mono);font-size:0.9rem;color:var(--purple)">247</div>
+                  <div style="font-size:0.68rem;color:var(--text-3)">Entries</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="font-family:var(--font-mono);font-size:0.9rem;color:var(--yellow)">🪙 500</div>
+                  <div style="font-size:0.68rem;color:var(--text-3)">Prize</div>
+                </div>
+              </div>
+              <a href="challenges.html" class="btn btn-secondary btn-sm w-full">Enter Challenge →</a>
+            </div>
+
+            <!-- Top Creators -->
+            <div class="card" style="padding:var(--s5)">
+              <div
+                style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);margin-bottom:var(--s4)">
+                ⭐ Top Creators This Month
+              </div>
+              <div id="top-creators"></div>
+            </div>
+
+            <!-- Community Stats -->
+            <div class="card" style="padding:var(--s5)">
+              <div
+                style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);margin-bottom:var(--s4)">
+                🌍 Community Impact
+              </div>
+              <div style="display:flex;flex-direction:column;gap:var(--s3)">
+                <div style="display:flex;justify-content:space-between;font-size:0.82rem">
+                  <span class="text-muted">Members</span>
+                  <span style="font-family:var(--font-mono);color:var(--green);font-weight:700">12,847</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:0.82rem">
+                  <span class="text-muted">Posts this week</span>
+                  <span style="font-family:var(--font-mono);color:var(--cyan);font-weight:700">1,234</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:0.82rem">
+                  <span class="text-muted">Waste saved (community)</span>
+                  <span style="font-family:var(--font-mono);color:var(--green);font-weight:700">48.2T</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:0.82rem">
+                  <span class="text-muted">Products created</span>
+                  <span style="font-family:var(--font-mono);color:var(--purple);font-weight:700">32,100+</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/utils.js"></script>
+  <script src="../assets/js/lang.js"></script>
+  <script src="../assets/js/chatbot.js?v=2"></script>
+  <script>
+
+
+    // ── State ────────────────────────────────────────────────
+    let allPosts = [];
+    let displayedPosts = [];
+    let currentFilter = "all";
+    let currentSort = "latest";
+    let currentSearch = "";
+    let selectedType = "showcase";
+    let following = new Set(JSON.parse(localStorage.getItem("cc_following") || "[]"));
+    let likedPosts = new Set(JSON.parse(localStorage.getItem("cc_liked_posts") || "[]"));
+    let savedPosts = new Set(JSON.parse(localStorage.getItem("cc_saved_posts") || "[]"));
+
+    const CATEGORY_CONFIG = {
+      showcase: { icon: "🎨", color: "green", label: "Showcase" },
+      tutorial: { icon: "📖", color: "cyan", label: "Tutorial" },
+      question: { icon: "❓", color: "orange", label: "Question" },
+      tip: { icon: "💡", color: "yellow", label: "Tip" },
+      challenge: { icon: "🏆", color: "purple", label: "Challenge" },
+    };
+
+    // ── Seed demo posts ──────────────────────────────────────
+    function getSeedPosts() {
+      return [
+        {
+          id: "p1", type: "showcase", author: "riya_creates", authorName: "Riya Sharma",
+          authorInitial: "R", authorRole: "Seller • ⭐ Top Creator",
+          content: "Just finished this wall clock made from reclaimed teak wood offcuts! 🕰️ The natural grain is absolutely beautiful. Took me 3 hours total and it's already sold for ₹1,299. This is what CraftCycle is all about — one person's scrap is another's treasure! ♻️",
+          imageEmoji: "🕰️", tags: ["wood", "homedecor", "upcycled", "sold"],
+          likes: 142, comments: [], timestamp: new Date(Date.now() - 3600000).toISOString(), verified: true,
+        },
+        {
+          id: "p2", type: "tutorial", author: "suresh_scrap", authorName: "Suresh Kumar",
+          authorInitial: "S", authorRole: "Seller • Wood Expert",
+          content: "📖 **TUTORIAL: How to make a plastic bottle vertical garden (Easy - 2hrs)**\n\n✅ Step 1: Cut PET bottles at 2/3 height\n✅ Step 2: Drill 3 drainage holes at the bottom\n✅ Step 3: Thread 3mm rope through both sides\n✅ Step 4: Hang on wall and space them 15cm apart\n✅ Step 5: Fill with potting mix and plant herbs\n\nSells for ₹450-800 depending on size. Happy crafting! 🌿",
+          tags: ["tutorial", "plastic", "garden", "beginner", "diy"],
+          likes: 89, comments: [], timestamp: new Date(Date.now() - 7200000).toISOString(), verified: false,
+        },
+        {
+          id: "p3", type: "question", author: "eco_priya", authorName: "Priya Nair",
+          authorInitial: "P", authorRole: "Buyer • 2 months",
+          content: "Hey community! 🙋‍♀️ I'm just starting out and have collected about 5kg of copper wire from old appliances. What's the best product I can make from this? I've seen some beautiful art pieces but not sure where to start. Any suggestions would be super helpful! 🪡",
+          tags: ["question", "copper", "metal", "beginner", "help"],
+          likes: 31, comments: [
+            { author: "riya_creates", authorName: "Riya Sharma", authorInitial: "R", text: "Copper wire baskets are a great start! Very beginner-friendly and sell well 🙂", time: new Date(Date.now() - 3000000).toISOString() },
+            { author: "suresh_scrap", authorName: "Suresh Kumar", authorInitial: "S", text: "Try wall art frames first — you need minimal tools and they look stunning!", time: new Date(Date.now() - 2000000).toISOString() },
+          ],
+          timestamp: new Date(Date.now() - 10800000).toISOString(), verified: false,
+        },
+        {
+          id: "p4", type: "tip", author: "raj_maker", authorName: "Raj Mehta",
+          authorInitial: "R", authorRole: "Seller • 🔨 Pro Maker",
+          content: "💡 **PRO TIP of the day:**\n\nAlways sand reclaimed wood in the direction of the grain, never against it. Going against the grain creates micro-scratches that show up after varnishing.\n\nAlso — always apply a wood conditioner before staining softwoods like pine. It prevents blotchy finishes.\n\nHope this helps someone! Drop your woodworking questions below 👇",
+          tags: ["tip", "wood", "woodworking", "technique", "pro"],
+          likes: 203, comments: [], timestamp: new Date(Date.now() - 86400000).toISOString(), verified: true,
+        },
+        {
+          id: "p5", type: "challenge", author: "deepa_crafts", authorName: "Deepa Rao",
+          authorInitial: "D", authorRole: "Seller • Challenge Winner 🏆",
+          content: "My E-Waste Innovation Challenge entry is live! 🎉 I built a working Bluetooth speaker from an old PCB, salvaged speaker cones, and a wooden offcut box. Total material cost: ₹0 (all from scrap!). Sound quality is honestly better than I expected. Let me know what you think — every vote counts! 🙏",
+          imageEmoji: "🔊", tags: ["challenge", "ewaste", "speaker", "innovation", "diy"],
+          likes: 376, comments: [], timestamp: new Date(Date.now() - 172800000).toISOString(), verified: true,
+        },
+        {
+          id: "p6", type: "showcase", author: "meera_weaves", authorName: "Meera Krishnan",
+          authorInitial: "M", authorRole: "Seller • Textile Artist",
+          content: "Finally listed my fabric offcut wall hangings in the marketplace! 🧵 These are made from zero-cost fabric scraps I collected from a garment factory. Each one is unique — no two are the same pattern. Priced at ₹299 and the first batch sold out in 2 days! Listing more tomorrow ✨",
+          imageEmoji: "🎨", tags: ["fabric", "textile", "wallart", "upcycled", "sold"],
+          likes: 167, comments: [], timestamp: new Date(Date.now() - 259200000).toISOString(), verified: false,
+        },
+      ];
+    }
+
+    // ── Load posts from localStorage or seed ──────────────────
+    function loadPosts() {
+      const stored = localStorage.getItem("cc_community_posts");
+      const seed = getSeedPosts();
+      let userPosts = stored ? JSON.parse(stored) : [];
+      allPosts = [...userPosts, ...seed];
+      renderFeed();
+      updateMyStats();
+    }
+
+    function saveUserPosts() {
+      const stored = localStorage.getItem("cc_community_posts");
+      const existing = stored ? JSON.parse(stored) : [];
+      localStorage.setItem("cc_community_posts", JSON.stringify(existing));
+    }
+
+    // ── Filter & render feed ──────────────────────────────────
+    function renderFeed() {
+      let filtered = [...allPosts];
+
+      if (currentFilter !== "all") {
+        filtered = filtered.filter(p => p.type === currentFilter);
+      }
+      if (currentSearch) {
+        const q = currentSearch.toLowerCase();
+        filtered = filtered.filter(p =>
+          p.content.toLowerCase().includes(q) ||
+          p.authorName.toLowerCase().includes(q) ||
+          p.tags.some(t => t.includes(q))
+        );
+      }
+      if (currentSort === "trending") {
+        filtered.sort((a, b) => b.likes - a.likes);
+      } else if (currentSort === "latest") {
+        filtered.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      } else if (currentSort === "following") {
+        filtered = filtered.filter(p => following.has(p.author));
+        if (!filtered.length) {
+          document.getElementById("community-feed").innerHTML = `
+          <div class="card" style="padding:var(--s10);text-align:center">
+            <div style="font-size:2.5rem;margin-bottom:var(--s4)">👥</div>
+            <div style="color:var(--text-2);margin-bottom:var(--s4)">Follow some creators to see their posts here!</div>
+            <button class="btn btn-primary" onclick="setSortFilter('latest',document.getElementById('sort-latest'))">Browse All Posts</button>
+          </div>`;
+          return;
+        }
+      }
+
+      displayedPosts = filtered;
+      const feed = document.getElementById("community-feed");
+      feed.innerHTML = "";
+
+      if (!filtered.length) {
+        feed.innerHTML = `<div class="card" style="padding:var(--s10);text-align:center">
+        <div style="font-size:2.5rem;margin-bottom:var(--s4)">📭</div>
+        <div class="text-muted">No posts found for this filter.</div>
+      </div>`;
+        return;
+      }
+
+      filtered.forEach(post => {
+        feed.appendChild(renderPostCard(post));
+      });
+    }
+
+    // ── Render single post card ───────────────────────────────
+    function renderPostCard(post) {
+      const cat = CATEGORY_CONFIG[post.type] || CATEGORY_CONFIG.showcase;
+      const isLiked = likedPosts.has(post.id);
+      const isSaved = savedPosts.has(post.id);
+      const isFollow = following.has(post.author);
+      const user = Auth.getUser();
+      const isOwn = user?.username === post.author;
+
+      const formattedContent = post.content
+        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+        .replace(/✅/g, '<span style="color:var(--green)">✅</span>')
+        .replace(/\n/g, "<br>");
+
+      const el = document.createElement("div");
+      el.className = "card post-card reveal";
+      el.id = `post-${post.id}`;
+
+      el.innerHTML = `
+      <div class="post-header">
+        <div class="post-author-avatar">${post.authorInitial}</div>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap">
+            <span class="post-author-name">${post.authorName}</span>
+            ${post.verified ? '<span class="badge badge-green" style="font-size:0.6rem;padding:2px 6px">✓ Verified</span>' : ""}
+            <span class="post-category-tag badge badge-${cat.color}">${cat.icon} ${cat.label}</span>
+          </div>
+          <div class="post-author-meta">
+            <span>${post.authorRole}</span>
+            <span>• ${timeAgo(post.timestamp)}</span>
+          </div>
+        </div>
+        ${!isOwn ? `
+          <button class="btn btn-sm follow-btn ${isFollow ? 'following btn-ghost' : 'btn-secondary'}"
+                  onclick="toggleFollow('${post.author}', this)">
+            ${isFollow ? "✓ Following" : "+ Follow"}
+          </button>` : ""}
+        <button class="btn btn-ghost btn-sm" style="padding:6px 8px" onclick="reportPost('${post.id}')">⋯</button>
+      </div>
+
+      <div class="post-body">
+        <p>${formattedContent}</p>
+      </div>
+
+      ${post.imageEmoji ? `
+        <div class="post-image-placeholder">
+          <div style="text-align:center">
+            <div style="font-size:5rem">${post.imageEmoji}</div>
+            <div style="font-size:0.72rem;color:var(--text-3);margin-top:var(--s2)">Image preview</div>
+          </div>
+        </div>` : ""}
+
+      <div class="post-tags">
+        ${post.tags.map(t => `<span class="tag-chip">#${t}</span>`).join("")}
+      </div>
+
+      <!-- Action Bar -->
+      <div class="post-footer">
+        <button class="post-action-btn ${isLiked ? "liked" : ""}" id="like-btn-${post.id}"
+                onclick="toggleLike('${post.id}')">
+          ${isLiked ? "❤️" : "🤍"} <span id="like-count-${post.id}">${post.likes}</span>
+        </button>
+        <button class="post-action-btn" onclick="toggleComments('${post.id}')">
+          💬 <span>${post.comments.length}</span>
+        </button>
+        <button class="post-action-btn" onclick="sharePost('${post.id}', '${post.authorName}')">
+          🔗 Share
+        </button>
+        <button class="post-action-btn ${isSaved ? "saved" : ""}" id="save-btn-${post.id}"
+                onclick="toggleSave('${post.id}')">
+          ${isSaved ? "🔖" : "📌"} ${isSaved ? "Saved" : "Save"}
+        </button>
+      </div>
+
+      <!-- Comments Section -->
+      <div class="comments-section" id="comments-${post.id}">
+        <!-- Existing comments -->
+        <div id="comment-list-${post.id}">
+          ${post.comments.map(c => renderComment(c)).join("")}
+        </div>
+        <!-- New comment input -->
+        <div class="comment-input-row">
+          <div class="user-avatar" data-user-avatar style="width:30px;height:30px;font-size:0.75rem"></div>
+          <input class="comment-input" placeholder="Write a comment…"
+                 id="comment-input-${post.id}"
+                 onkeydown="if(event.key==='Enter')submitComment('${post.id}')" />
+          <button class="btn btn-primary btn-sm" onclick="submitComment('${post.id}')">Send</button>
+        </div>
+      </div>
+    `;
+
+      return el;
+    }
+
+    function renderComment(c) {
+      return `
+      <div class="comment">
+        <div class="comment-avatar">${c.authorInitial || c.authorName[0]}</div>
+        <div>
+          <div class="comment-author">${c.authorName}</div>
+          <div class="comment-text">${c.text}</div>
+          <div class="comment-time">${timeAgo(c.time)}</div>
+        </div>
+      </div>
+    `;
+    }
+
+    // ── Interactions ──────────────────────────────────────────
+    function toggleLike(postId) {
+      if (!requireAuthForAction("Login to like posts.")) return;
+      const post = allPosts.find(p => p.id === postId);
+      if (!post) return;
+      const btn = document.getElementById(`like-btn-${postId}`);
+      const countEl = document.getElementById(`like-count-${postId}`);
+
+      if (likedPosts.has(postId)) {
+        likedPosts.delete(postId);
+        post.likes = Math.max(0, post.likes - 1);
+        btn.classList.remove("liked");
+        btn.innerHTML = `🤍 <span id="like-count-${postId}">${post.likes}</span>`;
+      } else {
+        likedPosts.add(postId);
+        post.likes++;
+        btn.classList.add("liked");
+        btn.innerHTML = `❤️ <span id="like-count-${postId}">${post.likes}</span>`;
+      }
+      localStorage.setItem("cc_liked_posts", JSON.stringify([...likedPosts]));
+      updateMyStats();
+    }
+
+    function toggleSave(postId) {
+      const btn = document.getElementById(`save-btn-${postId}`);
+      if (savedPosts.has(postId)) {
+        savedPosts.delete(postId);
+        btn.classList.remove("saved");
+        btn.innerHTML = `📌 Save`;
+        Toast.info("Removed", "Post unsaved.");
+      } else {
+        savedPosts.add(postId);
+        btn.classList.add("saved");
+        btn.innerHTML = `🔖 Saved`;
+        Toast.success("Saved!", "Post added to your saved collection.");
+      }
+      localStorage.setItem("cc_saved_posts", JSON.stringify([...savedPosts]));
+    }
+
+    function toggleFollow(username, btn) {
+      if (!requireAuthForAction("Login to follow creators.")) return;
+      if (following.has(username)) {
+        following.delete(username);
+        btn.className = "btn btn-sm btn-secondary follow-btn";
+        btn.textContent = "+ Follow";
+        Toast.info("Unfollowed", `You unfollowed @${username}`);
+      } else {
+        following.add(username);
+        btn.className = "btn btn-sm btn-ghost follow-btn following";
+        btn.textContent = "✓ Following";
+        Toast.success("Following!", `You're now following @${username}`);
+      }
+      localStorage.setItem("cc_following", JSON.stringify([...following]));
+      updateMyStats();
+    }
+
+    function toggleComments(postId) {
+      const section = document.getElementById(`comments-${postId}`);
+      section.classList.toggle("open");
+      if (section.classList.contains("open")) {
+        document.getElementById(`comment-input-${postId}`)?.focus();
+      }
+    }
+
+    function submitComment(postId) {
+      if (!requireAuthForAction("Login to leave comments.")) return;
+      const input = document.getElementById(`comment-input-${postId}`);
+      const text = input.value.trim();
+      if (!text) return;
+
+      const user = Auth.getUser();
+      const comment = {
+        author: user?.username || "me",
+        authorName: user?.full_name || "You",
+        authorInitial: (user?.full_name || "Y")[0],
+        text,
+        time: new Date().toISOString(),
+      };
+
+      const post = allPosts.find(p => p.id === postId);
+      if (post) post.comments.push(comment);
+
+      const list = document.getElementById(`comment-list-${postId}`);
+      list.insertAdjacentHTML("beforeend", renderComment(comment));
+      input.value = "";
+
+      Toast.success("Commented!", "Your comment was posted.");
+    }
+
+    function sharePost(postId, authorName) {
+      const url = `${window.location.origin}${window.location.pathname}?post=${postId}`;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => Toast.success("Link copied!", `Share this post by ${authorName}`));
+      } else {
+        Toast.info("Share", `Post by ${authorName} — copy the page URL`);
+      }
+    }
+
+    function reportPost(postId) {
+      Toast.info("Reported", "Thanks — our team will review this post.");
+    }
+
+    // ── Submit new post ───────────────────────────────────────
+    function submitPost() {
+      if (!requireAuthForAction("Login to post in the community.")) return;
+      const content = document.getElementById("post-content").value.trim();
+      if (!content) { Toast.error("Empty post", "Write something before posting!"); return; }
+
+      const user = Auth.getUser();
+      const tagsRaw = document.getElementById("post-tags-input").value;
+      const tags = tagsRaw.split(",").map(t => t.trim().toLowerCase()).filter(Boolean);
+
+      const post = {
+        id: "p" + Date.now(),
+        type: selectedType,
+        author: user?.username || "me",
+        authorName: user?.full_name || "You",
+        authorInitial: (user?.full_name || "Y")[0],
+        authorRole: user?.role === "seller" ? "Seller" : "Buyer",
+        content,
+        tags: tags.length ? tags : [selectedType],
+        likes: 0, comments: [],
+        timestamp: new Date().toISOString(),
+        verified: false,
+      };
+
+      // Persist
+      const stored = JSON.parse(localStorage.getItem("cc_community_posts") || "[]");
+      stored.unshift(post);
+      localStorage.setItem("cc_community_posts", JSON.stringify(stored));
+
+      // Reset form
+      document.getElementById("post-content").value = "";
+      document.getElementById("post-tags-input").value = "";
+
+      // Add to feed
+      allPosts.unshift(post);
+      const feed = document.getElementById("community-feed");
+      const card = renderPostCard(post);
+      feed.prepend(card);
+
+      Toast.success("Posted! 🎉", "Your post is now live in the community.");
+      updateMyStats();
+    }
+
+    // ── Type selector ─────────────────────────────────────────
+    function selectType(btn) {
+      document.querySelectorAll(".post-type-tab").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedType = btn.dataset.type;
+    }
+
+    // ── Filters ───────────────────────────────────────────────
+    function setFilter(filter, btn) {
+      currentFilter = filter;
+      document.querySelectorAll(".community-nav-item").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      renderFeed();
+    }
+
+    function setSortFilter(sort, btn) {
+      currentSort = sort;
+      ["latest", "trending", "following"].forEach(s => {
+        const el = document.getElementById(`sort-${s}`);
+        el.className = s === sort ? "btn btn-secondary btn-sm" : "btn btn-ghost btn-sm";
+      });
+      renderFeed();
+    }
+
+    function filterPosts(query) {
+      currentSearch = query;
+      renderFeed();
+    }
+
+    // ── Trending tags ─────────────────────────────────────────
+    function renderTrendingTags() {
+      const tagCount = {};
+      allPosts.forEach(p => p.tags.forEach(t => { tagCount[t] = (tagCount[t] || 0) + 1; }));
+      const sorted = Object.entries(tagCount).sort((a, b) => b[1] - a[1]).slice(0, 8);
+
+      document.getElementById("trending-tags").innerHTML = sorted.map(([tag, count]) => `
+      <div class="trending-tag" onclick="filterPosts('${tag}');document.getElementById('community-search').value='${tag}'">
+        <span class="tag-name">#${tag}</span>
+        <span class="tag-count">${count} posts</span>
+      </div>
+    `).join("");
+    }
+
+    // ── Top creators ──────────────────────────────────────────
+    function renderTopCreators() {
+      const creators = [
+        { username: "riya_creates", name: "Riya Sharma", initial: "R", posts: 24, specialty: "Wood & Fabric" },
+        { username: "raj_maker", name: "Raj Mehta", initial: "R", posts: 18, specialty: "Metal Art" },
+        { username: "meera_weaves", name: "Meera Krishnan", initial: "M", posts: 15, specialty: "Textiles" },
+        { username: "suresh_scrap", name: "Suresh Kumar", initial: "S", posts: 12, specialty: "Scrap Dealer" },
+      ];
+
+      document.getElementById("top-creators").innerHTML = creators.map((c, i) => {
+        const isFollow = following.has(c.username);
+        return `
+        <div class="creator-card">
+          <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#00FF88,#00D4FF);
+                      display:flex;align-items:center;justify-content:center;font-size:0.9rem;font-weight:700;
+                      color:#050D1A;flex-shrink:0">${c.initial}</div>
+          <div class="creator-info">
+            <div class="creator-name">${c.name}</div>
+            <div class="creator-tag">${c.specialty} • ${c.posts} posts</div>
+          </div>
+          <button class="btn btn-sm follow-btn ${isFollow ? 'following btn-ghost' : 'btn-secondary'}"
+                  id="follow-creator-${c.username}"
+                  onclick="toggleFollow('${c.username}', this)">
+            ${isFollow ? "✓" : "+"}
+          </button>
+        </div>
+      `;
+      }).join("");
+    }
+
+    // ── My stats ──────────────────────────────────────────────
+    function updateMyStats() {
+      const user = Auth.getUser();
+      const myPosts = allPosts.filter(p => p.author === user?.username);
+      const totalLikes = myPosts.reduce((sum, p) => sum + p.likes, 0);
+
+      document.getElementById("my-posts-count").textContent = myPosts.length;
+      document.getElementById("my-likes-count").textContent = totalLikes;
+      document.getElementById("my-followers-count").textContent = Math.floor(Math.random() * 50) + 5;
+      document.getElementById("my-following-count").textContent = following.size;
+    }
+
+    // ── Load more ─────────────────────────────────────────────
+    function loadMorePosts() {
+      Toast.info("Loading…", "More posts coming soon!");
+    }
+
+    // ── Challenge timer ───────────────────────────────────────
+    function updateChallengeTimer() {
+      const end = new Date(); end.setDate(end.getDate() + 5);
+      const diff = end - Date.now();
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const timer = document.getElementById("challenge-timer");
+      if (timer) timer.textContent = `${d}d ${h}h`;
+    }
+
+    // ── Init ──────────────────────────────────────────────────
+    document.addEventListener("DOMContentLoaded", () => {
+      updatePublicNav();
+      loadPosts();
+      renderTrendingTags();
+      renderTopCreators();
+      updateChallengeTimer();
+      setInterval(updateChallengeTimer, 60000);
+      setTimeout(initScrollReveal, 200);
+
+      // Populate user info in create post area
+      populateUserInfo();
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>CraftCycle Market — Trash to Treasure</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♻️</text></svg>">
+    <meta name="description"
+        content="CraftCycle is the circular economy marketplace where waste becomes wealth. Buy scrap, create products, sell with impact." />
+    <link rel="stylesheet" href="assets/css/style.css?v=3" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* ── Landing-spe cific overrides ── */
+        body {
+            display: block;
+        }
+
+        /* ── TOP NAVBAR ── */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 300;
+            height: 68px;
+            background: rgba(5, 13, 26, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 var(--s8);
+            gap: var(--s6);
+        }
+
+        .navbar-logo {
+            display: flex;
+            align-items: center;
+            gap: var(--s3);
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .navbar-logo-icon {
+            width: 38px;
+            height: 38px;
+            background: var(--green-glow);
+            border: 1px solid rgba(0, 255, 136, 0.35);
+            border-radius: var(--r-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            animation: glow 3s ease-in-out infinite;
+        }
+
+        .navbar-logo-text {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--green);
+        }
+
+        .navbar-logo-sub {
+            font-size: 0.6rem;
+            color: var(--text-3);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .navbar-links {
+            display: flex;
+            align-items: center;
+            gap: var(--s1);
+            flex: 1;
+            justify-content: center;
+        }
+
+        .nav-link {
+            padding: 8px 16px;
+            border-radius: var(--r-md);
+            color: var(--text-2);
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all var(--t-fast);
+        }
+
+        .nav-link:hover {
+            color: var(--text-1);
+            background: var(--surface-3);
+            text-decoration: none;
+        }
+
+        .nav-link.active {
+            color: var(--green);
+        }
+
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: var(--s3);
+            flex-shrink: 0;
+        }
+
+        .hamburger-nav {
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 24px;
+            height: 18px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            z-index: 400;
+            position: relative;
+        }
+
+        .hamburger-nav span {
+            display: block;
+            height: 2px;
+            background: var(--text-2);
+            border-radius: 2px;
+            transition: all var(--t-base);
+        }
+
+        .landing-sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 350;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.28s ease;
+        }
+
+        .landing-sidebar-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .landing-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 280px;
+            max-width: 85vw;
+            background: var(--surface-1);
+            border-right: 1px solid var(--border);
+            z-index: 360;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            transform: translateX(-100%);
+            transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 4px 0 40px rgba(0, 0, 0, 0.6);
+        }
+
+        .landing-sidebar.open {
+            transform: translateX(0);
+        }
+
+        .ls-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--s5) var(--s5);
+            border-bottom: 1px solid var(--border);
+            background: rgba(10, 22, 40, 0.95);
+            flex-shrink: 0;
+        }
+
+        .ls-logo {
+            display: flex;
+            align-items: center;
+            gap: var(--s3);
+            text-decoration: none;
+        }
+
+        .ls-logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--green-glow);
+            border: 1px solid rgba(0, 255, 136, 0.35);
+            border-radius: var(--r-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            animation: glow 3s ease-in-out infinite;
+        }
+
+        .ls-logo-text {
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--green);
+        }
+
+        .ls-logo-sub {
+            font-size: 0.58rem;
+            color: var(--text-3);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .ls-close {
+            width: 32px;
+            height: 32px;
+            background: var(--surface-3);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1rem;
+            color: var(--text-2);
+            transition: all var(--t-fast);
+            flex-shrink: 0;
+        }
+
+        .ls-close:hover {
+            background: var(--red-glow, rgba(255, 77, 77, 0.12));
+            border-color: rgba(255, 77, 77, 0.4);
+            color: #FF4D4D;
+        }
+
+        .ls-nav {
+            flex: 1;
+            padding: var(--s4) var(--s3);
+            overflow-y: auto;
+        }
+
+        .ls-section-label {
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--text-3);
+            padding: var(--s3) var(--s3) var(--s2);
+            margin-top: var(--s2);
+        }
+
+        .ls-nav-item {
+            display: flex;
+            align-items: center;
+            gap: var(--s3);
+            padding: 11px var(--s3);
+            border-radius: var(--r-md);
+            color: var(--text-2);
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            margin-bottom: 2px;
+            transition: all var(--t-fast);
+            border-left: 2px solid transparent;
+        }
+
+        .ls-nav-item:hover {
+            background: var(--surface-3);
+            color: var(--text-1);
+            text-decoration: none;
+            border-left-color: rgba(0, 255, 136, 0.4);
+        }
+
+        .ls-nav-item.active {
+            background: var(--green-glow);
+            color: var(--green);
+            border-left-color: var(--green);
+        }
+
+        .ls-nav-icon {
+            font-size: 1rem;
+            width: 22px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .ls-footer {
+            padding: var(--s5);
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: var(--s3);
+            flex-shrink: 0;
+        }
+
+        .ls-auth-btns {
+            display: flex;
+            gap: var(--s3);
+        }
+
+        .ls-auth-btns .btn {
+            flex: 1;
+            font-size: 0.8rem;
+            padding: 8px 12px;
+        }
+
+        .ls-version {
+            font-size: 0.68rem;
+            color: var(--text-3);
+            text-align: center;
+            letter-spacing: 0.08em;
+        }
+
+        /* ── MOBILE MENU (kept for fallback but hidden — sidebar replaces it) ── */
+        .mobile-menu {
+            display: none;
+        }
+
+        /* ── PAGE WRAPPER ── */
+        .landing {
+            padding-top: 68px;
+        }
+
+        /* ── HERO ── */
+        .hero {
+            min-height: calc(100vh - 68px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: var(--s12) var(--s8);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-bg {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(ellipse 60% 50% at 50% 0%, rgba(0, 255, 136, 0.07) 0%, transparent 70%),
+                radial-gradient(ellipse 40% 40% at 80% 80%, rgba(0, 212, 255, 0.05) 0%, transparent 60%);
+        }
+
+        .hero-particles {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .hero-particle {
+            position: absolute;
+            font-size: 1.4rem;
+            opacity: 0.1;
+            animation: float-p linear infinite;
+        }
+
+        @keyframes float-p {
+            0% {
+                transform: translateY(110vh) rotate(0deg);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 0.12;
+            }
+
+            90% {
+                opacity: 0.12;
+            }
+
+            100% {
+                transform: translateY(-10vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .hero-content {
+            position: relative;
+            max-width: 760px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--s2);
+            padding: 6px 16px;
+            border-radius: var(--r-full);
+            background: var(--green-glow);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--green);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-bottom: var(--s6);
+            animation: fadeUp 0.5s ease both;
+        }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(2.2rem, 6vw, 4rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: var(--s5);
+            animation: fadeUp 0.5s 0.1s ease both;
+        }
+
+        .hero-title .hl {
+            background: linear-gradient(135deg, var(--green), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-sub {
+            font-size: 1.05rem;
+            color: var(--text-2);
+            line-height: 1.75;
+            max-width: 560px;
+            margin: 0 auto var(--s8);
+            animation: fadeUp 0.5s 0.2s ease both;
+        }
+
+        .hero-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--s4);
+            flex-wrap: wrap;
+            animation: fadeUp 0.5s 0.3s ease both;
+        }
+
+        .hero-stats {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--s8);
+            margin-top: var(--s10);
+            flex-wrap: wrap;
+            animation: fadeUp 0.5s 0.4s ease both;
+        }
+
+        .hero-stat-val {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--green);
+        }
+
+        .hero-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-3);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-top: 2px;
+        }
+
+        .hero-stat-sep {
+            width: 1px;
+            height: 40px;
+            background: var(--border);
+        }
+
+        /* ── SECTION COMMON ── */
+        .section {
+            padding: 90px var(--s8);
+        }
+
+        .section-center {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto var(--s12);
+        }
+
+        .section-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--green);
+            margin-bottom: var(--s3);
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: clamp(1.4rem, 3vw, 2rem);
+            font-weight: 900;
+            line-height: 1.2;
+            margin-bottom: var(--s4);
+        }
+
+        .section-sub {
+            color: var(--text-2);
+            line-height: 1.7;
+        }
+
+        /* ── FEATURES ── */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--s6);
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            padding: var(--s8);
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--r-xl);
+            transition: all var(--t-base);
+        }
+
+        .feature-card:hover {
+            border-color: rgba(0, 255, 136, 0.25);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 255, 136, 0.06);
+        }
+
+        .feature-icon {
+            width: 52px;
+            height: 52px;
+            background: var(--green-glow);
+            border: 1px solid rgba(0, 255, 136, 0.25);
+            border-radius: var(--r-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            margin-bottom: var(--s5);
+        }
+
+        .feature-icon.cyan {
+            background: var(--cyan-glow);
+            border-color: rgba(0, 212, 255, 0.25);
+        }
+
+        .feature-icon.purple {
+            background: var(--purple-glow);
+            border-color: rgba(168, 85, 247, 0.25);
+        }
+
+        .feature-icon.orange {
+            background: var(--orange-glow);
+            border-color: rgba(249, 115, 22, 0.25);
+        }
+
+        .feature-title {
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: var(--s3);
+            letter-spacing: 0.06em;
+        }
+
+        .feature-desc {
+            font-size: 0.875rem;
+            color: var(--text-2);
+            line-height: 1.65;
+        }
+
+        /* ── HOW IT WORKS ── */
+        .hiw-bg {
+            background: var(--surface-1);
+        }
+
+        .hiw-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: var(--s6);
+            max-width: 960px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .hiw-step {
+            text-align: center;
+            padding: var(--s6);
+        }
+
+        .hiw-num {
+            width: 52px;
+            height: 52px;
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: var(--bg);
+            background: linear-gradient(135deg, var(--green), var(--cyan));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto var(--s4);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .hiw-step-title {
+            font-weight: 700;
+            margin-bottom: var(--s2);
+        }
+
+        .hiw-step-desc {
+            font-size: 0.875rem;
+            color: var(--text-2);
+            line-height: 1.6;
+        }
+
+        /* ── IMPACT STATS ── */
+        .impact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--s5);
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .impact-card {
+            text-align: center;
+            padding: var(--s8) var(--s6);
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--r-xl);
+        }
+
+        .impact-val {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--green);
+            text-shadow: 0 0 16px rgba(0, 255, 136, 0.4);
+            margin-bottom: var(--s2);
+        }
+
+        .impact-val.cyan {
+            color: var(--cyan);
+            text-shadow: 0 0 16px rgba(0, 212, 255, 0.4);
+        }
+
+        .impact-val.purple {
+            color: var(--purple);
+            text-shadow: none;
+        }
+
+        .impact-label {
+            font-size: 0.8rem;
+            color: var(--text-3);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* ── CATEGORIES ── */
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: var(--s4);
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .cat-card {
+            padding: var(--s5) var(--s4);
+            text-align: center;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--r-xl);
+            cursor: pointer;
+            transition: all var(--t-base);
+            text-decoration: none;
+            color: var(--text-1);
+        }
+
+        .cat-card:hover {
+            border-color: rgba(0, 255, 136, 0.3);
+            background: var(--surface-3);
+            transform: translateY(-3px);
+            text-decoration: none;
+            color: var(--green);
+        }
+
+        .cat-icon {
+            font-size: 2rem;
+            margin-bottom: var(--s3);
+        }
+
+        .cat-name {
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+
+        /* ── TESTIMONIALS ── */
+        .testimonials-bg {
+            background: var(--surface-1);
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--s6);
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .testimonial-card {
+            padding: var(--s7, 28px);
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--r-xl);
+        }
+
+        .testimonial-stars {
+            color: var(--yellow);
+            font-size: 0.9rem;
+            margin-bottom: var(--s4);
+        }
+
+        .testimonial-text {
+            font-size: 0.9rem;
+            color: var(--text-2);
+            line-height: 1.7;
+            margin-bottom: var(--s5);
+            font-style: italic;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: var(--s3);
+        }
+
+        .testimonial-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--green-glow);
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .testimonial-name {
+            font-weight: 700;
+            font-size: 0.875rem;
+        }
+
+        .testimonial-role {
+            font-size: 0.75rem;
+            color: var(--text-3);
+        }
+
+        /* ── CTA BANNER ── */
+        .cta-section {
+            padding: 90px var(--s8);
+            text-align: center;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.06) 0%, rgba(0, 212, 255, 0.03) 100%);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .cta-title {
+            font-family: var(--font-display);
+            font-size: clamp(1.5rem, 4vw, 2.4rem);
+            font-weight: 900;
+            margin-bottom: var(--s4);
+        }
+
+        .cta-sub {
+            color: var(--text-2);
+            margin-bottom: var(--s8);
+            line-height: 1.7;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            background: var(--surface-1);
+            border-top: 1px solid var(--border);
+            padding: var(--s12) var(--s8) var(--s8);
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr repeat(3, 1fr);
+            gap: var(--s10);
+            max-width: 1100px;
+            margin: 0 auto var(--s10);
+        }
+
+        .footer-brand p {
+            font-size: 0.875rem;
+            color: var(--text-2);
+            line-height: 1.7;
+            margin-top: var(--s4);
+            max-width: 280px;
+        }
+
+        .footer-col-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-2);
+            margin-bottom: var(--s4);
+        }
+
+        .footer-link {
+            display: block;
+            color: var(--text-3);
+            font-size: 0.875rem;
+            margin-bottom: var(--s3);
+            text-decoration: none;
+            transition: color var(--t-fast);
+        }
+
+        .footer-link:hover {
+            color: var(--green);
+        }
+
+        .footer-bottom {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid var(--border);
+            padding-top: var(--s5);
+            flex-wrap: wrap;
+            gap: var(--s4);
+            font-size: 0.8rem;
+            color: var(--text-3);
+        }
+
+        .footer-socials {
+            display: flex;
+            gap: var(--s3);
+        }
+
+        .social-btn {
+            width: 34px;
+            height: 34px;
+            background: var(--surface-3);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all var(--t-fast);
+            text-decoration: none;
+        }
+
+        .social-btn:hover {
+            border-color: rgba(0, 255, 136, 0.3);
+            background: var(--green-glow);
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 900px) {
+
+            .navbar-links,
+            #nav-login-btn,
+            #nav-signup-btn,
+            #nav-dash-btn {
+                display: none !important;
+            }
+
+            .hamburger-nav {
+                display: flex;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* Always show hamburger so sidebar is accessible on all screen sizes on mobile */
+        @media (max-width: 1100px) {
+            .hamburger-nav {
+                display: flex;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .section {
+                padding: 60px var(--s5);
+            }
+
+            .hero {
+                padding: var(--s10) var(--s5);
+            }
+
+            .hero-stats {
+                gap: var(--s5);
+            }
+
+            .hero-stat-sep {
+                display: none;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: var(--s8);
+            }
+
+            .cta-section {
+                padding: 60px var(--s5);
+            }
+
+            .navbar {
+                padding: 0 var(--s5);
+            }
+        }
+
+        /* ── Scroll reveal helper ── */
+        .reveal-land {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .reveal-land.vis {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ════════════════════════════════════════════════════════════
+     LANDING SIDEBAR (slide-in)
+════════════════════════════════════════════════════════════ -->
+    <div class="landing-sidebar-overlay" id="ls-overlay"></div>
+
+    <aside class="landing-sidebar" id="landing-sidebar" aria-label="Navigation Sidebar">
+        <!-- Header -->
+        <div class="ls-header">
+            <div class="ls-logo" onclick="closeSidebar()">
+                <div class="ls-logo-icon notranslate">♻️</div>
+                <div>
+                    <div class="ls-logo-text">CraftCycle</div>
+                    <div class="ls-logo-sub">Market</div>
+                </div>
+            </div>
+            <button class="ls-close" id="ls-close-btn" aria-label="Close sidebar">✕</button>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="ls-nav">
+            <div class="ls-section-label">🏠 Main</div>
+            <a href="home.html" class="ls-nav-item active" onclick="closeSidebar()">
+                <span class="ls-nav-icon">🏠</span> Home
+            </a>
+
+            <div class="ls-section-label">🛒 Explore</div>
+            <a href="pages/marketplace.html" class="ls-nav-item" onclick="closeSidebar()">
+                <span class="ls-nav-icon">🏪</span> Marketplace
+            </a>
+            <a href="pages/tutorial-hub.html" class="ls-nav-item" onclick="closeSidebar()">
+                <span class="ls-nav-icon">🎓</span> Tutorial Hub
+            </a>
+            <a href="pages/scanner.html" class="ls-nav-item" onclick="closeSidebar()">
+                <span class="ls-nav-icon">🤖</span> AI Scanner
+            </a>
+            <a href="pages/nearby.html" class="ls-nav-item" onclick="closeSidebar()">
+                <span class="ls-nav-icon">📍</span> Nearby Dealers
+            </a>
+            <a href="pages/community.html" class="ls-nav-item" onclick="closeSidebar()">
+                <span class="ls-nav-icon">🌐</span> Community
+            </a>
+
+            <div class="ls-section-label">👤 Account</div>
+            <a href="pages/dashboard.html" class="ls-nav-item" id="ls-dash-link" onclick="closeSidebar()">
+                <span class="ls-nav-icon">📊</span> Dashboard
+            </a>
+            <a href="pages/challenges.html" class="ls-nav-item" id="ls-challenges-link" onclick="closeSidebar()">
+                <span class="ls-nav-icon">🏆</span> Challenges
+            </a>
+            <a href="pages/coins.html" class="ls-nav-item" id="ls-coins-link" onclick="closeSidebar()">
+                <span class="ls-nav-icon">🪙</span> Green Coins
+            </a>
+
+            <div class="ls-section-label">📄 Info</div>
+            <a href="#features" class="ls-nav-item" onclick="closeSidebar()">
+                <span class="ls-nav-icon">⚡</span> Features
+            </a>
+            <a href="#how-it-works" class="ls-nav-item" onclick="closeSidebar()">
+                <span class="ls-nav-icon">🔄</span> How It Works
+            </a>
+            <a href="#impact" class="ls-nav-item" onclick="closeSidebar()">
+                <span class="ls-nav-icon">🌿</span> Impact Stats
+            </a>
+            <a href="#testimonials" class="ls-nav-item" onclick="closeSidebar()">
+                <span class="ls-nav-icon">💬</span> Creator Stories
+            </a>
+        </nav>
+
+        <!-- Footer -->
+        <div class="ls-footer">
+            <div class="ls-auth-btns" id="ls-auth-btns">
+                <a href="pages/auth.html" class="btn btn-ghost">Sign In</a>
+                <a href="pages/auth.html" class="btn btn-primary">Get Started</a>
+            </div>
+            <div class="ls-auth-btns" id="ls-loggedin-btns" style="display:none">
+                <a href="pages/dashboard.html" class="btn btn-secondary" style="flex:1">Dashboard →</a>
+            </div>
+            <div class="ls-version">🌿 CraftCycle v2.0 &nbsp;·&nbsp; Certified Green Platform</div>
+        </div>
+    </aside>
+
+    <!-- ════════════════════════════════════════════════════════════
+     TOP NAVBAR
+════════════════════════════════════════════════════════════ -->
+    <nav class="navbar" id="main-navbar">
+        <!-- Logo -->
+        <a href="home.html" class="navbar-logo">
+            <div class="navbar-logo-icon notranslate">♻️</div>
+            <div>
+                <div class="navbar-logo-text">CraftCycle</div>
+                <div class="navbar-logo-sub">Market</div>
+            </div>
+        </a>
+
+        <!-- Desktop Links -->
+        <div class="navbar-links">
+            <a href="home.html" class="nav-link active">Home</a>
+            <a href="pages/marketplace.html" class="nav-link">Marketplace</a>
+            <a href="pages/tutorial-hub.html" class="nav-link">Tutorial Hub</a>
+            <a href="pages/community.html" class="nav-link">Community</a>
+            <a href="pages/scanner.html" class="nav-link">AI Scanner</a>
+            <a href="pages/nearby.html" class="nav-link">Nearby Dealer</a>
+        </div>
+
+        <!-- Actions -->
+        <div class="navbar-actions">
+            <!-- Language Picker — populated by lang.js -->
+            <div id="lang-picker-wrap" style="position:relative"></div>
+
+            <a href="pages/auth.html" class="btn btn-ghost btn-sm" id="nav-login-btn">Sign In</a>
+            <a href="pages/auth.html" class="btn btn-primary btn-sm" id="nav-signup-btn">Get Started</a>
+            <a href="pages/dashboard.html" class="btn btn-secondary btn-sm" id="nav-dash-btn"
+                style="display:none">Dashboard
+                →</a>
+            <button class="hamburger-nav" id="hamburger-nav" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobile-menu">
+        <a href="home.html" class="nav-link active">🏠 Home</a>
+        <a href="pages/marketplace.html" class="nav-link">🏪 Marketplace</a>
+        <a href="pages/tutorial-hub.html" class="nav-link">🎓 Tutorial Hub</a>
+        <a href="pages/community.html" class="nav-link">🌐 Community</a>
+        <a href="pages/scanner.html" class="nav-link">🔍 AI Scanner</a>
+        <div
+            style="border-top:1px solid var(--border);margin-top:var(--s2);padding-top:var(--s3);display:flex;gap:var(--s3)">
+            <a href="pages/auth.html" class="btn btn-ghost btn-sm" style="flex:1">Sign In</a>
+            <a href="pages/auth.html" class="btn btn-primary btn-sm" style="flex:1">Get Started</a>
+        </div>
+    </div>
+
+
+    <div class="landing">
+
+        <!-- ════════════════════════════════════════════════════════════
+     HERO SECTION
+════════════════════════════════════════════════════════════ -->
+        <section class="hero" id="home">
+            <div class="hero-bg"></div>
+            <div class="hero-particles" id="hero-particles"></div>
+
+            <div class="hero-content">
+                <div class="hero-badge">♻️ &nbsp;Circular Economy Marketplace</div>
+
+                <h1 class="hero-title">
+                    Turn <span class="hl">Trash</span><br>into <span class="hl">Treasure</span>
+                </h1>
+
+                <p class="hero-sub">
+                    India's first AI-powered marketplace where waste materials become valuable products.
+                    Scan scrap, list materials, craft upcycled goods, and earn <strong style="color:var(--yellow)">Green
+                        Coins</strong>.
+                </p>
+
+                <div class="hero-actions">
+                    <a href="pages/auth.html" class="btn btn-primary btn-lg">🚀 Start Selling Free</a>
+                    <a href="pages/marketplace.html" class="btn btn-secondary btn-lg">Browse Marketplace →</a>
+                </div>
+
+                <div class="hero-stats">
+                    <div>
+                        <div class="hero-stat-val">12K+</div>
+                        <div class="hero-stat-label">Creators</div>
+                    </div>
+                    <div class="hero-stat-sep"></div>
+                    <div>
+                        <div class="hero-stat-val">50T</div>
+                        <div class="hero-stat-label">Waste Saved</div>
+                    </div>
+                    <div class="hero-stat-sep"></div>
+                    <div>
+                        <div class="hero-stat-val">₹5Cr+</div>
+                        <div class="hero-stat-label">GMV</div>
+                    </div>
+                    <div class="hero-stat-sep"></div>
+                    <div>
+                        <div class="hero-stat-val">4.9★</div>
+                        <div class="hero-stat-label">Rating</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ════════════════════════════════════════════════════════════
+     FEATURES
+════════════════════════════════════════════════════════════ -->
+        <section class="section" id="features">
+            <div class="section-center reveal-land">
+                <div class="section-label">Why CraftCycle</div>
+                <h2 class="section-title">Everything you need to build a sustainable business</h2>
+                <p class="section-sub">From AI waste identification to community challenges — we have tools for every
+                    creator.</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card reveal-land">
+                    <div class="feature-icon notranslate">🤖</div>
+                    <div class="feature-title">AI Waste Scanner</div>
+                    <p class="feature-desc">Point your camera at any scrap material. Our AI instantly identifies the
+                        type, estimates its value, and suggests DIY project ideas you can sell.</p>
+                </div>
+                <div class="feature-card reveal-land">
+                    <div class="feature-icon cyan">🏪</div>
+                    <div class="feature-title">Eco Marketplace</div>
+                    <p class="feature-desc">List upcycled products and raw scrap materials side-by-side. Verified
+                        eco-badges build buyer trust and increase your conversions.</p>
+                </div>
+                <div class="feature-card reveal-land">
+                    <div class="feature-icon purple">🏆</div>
+                    <div class="feature-title">Community Challenges</div>
+                    <p class="feature-desc">Join weekly upcycling challenges, compete with fellow creators, win prizes,
+                        and earn bonus Green Coins that convert to real money.</p>
+                </div>
+                <div class="feature-card reveal-land">
+                    <div class="feature-icon orange">🪙</div>
+                    <div class="feature-title">Green Coins Rewards</div>
+                    <p class="feature-desc">Earn coins for every sale, scan, and community contribution. Redeem for
+                        platform discounts, shipping credits, or cash your coins out.</p>
+                </div>
+                <div class="feature-card reveal-land">
+                    <div class="feature-icon notranslate">🔨</div>
+                    <div class="feature-title">Tutorial Hub</div>
+                    <p class="feature-desc">Browse thousands of step-by-step tutorials. Learn to transform e-waste, wood
+                        scrap, glass, and textiles into sellable products.</p>
+                </div>
+                <div class="feature-card reveal-land">
+                    <div class="feature-icon cyan">🌐</div>
+                    <div class="feature-title">Maker Community</div>
+                    <p class="feature-desc">Connect with 12,000+ eco-entrepreneurs. Share your creations, get feedback,
+                        collaborate on projects, and grow together.</p>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ════════════════════════════════════════════════════════════
+     HOW IT WORKS
+════════════════════════════════════════════════════════════ -->
+        <section class="section hiw-bg" id="how-it-works">
+            <div class="section-center reveal-land">
+                <div class="section-label">How It Works</div>
+                <h2 class="section-title">From waste to income in 4 simple steps</h2>
+                <p class="section-sub">Anyone can start — no experience needed. Just bring your scrap and creativity.
+                </p>
+            </div>
+
+            <div class="hiw-steps">
+                <div class="hiw-step reveal-land">
+                    <div class="hiw-num notranslate">01</div>
+                    <div class="hiw-step-title">Scan Your Waste</div>
+                    <p class="hiw-step-desc">Use our AI Scanner to photograph scrap materials. Get instant
+                        identification, current market rates, and creative ideas.</p>
+                </div>
+                <div class="hiw-step reveal-land">
+                    <div class="hiw-num notranslate">02</div>
+                    <div class="hiw-step-title">Create & Craft</div>
+                    <p class="hiw-step-desc">Browse Tutorial Hub tutorials to upcycle your materials. Build unique
+                        products
+                        that buyers actually want to purchase.</p>
+                </div>
+                <div class="hiw-step reveal-land">
+                    <div class="hiw-num notranslate">03</div>
+                    <div class="hiw-step-title">List & Sell</div>
+                    <p class="hiw-step-desc">Upload your product in 2 minutes. Our platform verifies its eco-credentials
+                        and makes it visible to thousands of buyers.</p>
+                </div>
+                <div class="hiw-step reveal-land">
+                    <div class="hiw-num notranslate">04</div>
+                    <div class="hiw-step-title">Earn & Impact</div>
+                    <p class="hiw-step-desc">Get paid instantly. Track your CO₂ offset, waste saved, and Green Coins
+                        earned — all in your personal dashboard.</p>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ════════════════════════════════════════════════════════════
+     CATEGORIES
+════════════════════════════════════════════════════════════ -->
+        <section class="section" id="categories">
+            <div class="section-center reveal-land">
+                <div class="section-label">Browse By Category</div>
+                <h2 class="section-title">What can you make from waste?</h2>
+                <p class="section-sub">Explore popular scrap categories and see what creators are building right now.
+                </p>
+            </div>
+
+            <div class="categories-grid">
+                <a href="pages/marketplace.html?cat=wood" class="cat-card reveal-land">
+                    <div class="cat-icon notranslate">🪵</div>
+                    <div class="cat-name">Wood Scrap</div>
+                </a>
+                <a href="pages/marketplace.html?cat=ewaste" class="cat-card reveal-land">
+                    <div class="cat-icon notranslate">💾</div>
+                    <div class="cat-name">E-Waste</div>
+                </a>
+                <a href="pages/marketplace.html?cat=plastic" class="cat-card reveal-land">
+                    <div class="cat-icon notranslate">🧴</div>
+                    <div class="cat-name">Plastic</div>
+                </a>
+                <a href="pages/marketplace.html?cat=metal" class="cat-card reveal-land">
+                    <div class="cat-icon notranslate">⚙️</div>
+                    <div class="cat-name">Metal</div>
+                </a>
+                <a href="pages/marketplace.html?cat=textile" class="cat-card reveal-land">
+                    <div class="cat-icon notranslate">🧵</div>
+                    <div class="cat-name">Textile</div>
+                </a>
+                <a href="pages/marketplace.html?cat=glass" class="cat-card reveal-land">
+                    <div class="cat-icon notranslate">🫙</div>
+                    <div class="cat-name">Glass</div>
+                </a>
+                <a href="pages/marketplace.html?cat=paper" class="cat-card reveal-land">
+                    <div class="cat-icon notranslate">📦</div>
+                    <div class="cat-name">Paper / Card</div>
+                </a>
+                <a href="pages/marketplace.html?cat=organic" class="cat-card reveal-land">
+                    <div class="cat-icon notranslate">🌱</div>
+                    <div class="cat-name">Organic</div>
+                </a>
+            </div>
+        </section>
+
+
+        <!-- ════════════════════════════════════════════════════════════
+     IMPACT STATS
+════════════════════════════════════════════════════════════ -->
+        <section class="section hiw-bg" id="impact">
+            <div class="section-center reveal-land">
+                <div class="section-label">Real Impact</div>
+                <h2 class="section-title">Numbers that matter for our planet</h2>
+            </div>
+            <div class="impact-grid">
+                <div class="impact-card reveal-land">
+                    <div class="impact-val">50,000+</div>
+                    <div class="impact-label">Kg Waste Diverted</div>
+                </div>
+                <div class="impact-card reveal-land">
+                    <div class="impact-val cyan">32,000</div>
+                    <div class="impact-label">Kg CO₂ Offset</div>
+                </div>
+                <div class="impact-card reveal-land">
+                    <div class="impact-val">12,400+</div>
+                    <div class="impact-label">Active Creators</div>
+                </div>
+                <div class="impact-card reveal-land">
+                    <div class="impact-val purple">₹5Cr+</div>
+                    <div class="impact-label">Paid to Creators</div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ════════════════════════════════════════════════════════════
+     TESTIMONIALS
+════════════════════════════════════════════════════════════ -->
+        <section class="section testimonials-bg" id="testimonials">
+            <div class="section-center reveal-land">
+                <div class="section-label">Creator Stories</div>
+                <h2 class="section-title">Real people, real earnings</h2>
+            </div>
+
+            <div class="testimonials-grid">
+                <div class="testimonial-card reveal-land">
+                    <div class="testimonial-stars">★★★★★</div>
+                    <p class="testimonial-text">"I was throwing away wood scraps from my workshop every week. Now I sell
+                        decorative items made from them and earn an extra ₹18,000/month. CraftCycle changed my life."
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar notranslate">🧑</div>
+                        <div>
+                            <div class="testimonial-name">Arjun Mehta</div>
+                            <div class="testimonial-role">Carpenter → Eco Seller, Pune</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card reveal-land">
+                    <div class="testimonial-stars">★★★★★</div>
+                    <p class="testimonial-text">"The AI scanner is unbelievable. I found old circuit boards in my
+                        garage, scanned them, and in 10 minutes I knew they were worth ₹4,000 in e-waste markets."</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar notranslate">👩</div>
+                        <div>
+                            <div class="testimonial-name">Priya Nair</div>
+                            <div class="testimonial-role">Student Upcycler, Bengaluru</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card reveal-land">
+                    <div class="testimonial-stars">★★★★★</div>
+                    <p class="testimonial-text">"Joined a challenge on a weekend for fun and ended up winning ₹5,000 in
+                        prizes. The community here is incredibly supportive and inspiring."</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar notranslate">🧑‍🎨</div>
+                        <div>
+                            <div class="testimonial-name">Rahul Das</div>
+                            <div class="testimonial-role">DIY Artist, Kolkata</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ════════════════════════════════════════════════════════════
+     CTA BANNER
+════════════════════════════════════════════════════════════ -->
+        <section class="cta-section" id="cta">
+            <div class="reveal-land">
+                <div class="section-label">Join Today — It's Free</div>
+                <h2 class="cta-title">Ready to turn your waste<br>into <span class="text-green">wealth</span>?</h2>
+                <p class="cta-sub">Create your free account in under 60 seconds. No credit card required. Start selling
+                    today.</p>
+                <div style="display:flex;gap:var(--s4);justify-content:center;flex-wrap:wrap">
+                    <a href="pages/auth.html" class="btn btn-primary btn-lg">🚀 Create Free Account</a>
+                    <a href="pages/scanner.html" class="btn btn-ghost btn-lg">🔍 Try AI Scanner</a>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ════════════════════════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════════════════════ -->
+        <footer>
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="home.html" class="navbar-logo" style="display:inline-flex;margin-bottom:var(--s2)">
+                        <div class="navbar-logo-icon notranslate" style="width:32px;height:32px;font-size:1rem">♻️</div>
+                        <div style="margin-left:var(--s3)">
+                            <div class="navbar-logo-text">CraftCycle</div>
+                            <div class="navbar-logo-sub">Market</div>
+                        </div>
+                    </a>
+                    <p>India's circular economy marketplace — empowering waste warriors to build sustainable livelihoods
+                        and protect the planet.</p>
+                </div>
+
+                <div>
+                    <div class="footer-col-title">Platform</div>
+                    <a href="pages/marketplace.html" class="footer-link">Marketplace</a>
+                    <a href="pages/tutorial-hub.html" class="footer-link">Tutorial Hub</a>
+                    <a href="pages/scanner.html" class="footer-link">AI Scanner</a>
+                    <a href="pages/community.html" class="footer-link">Community</a>
+                </div>
+
+                <div>
+                    <div class="footer-col-title">Account</div>
+                    <a href="pages/auth.html" class="footer-link">Sign In</a>
+                    <a href="pages/auth.html" class="footer-link">Create Account</a>
+                    <a href="pages/dashboard.html" class="footer-link">Dashboard</a>
+                </div>
+
+                <div>
+                    <div class="footer-col-title">Info</div>
+                    <a href="#" class="footer-link">About Us</a>
+                    <a href="#" class="footer-link">Blog</a>
+                    <a href="#" class="footer-link">Privacy Policy</a>
+                    <a href="#" class="footer-link">Terms of Service</a>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <span>© 2026 CraftCycle Market. All rights reserved.</span>
+                <div class="footer-socials">
+                    <a href="#" class="social-btn" title="Twitter">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z">
+                            </path>
+                        </svg>
+                    </a>
+                    <a href="#" class="social-btn" title="Instagram">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                        </svg>
+                    </a>
+                    <a href="#" class="social-btn" title="LinkedIn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z">
+                            </path>
+                            <rect x="2" y="9" width="4" height="12"></rect>
+                            <circle cx="4" cy="4" r="2"></circle>
+                        </svg>
+                    </a>
+                    <a href="#" class="social-btn" title="YouTube">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z">
+                            </path>
+                            <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon>
+                        </svg>
+                    </a>
+                </div>
+                <span>🌿 Certified Green Platform</span>
+            </div>
+        </footer>
+    </div><!-- /landing -->
+
+
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/utils.js?v=3"></script>
+    <script src="assets/js/lang.js"></script>
+    <script src="assets/js/chatbot.js?v=2"></script>
+    <script>
+        // ── Check if already logged in — swap nav buttons ──────────
+        (function () {
+            try {
+                const user = Auth.getUser();
+                if (user) {
+                    document.getElementById('nav-login-btn')?.style.setProperty('display', 'none');
+                    document.getElementById('nav-signup-btn')?.style.setProperty('display', 'none');
+                    document.getElementById('nav-dash-btn')?.style.removeProperty('display');
+                }
+            } catch (e) { }
+        })();
+
+        // ── Hero floating particles ─────────────────────────────────
+        (function () {
+            const SYMBOLS = ['♻', '🌱', '🔩', '⚡', '🪵', '💚', '🔨', '🧴', '💾', '🌿'];
+            const container = document.getElementById('hero-particles');
+            for (let i = 0; i < 18; i++) {
+                const el = document.createElement('span');
+                el.className = 'hero-particle';
+                el.textContent = SYMBOLS[i % SYMBOLS.length];
+                Object.assign(el.style, {
+                    left: `${Math.random() * 100}%`,
+                    fontSize: `${Math.random() * 1.4 + 0.7}rem`,
+                    animationDuration: `${Math.random() * 22 + 16}s`,
+                    animationDelay: `-${Math.random() * 22}s`,
+                });
+                container.appendChild(el);
+            }
+        })();
+
+        // ── Landing Sidebar Logic ───────────────────────────────────
+        const landingSidebar = document.getElementById('landing-sidebar');
+        const lsOverlay = document.getElementById('ls-overlay');
+
+        function openSidebar() {
+            landingSidebar.classList.add('open');
+            lsOverlay.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSidebar() {
+            landingSidebar.classList.remove('open');
+            lsOverlay.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        // Hamburger opens sidebar
+        document.getElementById('hamburger-nav').addEventListener('click', openSidebar);
+
+        // Close button inside sidebar
+        document.getElementById('ls-close-btn').addEventListener('click', closeSidebar);
+
+        // Click on overlay closes sidebar
+        lsOverlay.addEventListener('click', closeSidebar);
+
+        // Swipe-left to close on touch devices (Android)
+        let touchStartX = 0;
+        landingSidebar.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+        landingSidebar.addEventListener('touchend', (e) => {
+            const dx = e.changedTouches[0].screenX - touchStartX;
+            if (dx < -60) closeSidebar(); // swipe left
+        }, { passive: true });
+
+        // Show/hide account links based on auth state
+        (function () {
+            try {
+                const user = Auth.getUser();
+                if (user) {
+                    document.getElementById('ls-auth-btns').style.display = 'none';
+                    document.getElementById('ls-loggedin-btns').style.display = 'flex';
+                }
+            } catch (e) { }
+        })();
+
+        // ESC key closes sidebar
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeSidebar();
+        });
+
+        // ── Scroll reveal ───────────────────────────────────────────
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('vis'); observer.unobserve(e.target); } });
+        }, { threshold: 0.12 });
+        document.querySelectorAll('.reveal-land').forEach(el => observer.observe(el));
+
+        // ── Navbar scroll effect ────────────────────────────────────
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('main-navbar');
+            nav.style.background = window.scrollY > 40
+                ? 'rgba(5,13,26,0.97)'
+                : 'rgba(5,13,26,0.85)';
+        });
+    </script>
+
+</body>
+
+</html>

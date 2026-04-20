@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>CraftCycle Market — My Cart</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♻️</text></svg>">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    /* ── Cart Layout ── */
+    .cart-hero {
+      background: linear-gradient(135deg, rgba(0,255,136,.07) 0%, rgba(0,212,255,.05) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: var(--s8) var(--s8) var(--s6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--s4);
+      flex-wrap: wrap;
+    }
+
+    .cart-hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(1.1rem, 3vw, 1.6rem);
+      font-weight: 900;
+    }
+
+    .cart-layout {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: var(--s6);
+      padding: var(--s6);
+      align-items: start;
+    }
+
+    /* ── Cart Items ── */
+    .cart-items-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--s4);
+    }
+
+    .cart-items-title {
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text-3);
+    }
+
+    .cart-item {
+      display: grid;
+      grid-template-columns: 80px 1fr auto;
+      gap: var(--s4);
+      padding: var(--s5);
+      border-radius: var(--r-xl);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      margin-bottom: var(--s4);
+      transition: border-color .2s;
+      position: relative;
+    }
+
+    .cart-item:hover {
+      border-color: rgba(0,255,136,.2);
+    }
+
+    .cart-item-thumb {
+      width: 80px;
+      height: 80px;
+      border-radius: var(--r-lg);
+      background: var(--surface-3);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .cart-item-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .cart-item-thumb .placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+    }
+
+    .cart-item-info {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-width: 0;
+    }
+
+    .cart-item-name {
+      font-weight: 700;
+      font-size: .9rem;
+      margin-bottom: var(--s1);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cart-item-meta {
+      font-size: .72rem;
+      color: var(--text-3);
+      display: flex;
+      gap: var(--s3);
+      flex-wrap: wrap;
+      margin-bottom: var(--s3);
+    }
+
+    .qty-ctrl {
+      display: flex;
+      align-items: center;
+      gap: var(--s2);
+    }
+
+    .qty-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--r-md);
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      color: var(--text-1);
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .15s;
+      line-height: 1;
+    }
+
+    .qty-btn:hover {
+      background: var(--green-glow);
+      border-color: rgba(0,255,136,.4);
+      color: var(--green);
+    }
+
+    .qty-val {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: .9rem;
+      min-width: 24px;
+      text-align: center;
+    }
+
+    .cart-item-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: var(--s3);
+    }
+
+    .cart-item-price {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 900;
+      color: var(--green);
+      white-space: nowrap;
+    }
+
+    .cart-item-per {
+      font-size: .68rem;
+      color: var(--text-3);
+      text-align: right;
+    }
+
+    .remove-btn {
+      background: none;
+      border: 1px solid transparent;
+      color: var(--text-3);
+      font-size: .75rem;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: var(--r-md);
+      transition: all .15s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .remove-btn:hover {
+      background: rgba(255,77,77,.1);
+      border-color: rgba(255,77,77,.3);
+      color: #FF4D4D;
+    }
+
+    /* ── Empty Cart ── */
+    .cart-empty {
+      text-align: center;
+      padding: var(--s12) var(--s6);
+    }
+
+    .cart-empty-icon {
+      font-size: 4rem;
+      margin-bottom: var(--s5);
+      opacity: .5;
+    }
+
+    /* ── Order Summary ── */
+    .summary-card {
+      position: sticky;
+      top: 80px;
+    }
+
+    .summary-title {
+      font-family: var(--font-display);
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: var(--s5);
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: .875rem;
+      padding: var(--s2) 0;
+    }
+
+    .summary-row.total {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 900;
+      color: var(--green);
+      padding-top: var(--s4);
+      margin-top: var(--s2);
+      border-top: 1px solid var(--border);
+    }
+
+    .summary-label {
+      color: var(--text-2);
+    }
+
+    .summary-value {
+      font-weight: 600;
+    }
+
+    .promo-row {
+      display: flex;
+      gap: var(--s2);
+      margin: var(--s5) 0;
+    }
+
+    .promo-row input {
+      flex: 1;
+    }
+
+    .eco-badge {
+      background: linear-gradient(135deg, rgba(0,255,136,.08), rgba(0,212,255,.05));
+      border: 1px solid rgba(0,255,136,.2);
+      border-radius: var(--r-lg);
+      padding: var(--s3) var(--s4);
+      font-size: .75rem;
+      color: var(--text-2);
+      display: flex;
+      align-items: center;
+      gap: var(--s2);
+      margin-bottom: var(--s5);
+    }
+
+    .eco-badge .eco-val {
+      font-weight: 700;
+      color: var(--green);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .cart-layout {
+        grid-template-columns: 1fr;
+      }
+      .summary-card {
+        position: static;
+        order: -1;
+      }
+    }
+
+    @media (max-width: 580px) {
+      .cart-item {
+        grid-template-columns: 64px 1fr;
+      }
+      .cart-item-right {
+        grid-column: 2;
+        flex-direction: row;
+        align-items: center;
+      }
+      .cart-hero {
+        padding: var(--s5);
+      }
+      .cart-layout {
+        padding: var(--s4);
+      }
+    }
+
+    @media (max-width: 400px) {
+      .cart-item {
+        grid-template-columns: 1fr;
+      }
+      .cart-item-thumb {
+        width: 100%;
+        height: 120px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="sidebar-overlay"></div>
+  <div class="app-shell">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-mark">
+          <div class="logo-icon">♻️</div>
+          <div>
+            <div class="logo-text">CraftCycle</div>
+            <div class="logo-sub">Market</div>
+          </div>
+        </div>
+      </div>
+      <nav class="sidebar-nav"></nav>
+      <div class="sidebar-footer"></div>
+    </aside>
+
+    <!-- ── Main ── -->
+    <div class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="hamburger"><span></span><span></span><span></span></button>
+          <div class="page-title">MY CART</div>
+        </div>
+        <div class="topbar-right">
+          <button class="notif-btn">🔔<span class="notif-dot"></span></button>
+          <div class="user-avatar" data-user-avatar></div>
+        </div>
+      </header>
+
+      <main>
+        <!-- Hero -->
+        <div class="cart-hero">
+          <div>
+            <h1>🛒 Shopping <span class="text-green">Cart</span></h1>
+            <p class="text-secondary" style="font-size:.82rem;margin-top:var(--s1)">Review your items before
+              checkout</p>
+          </div>
+          <a href="marketplace.html" class="btn btn-ghost" style="font-size:.82rem">← Continue Shopping</a>
+        </div>
+
+        <!-- Cart Body -->
+        <div class="cart-layout">
+
+          <!-- Left: Cart Items -->
+          <div id="cart-items-col">
+            <div class="cart-items-header">
+              <span class="cart-items-title" id="items-count-label">0 Items</span>
+              <button class="btn btn-ghost btn-sm" id="clear-cart-btn" onclick="clearCart()" style="font-size:.75rem;color:#FF4D4D;border-color:rgba(255,77,77,.3);display:none">🗑 Clear All</button>
+            </div>
+            <div id="cart-items-list"></div>
+          </div>
+
+          <!-- Right: Order Summary -->
+          <div class="summary-card">
+            <div class="card" style="padding:var(--s6)">
+              <div class="summary-title">Order Summary</div>
+
+              <div class="eco-badge">
+                <span>🌿</span>
+                <span>Shopping here prevents <span class="eco-val" id="eco-kg">0 kg</span> of waste!</span>
+              </div>
+
+              <div class="summary-row">
+                <span class="summary-label">Subtotal (<span id="s-count">0</span> items)</span>
+                <span class="summary-value" id="s-subtotal">₹0</span>
+              </div>
+              <div class="summary-row">
+                <span class="summary-label">Delivery</span>
+                <span class="summary-value" id="s-delivery">₹0</span>
+              </div>
+              <div class="summary-row">
+                <span class="summary-label">Platform Fee</span>
+                <span class="summary-value" id="s-fee">₹0</span>
+              </div>
+              <div class="summary-row" id="s-discount-row" style="display:none">
+                <span class="summary-label" style="color:var(--green)">Promo Discount</span>
+                <span class="summary-value" id="s-discount" style="color:var(--green)">-₹0</span>
+              </div>
+              <div class="summary-row total">
+                <span>Total</span>
+                <span id="s-total">₹0</span>
+              </div>
+
+              <!-- Promo Code -->
+              <div class="promo-row">
+                <input class="form-input" id="promo-input" placeholder="Promo code" style="font-size:.82rem" />
+                <button class="btn btn-ghost btn-sm" onclick="applyPromo()">Apply</button>
+              </div>
+
+              <button class="btn btn-primary w-full" id="checkout-btn" onclick="proceedCheckout()"
+                style="margin-top:var(--s3);font-size:.9rem;padding:14px" disabled>
+                🔒 Proceed to Checkout
+              </button>
+              <p class="text-muted" style="font-size:.7rem;text-align:center;margin-top:var(--s3)">🔐 Secure
+                checkout · COD available</p>
+            </div>
+
+            <!-- Accepted payment methods -->
+            <div class="card" style="padding:var(--s4);margin-top:var(--s4)">
+              <div style="font-size:.7rem;color:var(--text-3);text-align:center;margin-bottom:var(--s3)">We
+                accept</div>
+              <div style="display:flex;gap:var(--s3);justify-content:center;flex-wrap:wrap">
+                <span style="padding:4px 10px;background:var(--surface-3);border-radius:var(--r-md);font-size:.72rem;font-weight:600">UPI</span>
+                <span style="padding:4px 10px;background:var(--surface-3);border-radius:var(--r-md);font-size:.72rem;font-weight:600">Debit/Credit</span>
+                <span style="padding:4px 10px;background:var(--surface-3);border-radius:var(--r-md);font-size:.72rem;font-weight:600">Net Banking</span>
+                <span style="padding:4px 10px;background:var(--surface-3);border-radius:var(--r-md);font-size:.72rem;font-weight:600">COD</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/utils.js"></script>
+  <script src="../assets/js/lang.js"></script>
+  <script src="../assets/js/chatbot.js?v=2"></script>
+  <script>
+    // ── Cart State ──────────────────────────────────────────
+    const CART_KEY = 'craftcycle_cart';
+    let cart = [];
+    let promoDiscount = 0;
+    const DELIVERY_FEE = 49;
+    const PLATFORM_FEE_PCT = 0.02; // 2%
+
+    function loadCart() {
+      try { cart = JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch { cart = []; }
+    }
+
+    function saveCart() {
+      localStorage.setItem(CART_KEY, JSON.stringify(cart));
+    }
+
+    // ── Rendering ───────────────────────────────────────────
+    function render() {
+      loadCart();
+      const list = document.getElementById('cart-items-list');
+      const countLabel = document.getElementById('items-count-label');
+      const clearBtn = document.getElementById('clear-cart-btn');
+      const checkoutBtn = document.getElementById('checkout-btn');
+
+      const totalItems = cart.reduce((s, i) => s + i.qty, 0);
+      countLabel.textContent = `${totalItems} Item${totalItems !== 1 ? 's' : ''}`;
+      clearBtn.style.display = cart.length ? 'flex' : 'none';
+      checkoutBtn.disabled = !cart.length;
+
+      if (!cart.length) {
+        list.innerHTML = `
+          <div class="cart-empty card">
+            <div class="cart-empty-icon">🛒</div>
+            <h2 style="font-family:var(--font-display);font-weight:900;margin-bottom:var(--s3)">Your cart is empty</h2>
+            <p class="text-muted" style="margin-bottom:var(--s6)">Browse the marketplace and add items to get started.</p>
+            <a href="marketplace.html" class="btn btn-primary">🛍 Browse Marketplace</a>
+          </div>`;
+        updateSummary();
+        return;
+      }
+
+      list.innerHTML = cart.map((item, idx) => `
+        <div class="cart-item reveal" id="ci-${idx}">
+          <div class="cart-item-thumb">
+            ${item.image
+              ? `<img src="${item.image}" alt="${item.name}" loading="lazy" />`
+              : `<div class="placeholder">${categoryEmoji(item.category)}</div>`
+            }
+          </div>
+          <div class="cart-item-info">
+            <div>
+              <div class="cart-item-name">${item.name}</div>
+              <div class="cart-item-meta">
+                <span class="badge badge-gray" style="font-size:.6rem">${item.category || 'material'}</span>
+                ${item.quality ? `<span class="badge badge-${qualityColor(item.quality)}" style="font-size:.6rem">${item.quality}</span>` : ''}
+                <span>📍 ${item.location || 'India'}</span>
+              </div>
+            </div>
+            <div class="qty-ctrl">
+              <button class="qty-btn" onclick="changeQty(${idx}, -1)">−</button>
+              <span class="qty-val">${item.qty}</span>
+              <button class="qty-btn" onclick="changeQty(${idx}, 1)">+</button>
+              <span style="font-size:.7rem;color:var(--text-3);margin-left:4px">kg</span>
+            </div>
+          </div>
+          <div class="cart-item-right">
+            <div>
+              <div class="cart-item-price">₹${(item.price * item.qty).toLocaleString()}</div>
+              <div class="cart-item-per">₹${item.price}/kg</div>
+            </div>
+            <button class="remove-btn" onclick="removeItem(${idx})">✕ Remove</button>
+          </div>
+        </div>
+      `).join('');
+
+      setTimeout(initScrollReveal, 80);
+      updateSummary();
+    }
+
+    function updateSummary() {
+      const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+      const delivery = cart.length ? DELIVERY_FEE : 0;
+      const fee = cart.length ? Math.round(subtotal * PLATFORM_FEE_PCT) : 0;
+      const total = subtotal + delivery + fee - promoDiscount;
+      const totalKg = cart.reduce((s, i) => s + i.qty, 0);
+
+      document.getElementById('s-count').textContent = cart.reduce((s, i) => s + i.qty, 0);
+      document.getElementById('s-subtotal').textContent = `₹${subtotal.toLocaleString()}`;
+      document.getElementById('s-delivery').textContent = cart.length ? `₹${delivery}` : 'Free';
+      document.getElementById('s-fee').textContent = `₹${fee}`;
+      document.getElementById('s-total').textContent = `₹${Math.max(0, total).toLocaleString()}`;
+      document.getElementById('eco-kg').textContent = `${totalKg} kg`;
+
+      const discRow = document.getElementById('s-discount-row');
+      if (promoDiscount > 0) {
+        discRow.style.display = 'flex';
+        document.getElementById('s-discount').textContent = `-₹${promoDiscount}`;
+      } else {
+        discRow.style.display = 'none';
+      }
+    }
+
+    // ── Cart Actions ────────────────────────────────────────
+    function changeQty(idx, delta) {
+      if (!cart[idx]) return;
+      const newQty = cart[idx].qty + delta;
+      if (newQty < 1) { removeItem(idx); return; }
+      cart[idx].qty = newQty;
+      saveCart();
+      render();
+    }
+
+    function removeItem(idx) {
+      cart.splice(idx, 1);
+      saveCart();
+      render();
+      if (typeof Toast !== 'undefined') Toast.info('Removed', 'Item removed from cart.');
+    }
+
+    function clearCart() {
+      if (!confirm('Remove all items from your cart?')) return;
+      cart = [];
+      saveCart();
+      render();
+    }
+
+    // ── Promo Code ──────────────────────────────────────────
+    const PROMOS = { 'ECO10': 10, 'CRAFT50': 50, 'GREEN100': 100 };
+    function applyPromo() {
+      const code = document.getElementById('promo-input').value.trim().toUpperCase();
+      if (PROMOS[code]) {
+        promoDiscount = PROMOS[code];
+        updateSummary();
+        if (typeof Toast !== 'undefined') Toast.success('Promo Applied!', `₹${promoDiscount} discount added.`);
+      } else {
+        if (typeof Toast !== 'undefined') Toast.error('Invalid Code', 'This promo code is not valid.');
+      }
+    }
+
+    // ── Checkout ────────────────────────────────────────────
+    function proceedCheckout() {
+      if (!cart.length) return;
+      // Save cart summary for checkout page
+      const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+      const delivery = DELIVERY_FEE;
+      const fee = Math.round(subtotal * PLATFORM_FEE_PCT);
+      const total = subtotal + delivery + fee - promoDiscount;
+      sessionStorage.setItem('craftcycle_checkout_summary', JSON.stringify({
+        items: cart,
+        subtotal, delivery, fee, promoDiscount, total
+      }));
+      window.location.href = 'checkout.html';
+    }
+
+    // ── Helpers ─────────────────────────────────────────────
+    function categoryEmoji(cat) {
+      return { wood:'🪵', metal:'⚙️', plastic:'♻️', fabric:'🧵', paper:'📄', glass:'🫙', 'e-waste':'💻', organic:'🌿', rubber:'⚫' }[cat] || '📦';
+    }
+    function qualityColor(q) {
+      return { excellent:'green', good:'cyan', fair:'orange', poor:'red' }[q] || 'gray';
+    }
+
+    // ── Init ─────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      requireAuth();
+      render();
+    });
+  </script>
+</body>
+
+</html>

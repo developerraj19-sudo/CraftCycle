@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>CraftCycle Market — Orders</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♻️</text></svg>">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+
+<body>
+    <div class="sidebar-overlay"></div>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <div class="logo-mark">
+                    <div class="logo-icon">♻️</div>
+                    <div>
+                        <div class="logo-text">CraftCycle</div>
+                        <div class="logo-sub">Market</div>
+                    </div>
+                </div>
+            </div>
+            <nav class="sidebar-nav"></nav>
+            <div class="sidebar-footer"></div>
+        </aside>
+
+        <div class="main-content">
+            <header class="topbar">
+                <div class="topbar-left"><button class="hamburger"><span></span><span></span><span></span></button>
+                    <div class="page-title">ORDERS</div>
+                </div>
+                <div class="topbar-right"><button class="notif-btn">🔔<span class="notif-dot"></span></button>
+                    <div class="user-avatar" data-user-avatar></div>
+                </div>
+            </header>
+            <main class="dash-content">
+                <h1 style="font-family:var(--font-display); font-size:1.5rem; margin-bottom:var(--s6);">My Orders</h1>
+
+                <div class="card" style="margin-bottom: var(--s5);">
+                    <div
+                        style="padding: var(--s4); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--surface-3);">
+                        <div>
+                            <div style="font-size: 0.8rem; color: var(--text-3);">Order #ORD-88219</div>
+                            <div style="font-weight: 600;">Reclaimed Teak Wood Planks</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <span class="badge badge-green">Delivered</span>
+                            <div style="font-family: var(--font-mono); color: var(--green); margin-top: 4px;">₹ 1,125.00
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                        style="padding: var(--s4); background: rgba(255,255,255,0.02); display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.8rem; color: var(--text-3);">Placed: Oct 12, 2024</span>
+                        <button class="btn btn-ghost btn-sm">View Details</button>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom: var(--s5);">
+                    <div
+                        style="padding: var(--s4); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--surface-3);">
+                        <div>
+                            <div style="font-size: 0.8rem; color: var(--text-3);">Order #ORD-71932</div>
+                            <div style="font-weight: 600;">Mixed Electronic Waste Batch</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <span class="badge badge-orange">Shipped</span>
+                            <div style="font-family: var(--font-mono); color: var(--green); margin-top: 4px;">₹ 255.00
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                        style="padding: var(--s4); background: rgba(255,255,255,0.02); display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.8rem; color: var(--text-3);">Placed: Oct 15, 2024</span>
+                        <button class="btn btn-ghost btn-sm">Track Package</button>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+    <script src="../assets/js/config.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/js/utils.js"></script>
+    <script>
+        requireAuth();
+        document.addEventListener("DOMContentLoaded", async () => {
+            try { const data = await AuthAPI.me(); populateUserInfo(data.user); } catch (e) { }
+        });
+    </script>
+    <script src="../assets/js/lang.js"></script>
+    <script src="../assets/js/chatbot.js?v=2"></script>
+</body>
+
+</html>

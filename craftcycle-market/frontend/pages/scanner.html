@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>CraftCycle Market — AI Trash Scanner</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♻️</text></svg>">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <style>
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--r-2xl);
+      padding: var(--s12);
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      background: var(--surface-1);
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .upload-zone::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(168, 85, 247, .06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .upload-zone:hover,
+    .upload-zone.drag-over {
+      border-color: var(--purple);
+      box-shadow: 0 0 40px rgba(168, 85, 247, .15);
+    }
+
+    .upload-icon {
+      font-size: 4rem;
+      animation: float 3s ease-in-out infinite;
+      display: block;
+      margin-bottom: var(--s5);
+    }
+
+    .scan-overlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(5, 13, 26, .93);
+      z-index: 10;
+      border-radius: var(--r-2xl);
+    }
+
+    .scan-overlay.active {
+      display: flex;
+    }
+
+    .scan-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(to right, transparent, var(--purple), transparent);
+      box-shadow: 0 0 15px var(--purple);
+      animation: scanLine 2s ease-in-out infinite;
+    }
+
+    .suggestion-card {
+      padding: var(--s6);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .suggestion-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(to right, var(--purple), var(--cyan));
+    }
+
+    .suggestion-number {
+      position: absolute;
+      top: var(--s3);
+      right: var(--s4);
+      font-family: var(--font-display);
+      font-size: 3rem;
+      font-weight: 900;
+      color: var(--surface-3);
+      line-height: 1;
+    }
+
+    .suggestion-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s2);
+      background: var(--surface-3);
+      border-radius: var(--r-md);
+      padding: var(--s3);
+      margin: var(--s4) 0;
+    }
+
+    .smeta-val {
+      font-family: var(--font-mono);
+      font-size: .9rem;
+      font-weight: 700;
+      color: var(--green);
+    }
+
+    .smeta-lbl {
+      font-size: .65rem;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .tool-chip {
+      padding: 3px 10px;
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      border-radius: var(--r-full);
+      font-size: .72rem;
+      color: var(--text-2);
+    }
+
+    .step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--s3);
+      margin-bottom: var(--s2);
+    }
+
+    .step-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--purple-glow);
+      border: 1px solid rgba(168, 85, 247, .4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .65rem;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--purple);
+      flex-shrink: 0;
+    }
+
+    /* Guest preview teaser */
+    .guest-teaser {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(5, 13, 26, 1) 0%, rgba(5, 13, 26, .7) 50%, transparent 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding: var(--s8);
+      z-index: 5;
+      border-radius: 0 0 var(--r-xl) var(--r-xl);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="sidebar-overlay"></div>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-mark">
+          <div class="logo-icon">♻️</div>
+          <div>
+            <div class="logo-text">CraftCycle</div>
+            <div class="logo-sub">Market</div>
+          </div>
+        </div>
+      </div>
+      <nav class="sidebar-nav"></nav>
+      <div class="sidebar-footer"></div>
+    </aside>
+
+    <div class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="hamburger"><span></span><span></span><span></span></button>
+          <div class="page-title">AI TRASH SCANNER</div>
+        </div>
+        <div class="topbar-right">
+          <div class="user-avatar" data-user-avatar></div>
+        </div>
+      </header>
+
+      <main style="padding:var(--s8)">
+        <div style="max-width:880px;margin:0 auto">
+
+          <!-- Hero -->
+          <div style="text-align:center;margin-bottom:var(--s10)">
+            <div
+              style="display:inline-flex;align-items:center;gap:var(--s2);padding:6px 16px;background:var(--purple-glow);border:1px solid rgba(168,85,247,.3);border-radius:var(--r-full);color:var(--purple);font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:var(--s5)">
+              🤖 POWERED BY GPT-4o VISION
+            </div>
+            <h1 style="font-size:clamp(1.5rem,4vw,2.5rem);font-family:var(--font-display);margin-bottom:var(--s4)">
+              What Can You <span style="color:var(--purple)">Build</span> From This?
+            </h1>
+            <p class="text-secondary" style="max-width:480px;margin:0 auto;line-height:1.7">
+              Upload any waste material photo. Our AI analyzes it and suggests products you can make and sell. <strong
+                style="color:var(--green)">Free preview — 1 scan per visit.</strong>
+            </p>
+          </div>
+
+          <!-- Upload Zone -->
+          <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()"
+            ondragover="onDragOver(event)" ondragleave="onDragLeave()" ondrop="onDrop(event)">
+            <div class="scan-overlay" id="scan-overlay">
+              <div class="scan-line"></div>
+              <div class="spinner" style="border-top-color:var(--purple);box-shadow:0 0 12px rgba(168,85,247,.4)"></div>
+              <div
+                style="margin-top:var(--s5);font-family:var(--font-display);font-size:.85rem;color:var(--purple);letter-spacing:.15em;text-transform:uppercase">
+                Analyzing<span id="dots">...</span></div>
+              <div id="scan-status" style="font-size:.78rem;color:var(--text-3);margin-top:var(--s2)">Detecting material
+                type</div>
+            </div>
+
+            <div id="state-default">
+              <span class="upload-icon">🗑️</span>
+              <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:700;margin-bottom:var(--s3)">Drop
+                Your Waste Here</div>
+              <p class="text-secondary" style="margin-bottom:var(--s6)">Or click to browse files — free preview, no
+                signup needed</p>
+              <button class="btn btn-secondary"
+                onclick="event.stopPropagation();document.getElementById('file-input').click()">📷 Choose Photo</button>
+              <div style="display:flex;justify-content:center;gap:var(--s2);margin-top:var(--s5)">
+                <span class="badge badge-gray">JPG</span><span class="badge badge-gray">PNG</span><span
+                  class="badge badge-gray">WEBP</span><span class="badge badge-gray">Max 10MB</span>
+              </div>
+            </div>
+
+            <div id="state-preview" style="display:none">
+              <img id="preview-img" alt="Upload preview"
+                style="max-height:280px;border-radius:var(--r-lg);object-fit:contain;width:100%" />
+              <div style="display:flex;gap:var(--s3);justify-content:center;margin-top:var(--s5);flex-wrap:wrap">
+                <button class="btn btn-primary btn-lg" onclick="event.stopPropagation();analyze()">🔍 Analyze This
+                  Material</button>
+                <button class="btn btn-ghost" onclick="event.stopPropagation();reset()">↩ Choose Different</button>
+              </div>
+            </div>
+          </div>
+          <input type="file" id="file-input" accept="image/*" style="display:none" onchange="onFileSelect(event)" />
+
+          <!-- Tips row -->
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s4);margin-top:var(--s6)">
+            <div class="card" style="padding:var(--s4);text-align:center">
+              <div style="font-size:1.4rem;margin-bottom:var(--s2)">📸</div>
+              <div style="font-size:.8rem;font-weight:600;margin-bottom:4px">Clear Photo</div>
+              <div class="text-muted" style="font-size:.75rem">Good lighting, close-up</div>
+            </div>
+            <div class="card" style="padding:var(--s4);text-align:center">
+              <div style="font-size:1.4rem;margin-bottom:var(--s2)">🎯</div>
+              <div style="font-size:.8rem;font-weight:600;margin-bottom:4px">One Material</div>
+              <div class="text-muted" style="font-size:.75rem">Single type per scan</div>
+            </div>
+            <div class="card" style="padding:var(--s4);text-align:center">
+              <div style="font-size:1.4rem;margin-bottom:var(--s2)">⚡</div>
+              <div style="font-size:.8rem;font-weight:600;margin-bottom:4px">Instant Results</div>
+              <div class="text-muted" style="font-size:.75rem">AI responds in ~3 seconds</div>
+            </div>
+          </div>
+
+          <!-- Results section -->
+          <div id="results" style="display:none;margin-top:var(--s10)">
+            <div style="text-align:center;margin-bottom:var(--s8)">
+              <div id="material-chip"
+                style="display:inline-flex;align-items:center;gap:var(--s2);padding:8px 20px;background:var(--purple-glow);border:1px solid rgba(168,85,247,.3);border-radius:var(--r-full);color:var(--purple);font-family:var(--font-mono);font-size:.875rem;margin-bottom:var(--s4)">
+                🔎 Detected: —</div>
+              <h2 style="font-family:var(--font-display);font-size:1.2rem;margin-bottom:var(--s2)">✨ 3 Product Ideas
+                Found</h2>
+            </div>
+
+            <!-- Suggestions preview with gate overlay -->
+            <div style="position:relative">
+              <div id="suggestions-grid"
+                style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--s6)"></div>
+
+              <!-- Auth gate overlay shown only if guest -->
+              <div id="result-gate" style="display:none">
+                <div class="guest-teaser" style="border-radius:var(--r-xl)">
+                  <div style="text-align:center;margin-bottom:var(--s5)">
+                    <div style="font-size:2rem;margin-bottom:var(--s3)">🔒</div>
+                    <h3 style="font-family:var(--font-display);font-weight:900;margin-bottom:var(--s2)">See Full Product
+                      Details</h3>
+                    <p style="font-size:.875rem;color:var(--text-2);max-width:320px;margin:0 auto">
+                      Sign up free to unlock step-by-step instructions, tool lists, resale prices, and save scans.
+                    </p>
+                  </div>
+                  <div style="display:flex;gap:var(--s3);flex-wrap:wrap;justify-content:center">
+                    <a href="auth.html?tab=register" class="btn btn-primary">✨ Sign Up Free — It's Free!</a>
+                    <a href="auth.html?tab=login" class="btn btn-secondary">🔑 Login</a>
+                  </div>
+                  <p style="font-size:.72rem;color:var(--text-3);margin-top:var(--s4)">Join 12,000+ creators on
+                    CraftCycle</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="card"
+              style="padding:var(--s5);margin-top:var(--s6);background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(0,212,255,.04));border-color:rgba(168,85,247,.25);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--s3)">
+              <div style="display:flex;align-items:center;gap:var(--s3)">
+                <div style="font-size:2rem">🪙</div>
+                <div id="coin-msg">
+                  <div style="font-weight:700">Want to earn +2 Green Coins per scan?</div>
+                  <div style="font-size:.8rem;color:var(--text-2)">Sign up and get coins for every scan, purchase, and
+                    project!</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:var(--s3)">
+                <button class="btn btn-secondary btn-sm" onclick="reset()">Scan Another</button>
+                <a href="auth.html?tab=register" class="btn btn-primary btn-sm" id="cta-signup">✨ Sign Up Free</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scan history — only for logged in users -->
+          <div id="history-section" style="display:none;margin-top:var(--s10)">
+            <h3
+              style="font-family:var(--font-display);font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-2);margin-bottom:var(--s5)">
+              🕐 Your Recent Scans</h3>
+            <div id="history"></div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/utils.js"></script>
+  <script src="../assets/js/lang.js"></script>
+  <script src="../assets/js/chatbot.js?v=2"></script>
+  <script>
+    // ── OPEN PAGE — no requireAuth() ──────────────────────
+    let selectedFile = null;
+    let hasScanned = false;
+    const COINS_PER_SCAN = 2;
+
+    // ── Coin Manager — central coin credit utility ─────────
+    const CoinManager = {
+      /**
+       * Award `amount` coins to the locally cached user.
+       * Updates localStorage, fires a global 'coins:updated' event
+       * so any element with [data-user-coins] refreshes in real time.
+       */
+      award(amount, reason = '') {
+        const user = Auth.getUser();
+        if (!user) return 0;
+        user.green_coins = (user.green_coins || 0) + amount;
+        Auth.setUser(user);
+
+        // Dispatch event so sidebar/profile/topbar can react
+        window.dispatchEvent(new CustomEvent('coins:updated', {
+          detail: { coins: user.green_coins, delta: amount, reason }
+        }));
+
+        // Also try to persist via API (fire-and-forget)
+        api.post('/coins/award', { amount, reason }).catch(() => { });
+
+        return user.green_coins;
+      },
+
+      getBalance() {
+        const user = Auth.getUser();
+        return user ? (user.green_coins || 0) : 0;
+      }
+    };
+
+    // Listen for coin updates on THIS page and refresh all coin displays
+    window.addEventListener('coins:updated', (e) => {
+      const { coins, delta } = e.detail;
+      // Update every [data-user-coins] element
+      document.querySelectorAll('[data-user-coins]').forEach(el => {
+        el.textContent = coins.toLocaleString();
+      });
+      // Update the coin banner in results section
+      updateCoinBanner(coins, delta);
+    });
+
+    function updateCoinBanner(totalCoins, delta) {
+      const msg = document.getElementById('coin-msg');
+      if (!msg) return;
+      msg.innerHTML = `
+        <div style="font-weight:700;color:var(--green);font-size:1rem">
+          +${delta} Green Coins Earned! 🎉
+        </div>
+        <div style="font-size:.8rem;color:var(--text-2);margin-top:2px">
+          Balance: <strong style="color:var(--green);font-family:var(--font-mono)">${totalCoins.toLocaleString()} coins</strong>
+          · Used for rewards, discounts &amp; challenges
+        </div>`;
+      // Animate the coin icon
+      const icon = msg.closest('[style]')?.querySelector('[style*="font-size:2rem"]');
+      if (icon) {
+        icon.style.animation = 'none';
+        requestAnimationFrame(() => {
+          icon.style.animation = 'pop 0.5s cubic-bezier(.175,.885,.32,1.275) both';
+        });
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      updatePublicNav();
+      if (isLoggedIn()) {
+        document.getElementById("history-section").style.display = "block";
+        loadHistory();
+        // Show current balance in coin banner immediately
+        const balance = CoinManager.getBalance();
+        document.getElementById('coin-msg').innerHTML = `
+          <div style="font-weight:700">🪙 Your Balance: <span style="color:var(--green);font-family:var(--font-mono)">${balance.toLocaleString()} coins</span></div>
+          <div style="font-size:.8rem;color:var(--text-2)">Earn +${COINS_PER_SCAN} coins per scan · scan to earn!</div>`;
+        document.getElementById("cta-signup").innerHTML = "📖 DIY Tutorials →";
+        document.getElementById("cta-signup").href = "tutorial-hub.html";
+      }
+    });
+
+    function onDragOver(e) { e.preventDefault(); document.getElementById("upload-zone").classList.add("drag-over"); }
+    function onDragLeave() { document.getElementById("upload-zone").classList.remove("drag-over"); }
+    function onDrop(e) {
+      e.preventDefault();
+      document.getElementById("upload-zone").classList.remove("drag-over");
+      const file = e.dataTransfer.files[0];
+      if (file?.type.startsWith("image/")) loadPreview(file);
+      else Toast.error("Invalid file", "Please drop an image file.");
+    }
+    function onFileSelect(e) { if (e.target.files[0]) loadPreview(e.target.files[0]); }
+
+    function loadPreview(file) {
+      if (file.size > 10 * 1024 * 1024) { Toast.error("File too large", "Maximum size is 10 MB."); return; }
+      selectedFile = file;
+      const reader = new FileReader();
+      reader.onload = e => {
+        document.getElementById("preview-img").src = e.target.result;
+        document.getElementById("state-default").style.display = "none";
+        document.getElementById("state-preview").style.display = "block";
+        document.getElementById("results").style.display = "none";
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function reset() {
+      selectedFile = null;
+      document.getElementById("file-input").value = "";
+      document.getElementById("state-default").style.display = "block";
+      document.getElementById("state-preview").style.display = "none";
+      document.getElementById("scan-overlay").classList.remove("active");
+      document.getElementById("results").style.display = "none";
+    }
+
+    async function analyze() {
+      if (!selectedFile) return;
+      if (hasScanned && !isLoggedIn()) {
+        Toast.info("Free limit reached", "Sign up free for unlimited scans + earn Green Coins!");
+        setTimeout(() => window.location.href = "auth.html?tab=register", 1500);
+        return;
+      }
+
+      document.getElementById("scan-overlay").classList.add("active");
+      const statuses = ["Detecting material type…", "Analyzing composition…", "Searching upcycle database…", "Calculating resale value…", "Generating product ideas…"];
+      let i = 0;
+      const interval = setInterval(() => { document.getElementById("scan-status").textContent = statuses[i++ % statuses.length]; }, 900);
+
+      try {
+        const fd = new FormData(); fd.append("image", selectedFile);
+        const data = await ScannerAPI.analyze(fd);
+        clearInterval(interval);
+        document.getElementById("scan-overlay").classList.remove("active");
+        renderResults(data.material_detected, data.suggestions, true);
+        awardScanCoins();   // ← credit coins after real scan
+      } catch {
+        clearInterval(interval);
+        document.getElementById("scan-overlay").classList.remove("active");
+        Toast.info("Demo Mode", "Showing sample results.");
+        renderDemoResults();
+        awardScanCoins();   // ← credit coins even in demo mode for logged-in users
+      }
+      hasScanned = true;
+    }
+
+    /** Award scan coins and show an animated toast with the new balance. */
+    function awardScanCoins() {
+      if (!isLoggedIn()) return;   // guests don't earn coins
+      const newBalance = CoinManager.award(COINS_PER_SCAN, 'ai_scan');
+      // Animated toast with coin count
+      Toast.success(
+        `+${COINS_PER_SCAN} Green Coins! 🪙`,
+        `New balance: <strong style="color:var(--green)">${newBalance.toLocaleString()} coins</strong>`,
+        5000
+      );
+    }
+
+    function renderDemoResults() {
+      renderResults("Discarded PET Plastic Bottles", [
+        { title: "Vertical Herb Garden", description: "Wall-mounted garden system from cut plastic bottles.", difficulty: "easy", estimated_time_hours: 2, estimated_resale_value_inr: 800, waste_kg_saved: .8, tools_needed: ["Scissors", "Drill", "Wire"], steps_overview: ["Cut bottles to shape", "Drill drainage holes", "Mount on wall", "Fill and plant"] },
+        { title: "Eco Hanging Chandelier", description: "Stunning pendant light from heat-shaped PET bottles.", difficulty: "medium", estimated_time_hours: 5, estimated_resale_value_inr: 2500, waste_kg_saved: 1.2, tools_needed: ["Heat gun", "LED lights", "Wire"], steps_overview: ["Shape bottles", "Build frame", "Thread lights", "Hang and test"] },
+        { title: "Plastic Bottle Broom", description: "Practical household broom from shredded PET strips.", difficulty: "easy", estimated_time_hours: 1, estimated_resale_value_inr: 350, waste_kg_saved: .5, tools_needed: ["Scissors", "Bamboo", "Zip ties"], steps_overview: ["Shred into strips", "Bundle strips", "Secure to bamboo", "Trim length"] },
+      ], false);
+    }
+
+    function renderResults(material, suggestions, isReal) {
+      document.getElementById("material-chip").innerHTML = `🔎 Detected: <strong>${material}</strong>`;
+      document.getElementById("results").style.display = "block";
+      const logged = isLoggedIn();
+
+      document.getElementById("suggestions-grid").innerHTML = suggestions.map((s, i) => `
+      <div class="card suggestion-card" style="animation:fadeUp .4s ease ${i * 120}ms backwards">
+        <div class="suggestion-number">0${i + 1}</div>
+        <div style="font-family:var(--font-display);font-size:.95rem;font-weight:700;margin-bottom:var(--s3);padding-right:40px">${s.title}</div>
+        <span class="badge badge-${s.difficulty === 'easy' ? 'green' : s.difficulty === 'medium' ? 'orange' : 'red'}" style="margin-bottom:var(--s4)">${s.difficulty === 'easy' ? '🟢' : s.difficulty === 'medium' ? '🟡' : '🔴'} ${s.difficulty}</span>
+        <p style="font-size:.875rem;color:var(--text-2);line-height:1.75;margin-bottom:var(--s4)">${s.description}</p>
+        <div class="suggestion-meta">
+          <div><div class="smeta-val">₹${(s.estimated_resale_value_inr || 0).toLocaleString()}</div><div class="smeta-lbl">Est. Value</div></div>
+          <div><div class="smeta-val">${s.estimated_time_hours || '?'}h</div><div class="smeta-lbl">Time</div></div>
+          <div><div class="smeta-val">${s.waste_kg_saved || 0} kg</div><div class="smeta-lbl">Waste Saved</div></div>
+          <div><div class="smeta-val">${((s.waste_kg_saved || 0) * .8).toFixed(1)} kg</div><div class="smeta-lbl">CO₂ Saved</div></div>
+        </div>
+        ${logged && s.tools_needed?.length ? `<div style="margin-bottom:var(--s4)"><div style="font-size:.68rem;color:var(--text-3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:var(--s2)">🔧 Tools</div><div style="display:flex;flex-wrap:wrap;gap:var(--s2)">${s.tools_needed.map(t => `<span class="tool-chip">${t}</span>`).join("")}</div></div>` : ""}
+        ${logged && s.steps_overview?.length ? `<div style="margin-bottom:var(--s5)"><div style="font-size:.68rem;color:var(--text-3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:var(--s3)">📋 Steps</div>${s.steps_overview.map((step, idx) => `<div class="step-item"><div class="step-num">${idx + 1}</div><span style="font-size:.82rem;color:var(--text-2)">${step}</span></div>`).join("")}</div>` : ""}
+        ${logged ? `<button class="btn btn-primary btn-sm w-full" onclick="Toast.success('Saved!','Project saved to your board')">📋 Save Project</button>` : `<a href="auth.html?tab=register" class="btn btn-secondary btn-sm w-full">🔑 Login to See Full Guide</a>`}
+      </div>
+      `).join("");
+
+      // Show gate overlay if guest
+      document.getElementById("result-gate").style.display = logged ? "none" : "block";
+      setTimeout(() => document.getElementById("results").scrollIntoView({ behavior: "smooth", block: "start" }), 200);
+    }
+
+    async function loadHistory() {
+      const container = document.getElementById("history");
+      try {
+        const data = await ScannerAPI.history();
+        if (!data.scans?.length) { container.innerHTML = `<div class="card" style="padding:var(--s8);text-align:center"><div style="font-size:2rem;margin-bottom:var(--s3)">🔍</div><div class="text-muted">No scans yet.</div></div>`; return; }
+        container.innerHTML = data.scans.map(s => `
+        <div class="card" style="padding:var(--s4);margin-bottom:var(--s3);display:flex;align-items:center;gap:var(--s4)">
+          <div style="width:40px;height:40px;background:var(--purple-glow);border-radius:var(--r-md);border:1px solid rgba(168,85,247,.3);display:flex;align-items:center;justify-content:center;font-size:1.2rem">🔍</div>
+          <div style="flex:1"><div style="font-weight:600;font-size:.875rem">${s.material_detected || "Unknown material"}</div><div style="font-size:.75rem;color:var(--text-3)">${s.suggestions_count} ideas</div></div>
+          <div style="font-size:.75rem;color:var(--text-3);font-family:var(--font-mono)">${timeAgo(s.created_at)}</div>
+        </div>`).join("");
+      } catch { container.innerHTML = `<div class="card" style="padding:var(--s6);text-align:center"><div class="text-muted">No history available.</div></div>`; }
+    }
+  </script>
+</body>
+
+</html>

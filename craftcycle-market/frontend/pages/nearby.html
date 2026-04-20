@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CraftCycle — Nearby Dealers & Creators</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♻️</text></svg>">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+
+  <!-- Google Maps -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCaYuN4Jxz0v92F_3KGVysuqzcxXEiwuwY&callback=initMapInit"
+    async defer></script>
+
+  <style>
+    /* ─── Page shell ─────────────────────────────────────────── */
+    .nearby-shell {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      height: calc(100vh - 64px);
+      /* fill below topbar */
+      overflow: hidden;
+    }
+
+    /* ─── Left panel ─────────────────────────────────────────── */
+    .nearby-panel {
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border);
+      overflow: hidden;
+      background: var(--surface-1);
+    }
+
+    .panel-header {
+      padding: var(--s5) var(--s5) 0;
+      flex-shrink: 0;
+    }
+
+    .search-bar {
+      display: flex;
+      align-items: center;
+      gap: var(--s2);
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      border-radius: var(--r-full);
+      padding: 0 var(--s4);
+      transition: border-color 0.2s;
+    }
+
+    .search-bar:focus-within {
+      border-color: var(--green);
+    }
+
+    .search-bar input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text-1);
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      padding: 10px 0;
+    }
+
+    .search-bar input::placeholder {
+      color: var(--text-3);
+    }
+
+    /* Filter tabs */
+    .filter-tabs {
+      display: flex;
+      gap: var(--s2);
+      padding: var(--s4) var(--s5);
+      flex-shrink: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .filter-tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .ftab {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 7px 14px;
+      border-radius: var(--r-full);
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-2);
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+
+    .ftab:hover {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .ftab.active {
+      background: var(--green-glow);
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .ftab-count {
+      background: rgba(0, 255, 136, 0.15);
+      color: var(--green);
+      border-radius: var(--r-full);
+      padding: 1px 6px;
+      font-size: 0.65rem;
+      font-weight: 700;
+    }
+
+    .ftab:not(.active) .ftab-count {
+      background: var(--surface-3);
+      color: var(--text-3);
+    }
+
+    /* Sort / radius row */
+    .sort-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--s3) var(--s5);
+      flex-shrink: 0;
+    }
+
+    /* Dealer list */
+    .dealer-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 var(--s4) var(--s5);
+    }
+
+    .dealer-list::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .dealer-list::-webkit-scrollbar-thumb {
+      background: rgba(0, 212, 255, 0.15);
+      border-radius: 2px;
+    }
+
+    /* Dealer card */
+    .dealer-card {
+      display: flex;
+      gap: var(--s3);
+      padding: var(--s4);
+      border-radius: var(--r-lg);
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      margin-bottom: var(--s3);
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .dealer-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--border);
+      transition: background 0.2s;
+    }
+
+    .dealer-card:hover {
+      border-color: rgba(0, 255, 136, 0.25);
+      transform: translateX(2px);
+    }
+
+    .dealer-card:hover::before,
+    .dealer-card.active::before {
+      background: var(--green);
+    }
+
+    .dealer-card.active {
+      border-color: rgba(0, 255, 136, 0.35);
+      background: rgba(0, 255, 136, 0.04);
+    }
+
+    .dealer-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--r-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+
+    .dealer-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .dealer-name {
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .dealer-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--s2);
+      font-size: 0.72rem;
+      color: var(--text-3);
+      flex-wrap: wrap;
+    }
+
+    .dealer-distance {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--cyan);
+      flex-shrink: 0;
+    }
+
+    .dealer-tags {
+      display: flex;
+      gap: var(--s1);
+      margin-top: var(--s2);
+      flex-wrap: wrap;
+    }
+
+    .dtag {
+      padding: 2px 8px;
+      border-radius: var(--r-full);
+      font-size: 0.65rem;
+      font-weight: 600;
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      color: var(--text-3);
+    }
+
+    /* Skeleton loader */
+    .skeleton {
+      background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: var(--r-md);
+    }
+
+    .map-area {
+      position: relative;
+      overflow: hidden;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      background: var(--surface-1);
+    }
+
+    /* Map controls overlay */
+    .map-controls {
+      position: absolute;
+      top: var(--s4);
+      right: var(--s4);
+      display: flex;
+      flex-direction: column;
+      gap: var(--s2);
+      z-index: 500;
+      /* Google Maps overrides its z-index so we ensure controls are above */
+    }
+
+    .map-ctrl-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--r-md);
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      transition: all 0.15s;
+    }
+
+    .map-ctrl-btn:hover {
+      border-color: var(--green);
+      transform: scale(1.05);
+    }
+
+    /* Location status bar */
+    .location-bar {
+      position: absolute;
+      bottom: var(--s5);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: var(--r-full);
+      padding: 8px 18px;
+      display: flex;
+      align-items: center;
+      gap: var(--s3);
+      font-size: 0.8rem;
+      font-weight: 600;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      z-index: 500;
+      white-space: nowrap;
+      max-width: calc(100% - var(--s10));
+    }
+
+    .loc-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+      animation: pulse 2s infinite;
+    }
+
+    /* Radius circle overlay text */
+    .radius-label {
+      position: absolute;
+      top: var(--s4);
+      left: var(--s4);
+      background: var(--surface-1);
+      border: 1px solid rgba(0, 212, 255, 0.2);
+      border-radius: var(--r-lg);
+      padding: var(--s3) var(--s4);
+      z-index: 500;
+      font-size: 0.78rem;
+    }
+
+    /* Custom markers */
+    .custom-marker {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      border: 2px solid;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .custom-marker:hover {
+      transform: scale(1.15);
+    }
+
+    .marker-dealer {
+      background: rgba(0, 255, 136, 0.15);
+      border-color: #00FF88;
+      box-shadow: 0 4px 16px rgba(0, 255, 136, 0.3);
+    }
+
+    .marker-diy {
+      background: rgba(168, 85, 247, 0.15);
+      border-color: #A855F7;
+      box-shadow: 0 4px 16px rgba(168, 85, 247, 0.3);
+    }
+
+    .marker-creator {
+      background: rgba(0, 212, 255, 0.15);
+      border-color: #00D4FF;
+      box-shadow: 0 4px 16px rgba(0, 212, 255, 0.3);
+    }
+
+    .marker-seller {
+      background: rgba(249, 115, 22, 0.15);
+      border-color: #F97316;
+      box-shadow: 0 4px 16px rgba(249, 115, 22, 0.3);
+    }
+
+    .marker-me {
+      background: rgba(245, 158, 11, 0.2);
+      border-color: #F59E0B;
+      box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.15), 0 4px 16px rgba(245, 158, 11, 0.4);
+      animation: pulse 2s infinite;
+    }
+
+    /* Popup */
+    .gm-style .gm-style-iw-c {
+      background: #0A1628 !important;
+      border: 1px solid rgba(0, 212, 255, 0.2) !important;
+      border-radius: 14px !important;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7) !important;
+      color: #E8F4FF !important;
+      padding: 0 !important;
+    }
+
+    .gm-style .gm-style-iw-tc::after {
+      background: #0A1628 !important;
+    }
+
+    .gm-style-iw-d {
+      overflow: hidden !important;
+      padding: 14px 16px !important;
+      min-width: 220px;
+    }
+
+    .gm-ui-hover-effect {
+      top: 6px !important;
+      right: 6px !important;
+      background: transparent !important;
+    }
+
+    .gm-ui-hover-effect span {
+      background-color: #E8F4FF !important;
+    }
+
+    /* Custom google maps marker wrapper to use standard html */
+    .gmap-marker {
+      background: transparent;
+      border: none;
+    }
+
+    .popup-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .popup-av {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    .popup-name {
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .popup-sub {
+      font-size: 0.72rem;
+      color: #4A6080;
+      margin-top: 2px;
+    }
+
+    .popup-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      margin-bottom: 6px;
+    }
+
+    .popup-label {
+      color: #4A6080;
+    }
+
+    .popup-val {
+      font-weight: 600;
+    }
+
+    .popup-btn {
+      display: block;
+      width: 100%;
+      margin-top: 12px;
+      padding: 8px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.15s;
+    }
+
+    .popup-btn:hover {
+      opacity: 0.85;
+    }
+
+    /* Detect location prompt */
+    .locate-prompt {
+      position: absolute;
+      inset: 0;
+      z-index: 600;
+      background: rgba(5, 13, 26, 0.92);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: var(--s8);
+    }
+
+    .locate-pulse {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--green-glow);
+      border: 2px solid var(--green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      margin-bottom: var(--s6);
+      animation: float 3s ease-in-out infinite;
+      box-shadow: 0 0 40px rgba(0, 255, 136, 0.3);
+    }
+
+    /* Detail drawer (mobile/right-click) */
+    .detail-drawer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 550;
+      background: var(--surface-1);
+      border-top: 1px solid var(--border);
+      border-radius: var(--r-2xl) var(--r-2xl) 0 0;
+      padding: var(--s6);
+      transform: translateY(100%);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s, visibility 0.3s;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .detail-drawer.open {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .drawer-handle {
+      width: 40px;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      margin: 0 auto var(--s4);
+    }
+
+    /* Legend */
+    .map-legend {
+      position: absolute;
+      bottom: var(--s5);
+      right: var(--s4);
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: var(--s4);
+      z-index: 500;
+      font-size: 0.72rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: var(--s2);
+      margin-bottom: var(--s2);
+    }
+
+    .legend-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .nearby-shell {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+        height: auto;
+      }
+
+      .nearby-panel {
+        height: 380px;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .map-area {
+        height: 60vh;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="sidebar-overlay"></div>
+  <div class="app-shell">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-mark">
+          <div class="logo-icon">♻️</div>
+          <div>
+            <div class="logo-text">CraftCycle</div>
+            <div class="logo-sub">Market</div>
+          </div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Explore</div>
+        <a href="marketplace.html" class="nav-item"><span class="nav-icon">🏪</span> Marketplace</a>
+        <a href="tutorial-hub.html" class="nav-item"><span class="nav-icon">🛠️</span> DIY Hub</a>
+        <a href="scanner.html" class="nav-item"><span class="nav-icon">🔍</span> AI Scanner</a>
+        <a href="nearby.html" class="nav-item active"><span class="nav-icon">📍</span> Nearby</a>
+        <a href="community.html" class="nav-item"><span class="nav-icon">🌐</span> Community</a>
+        <div class="nav-section-label" style="margin-top:var(--s4)">Account</div>
+        <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+        <a href="challenges.html" class="nav-item"><span class="nav-icon">🏆</span> Challenges</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="user-avatar" data-user-avatar></div>
+          <div>
+            <div style="font-size:.875rem;font-weight:600" data-user-name>User</div>
+            <div style="font-size:.72rem;color:var(--text-3)">🪙 <span data-user-coins>0</span></div>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm w-full" style="margin-top:var(--s3)" data-logout>🚪 Logout</button>
+      </div>
+    </aside>
+
+    <!-- ── Main ── -->
+    <div class="main-content" style="display:flex;flex-direction:column;overflow:hidden">
+      <header class="topbar" style="flex-shrink:0">
+        <div class="topbar-left">
+          <button class="hamburger"><span></span><span></span><span></span></button>
+          <div class="page-title">📍 NEARBY</div>
+          <span id="location-label" style="font-size:.75rem;color:var(--text-3);margin-left:var(--s3)">Detecting
+            location…</span>
+        </div>
+        <div class="topbar-right">
+          <button class="notif-btn">🔔<span class="notif-dot"></span></button>
+          <div class="user-avatar" data-user-avatar></div>
+        </div>
+      </header>
+
+      <!-- Nearby shell (map + panel side by side) -->
+      <div class="nearby-shell" style="flex:1">
+
+        <!-- ── Left: List Panel ──────────────────────────────── -->
+        <div class="nearby-panel">
+          <div class="panel-header">
+
+            <!-- Search -->
+            <div class="search-bar" style="margin-bottom:var(--s4)">
+              <span style="color:var(--text-3);font-size:1rem">🔍</span>
+              <input type="text" id="dealer-search" placeholder="Search dealers, creators, city…"
+                oninput="filterList(this.value)" />
+              <button onclick="filterList(document.getElementById('dealer-search').value)"
+                style="background:none;border:none;color:var(--text-3);cursor:pointer;padding:4px">↵</button>
+            </div>
+
+            <!-- Radius selector -->
+            <div style="display:flex;align-items:center;gap:var(--s3);margin-bottom:var(--s2)">
+              <span style="font-size:.78rem;color:var(--text-3);white-space:nowrap">📡 Radius:</span>
+              <input type="range" id="radius-slider" min="2" max="50" value="10" step="1"
+                style="flex:1;accent-color:var(--green)" oninput="updateRadius(this.value)" />
+              <span id="radius-label"
+                style="font-family:var(--font-mono);font-size:.78rem;color:var(--green);min-width:40px;text-align:right">10
+                km</span>
+            </div>
+          </div>
+
+          <!-- Filter tabs -->
+          <div class="filter-tabs">
+            <button class="ftab active" data-type="dealer" onclick="setType('dealer',this)">
+              🏭 Scrap Dealers <span class="ftab-count" id="cnt-dealer">0</span>
+            </button>
+          </div>
+
+          <!-- Sort row -->
+          <div class="sort-row">
+            <span id="list-count" style="font-size:.78rem;color:var(--text-3)">Loading…</span>
+            <select class="form-input" style="width:auto;font-size:.78rem;padding:5px 10px" id="sort-by"
+              onchange="renderList()">
+              <option value="distance">Nearest First</option>
+              <option value="rating">Highest Rated</option>
+              <option value="name">A → Z</option>
+            </select>
+          </div>
+
+          <!-- List -->
+          <div class="dealer-list" id="dealer-list">
+            <!-- Skeleton loaders -->
+            <div
+              style="display:flex;gap:var(--s3);padding:var(--s4);margin-bottom:var(--s3);border:1px solid var(--border);border-radius:var(--r-lg)">
+              <div class="skeleton" style="width:48px;height:48px;border-radius:var(--r-md);flex-shrink:0"></div>
+              <div style="flex:1">
+                <div class="skeleton" style="height:14px;width:60%;margin-bottom:8px"></div>
+                <div class="skeleton" style="height:11px;width:40%"></div>
+              </div>
+            </div>
+            <div
+              style="display:flex;gap:var(--s3);padding:var(--s4);margin-bottom:var(--s3);border:1px solid var(--border);border-radius:var(--r-lg)">
+              <div class="skeleton" style="width:48px;height:48px;border-radius:var(--r-md);flex-shrink:0"></div>
+              <div style="flex:1">
+                <div class="skeleton" style="height:14px;width:60%;margin-bottom:8px"></div>
+                <div class="skeleton" style="height:11px;width:40%"></div>
+              </div>
+            </div>
+            <div
+              style="display:flex;gap:var(--s3);padding:var(--s4);margin-bottom:var(--s3);border:1px solid var(--border);border-radius:var(--r-lg)">
+              <div class="skeleton" style="width:48px;height:48px;border-radius:var(--r-md);flex-shrink:0"></div>
+              <div style="flex:1">
+                <div class="skeleton" style="height:14px;width:60%;margin-bottom:8px"></div>
+                <div class="skeleton" style="height:11px;width:40%"></div>
+              </div>
+            </div>
+            <div
+              style="display:flex;gap:var(--s3);padding:var(--s4);margin-bottom:var(--s3);border:1px solid var(--border);border-radius:var(--r-lg)">
+              <div class="skeleton" style="width:48px;height:48px;border-radius:var(--r-md);flex-shrink:0"></div>
+              <div style="flex:1">
+                <div class="skeleton" style="height:14px;width:60%;margin-bottom:8px"></div>
+                <div class="skeleton" style="height:11px;width:40%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Right: Map ──────────────────────────────────────── -->
+        <div class="map-area" id="map-area">
+
+          <!-- Location detect prompt (shown initially) -->
+          <div class="locate-prompt" id="locate-prompt">
+            <div class="locate-pulse">📍</div>
+            <h2 style="font-family:var(--font-display);font-size:1.3rem;font-weight:900;margin-bottom:var(--s3)">
+              Find Nearby Creators
+            </h2>
+            <p class="text-secondary" style="max-width:340px;line-height:1.7;margin-bottom:var(--s6)">
+              Share your location to discover scrap dealers, DIY creators, and sellers within your area.
+            </p>
+            <div style="display:flex;gap:var(--s3);flex-wrap:wrap;justify-content:center">
+              <button class="btn btn-primary" onclick="detectLocation()">
+                📍 Use My Location
+              </button>
+              <button class="btn btn-secondary" onclick="enterCity()">
+                🔍 Enter City Instead
+              </button>
+            </div>
+            <div id="city-input-wrap" style="display:none;margin-top:var(--s5);width:100%;max-width:320px">
+              <div style="display:flex;gap:var(--s2)">
+                <input class="form-input" type="text" id="city-input" placeholder="e.g. Mysuru, Bengaluru, Chennai…"
+                  onkeydown="if(event.key==='Enter')searchCity()" />
+                <button class="btn btn-primary btn-sm" onclick="searchCity()">Go</button>
+              </div>
+            </div>
+            <p style="font-size:.72rem;color:var(--text-3);margin-top:var(--s5)">
+              🔒 Location is used only to find nearby creators — never stored
+            </p>
+          </div>
+
+          <!-- Actual map -->
+          <div id="map"></div>
+
+          <!-- Radius label -->
+          <div class="radius-label" id="radius-display" style="display:none">
+            <span style="font-size:.72rem;color:var(--text-3)">Search radius:</span>
+            <span style="font-family:var(--font-mono);color:var(--cyan);font-weight:700" id="radius-display-val">10
+              km</span>
+          </div>
+
+          <!-- Map controls -->
+          <div class="map-controls">
+            <button class="map-ctrl-btn" onclick="map.zoomIn()" title="Zoom in">＋</button>
+            <button class="map-ctrl-btn" onclick="map.zoomOut()" title="Zoom out">−</button>
+            <button class="map-ctrl-btn" onclick="recenterMap()" title="My location">🎯</button>
+            <button class="map-ctrl-btn" onclick="toggleView()" title="Toggle view" id="view-toggle">☰</button>
+          </div>
+
+          <!-- Legend -->
+          <div class="map-legend">
+            <div
+              style="font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3);margin-bottom:var(--s3)">
+              Legend</div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#00FF88"></div><span>Scrap Dealer</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#F59E0B"></div><span>You 📍</span>
+            </div>
+          </div>
+
+          <!-- Location status bar -->
+          <div class="location-bar" id="location-bar" style="display:none">
+            <div class="loc-dot"></div>
+            <span id="location-bar-text">Detecting location…</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Detail Drawer (mobile) ── -->
+  <div class="detail-drawer" id="detail-drawer">
+    <div class="drawer-handle"></div>
+    <div id="detail-drawer-body"></div>
+    <button class="btn btn-ghost btn-sm w-full" style="margin-top:var(--s4)"
+      onclick="document.getElementById('detail-drawer').classList.remove('open')">Close</button>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/utils.js"></script>
+  <script src="../assets/js/lang.js"></script>
+  <script src="../assets/js/chatbot.js"></script>
+  <script>
+    updatePublicNav();
+
+    window.initMapInit = function () {
+      window.gmapsLoaded = true;
+    };
+
+    // ─── State ────────────────────────────────────────────────
+    let map = null, userMarker = null, radiusCircle = null;
+    let markersArray = [];
+    let infoWindow = null;
+    let userLat = null, userLng = null;
+    let allDealers = [];
+    let filtered = [];
+    let activeType = "dealer";
+    let radiusKm = 10;
+    let activeCard = null;
+
+    // ─── Type config ─────────────────────────────────────────
+    const TYPE_CONFIG = {
+      dealer: { emoji: "♻️", label: "Scrap Dealer", color: "#00FF88", cls: "marker-dealer" },
+      diy: { emoji: "🛠️", label: "DIY Creator", color: "#A855F7", cls: "marker-diy" },
+      seller: { emoji: "🏪", label: "Seller", color: "#F97316", cls: "marker-seller" },
+      creator: { emoji: "🎨", label: "Artist/Creator", color: "#00D4FF", cls: "marker-creator" },
+    };
+
+    // ─── Seed data generator (realistic Indian locations) ────
+    function generateDealers(centerLat, centerLng) {
+      const spread = (r) => (Math.random() - 0.5) * r;
+      return [
+        // Scrap Dealers
+        { id: 1, type: "dealer", name: "Rajan Scrap Mart", owner: "K. Rajan", lat: centerLat + spread(0.12), lng: centerLng + spread(0.12), rating: 4.6, reviews: 84, phone: "+91 98440 11223", address: "Near Old Bus Stand", materials: ["metal", "copper", "iron"], tags: ["24/7 pickup", "bulk deals"], bio: "20+ years in metal recycling. Best prices for copper and iron scrap." },
+        { id: 2, type: "dealer", name: "Green Scrap Solutions", owner: "Priya Menon", lat: centerLat + spread(0.09), lng: centerLng + spread(0.11), rating: 4.8, reviews: 127, phone: "+91 97435 88201", address: "Industrial Area, Sector 4", materials: ["e-waste", "plastic", "metal"], tags: ["certified", "pickup service"], bio: "Certified e-waste recycler. We handle everything from old phones to servers." },
+        { id: 3, type: "dealer", name: "Eco Recycle Hub", owner: "M. Subramaniam", lat: centerLat + spread(0.15), lng: centerLng + spread(0.08), rating: 4.3, reviews: 56, phone: "+91 90087 34512", address: "Main Road, Opp. Petrol Bunk", materials: ["paper", "cardboard", "glass"], tags: ["home pickup", "daily rates"], bio: "Specializing in paper, cardboard, and glass recycling with daily market rates." },
+        { id: 4, type: "dealer", name: "Metro Scrap Traders", owner: "Abdul Karim", lat: centerLat + spread(0.06), lng: centerLng + spread(0.14), rating: 4.5, reviews: 91, phone: "+91 88012 77654", address: "Bypass Road Junction", materials: ["all types"], tags: ["wholesale", "instant payment"], bio: "Wholesale scrap trading with instant cash payments. All material types accepted." },
+        { id: 5, type: "dealer", name: "CityWaste Collectors", owner: "Lakshmi Devi", lat: centerLat + spread(0.18), lng: centerLng + spread(0.06), rating: 4.1, reviews: 38, phone: "+91 94425 63210", address: "Gandhi Nagar, 3rd Cross", materials: ["household", "metal"], tags: ["residential", "weekly rounds"], bio: "Doorstep household scrap collection every Wednesday and Saturday." },
+        { id: 6, type: "dealer", name: "Varsha Metal Works", owner: "Ramesh V.", lat: centerLat + spread(0.10), lng: centerLng + spread(0.17), rating: 4.7, reviews: 103, phone: "+91 99001 24567", address: "KIADB Industrial Estate", materials: ["steel", "aluminium", "brass"], tags: ["industrial", "export grade"], bio: "Industrial-grade metal scrap. Aluminium and brass our specialty. Export quality." },
+
+      ];
+    }
+
+    // ─── Init map ─────────────────────────────────────────────
+    function initMap(lat, lng) {
+      document.getElementById("locate-prompt").style.display = "none";
+      document.getElementById("location-bar").style.display = "flex";
+      document.getElementById("radius-display").style.display = "block";
+
+      if (!window.gmapsLoaded && !window.google) {
+        setTimeout(() => initMap(lat, lng), 500);
+        return;
+      }
+
+      const mapOptions = {
+        center: { lat: lat, lng: lng },
+        zoom: 13,
+        disableDefaultUI: true,
+        styles: [
+          { elementType: "geometry", stylers: [{ color: "#050D1A" }] },
+          { elementType: "labels.text.stroke", stylers: [{ color: "#050D1A" }] },
+          { elementType: "labels.text.fill", stylers: [{ color: "#4A6080" }] },
+          { featureType: "water", elementType: "geometry", stylers: [{ color: "#0A1628" }] },
+          { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#11223A" }] },
+          { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#0A1628" }] },
+          { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#4A6080" }] },
+          { featureType: "poi", elementType: "geometry", stylers: [{ color: "#11223A" }] },
+        ]
+      };
+
+      map = new google.maps.Map(document.getElementById("map"), mapOptions);
+      infoWindow = new google.maps.InfoWindow();
+
+      // Implement our custom OverlayView class for DOM nodes
+      class HTMLMarker extends google.maps.OverlayView {
+        constructor(position, html, mapInstance, onClick) {
+          super();
+          this.position = position;
+          this.html = html;
+          this.div = null;
+          this.onClick = onClick;
+          this.setMap(mapInstance);
+        }
+
+        onAdd() {
+          this.div = document.createElement("div");
+          this.div.style.position = "absolute";
+          this.div.innerHTML = this.html;
+
+          if (this.onClick) {
+            this.div.addEventListener("click", (e) => {
+              e.stopPropagation();
+              this.onClick();
+            });
+          }
+
+          const panes = this.getPanes();
+          panes.overlayMouseTarget.appendChild(this.div);
+        }
+
+        draw() {
+          const overlayProjection = this.getProjection();
+          const p = overlayProjection.fromLatLngToDivPixel(this.position);
+          if (p && this.div) {
+            // center the marker
+            this.div.style.left = (p.x - 19) + "px";
+            this.div.style.top = (p.y - 19) + "px";
+          }
+        }
+
+        onRemove() {
+          if (this.div) {
+            this.div.parentNode.removeChild(this.div);
+            this.div = null;
+          }
+        }
+      }
+
+      // User location marker
+      placeUserMarker(lat, lng, HTMLMarker);
+
+      // Generate and render dealers
+      allDealers = generateDealers(lat, lng);
+      allDealers.forEach(d => d.distance = haversine(lat, lng, d.lat, d.lng));
+      allDealers.sort((a, b) => a.distance - b.distance);
+
+      updateCounts();
+      renderList();
+      renderMapMarkers(HTMLMarker);
+      drawRadius(lat, lng);
+    }
+
+    function placeUserMarker(lat, lng, MarkerClass) {
+      if (userMarker) userMarker.setMap(null);
+      const position = new google.maps.LatLng(lat, lng);
+      const html = `<div class="custom-marker marker-me" title="You are here">📍</div>`;
+
+      userMarker = new MarkerClass(position, html, map, () => {
+        infoWindow.setContent(`
+          <div style="text-align:center;padding:4px">
+            <div style="font-size:1.5rem;margin-bottom:6px">📍</div>
+            <div style="font-weight:700;font-size:.9rem">You are here</div>
+            <div style="font-size:.72rem;color:#4A6080;margin-top:4px">${lat.toFixed(4)}, ${lng.toFixed(4)}</div>
+          </div>
+        `);
+        infoWindow.setPosition(position);
+        infoWindow.open(map);
+      });
+    }
+
+    function drawRadius(lat, lng) {
+      if (radiusCircle) radiusCircle.setMap(null);
+      radiusCircle = new google.maps.Circle({
+        strokeColor: "#00FF88",
+        strokeOpacity: 0.8,
+        strokeWeight: 1,
+        fillColor: "#00FF88",
+        fillOpacity: 0.04,
+        map: map,
+        center: { lat, lng },
+        radius: radiusKm * 1000,
+      });
+    }
+
+    // ─── Render map markers ───────────────────────────────────
+    function renderMapMarkers(MarkerClass = null) {
+      if (!map) return;
+
+      // Clear old markers
+      markersArray.forEach(m => m.setMap(null));
+      markersArray = [];
+
+      // If called from redraw, we need the overlay class which is only within map init context
+      // So we retrieve it globally if we didn't pass it or simply we only call it when it exists
+      if (MarkerClass) window.HTMLMarkerRef = MarkerClass;
+      const MC = MarkerClass || window.HTMLMarkerRef;
+
+      const visible = filtered.length ? filtered : allDealers.filter(d => d.distance <= radiusKm && d.type === 'dealer');
+      visible.forEach(d => {
+        const cfg = TYPE_CONFIG[d.type] || TYPE_CONFIG.dealer;
+        const pos = new google.maps.LatLng(d.lat, d.lng);
+        const html = `<div class="custom-marker ${cfg.cls}" title="${d.name}">${cfg.emoji}</div>`;
+
+        const m = new MC(pos, html, map, () => {
+          highlightCard(d.id);
+          openDrawer(d);
+          infoWindow.setContent(buildPopupHTML(d));
+          infoWindow.setPosition(pos);
+          infoWindow.setOptions({ pixelOffset: new google.maps.Size(0, -19) });
+          infoWindow.open(map);
+        });
+
+        markersArray.push(m);
+      });
+    }
+
+    function buildPopupHTML(d) {
+      const cfg = TYPE_CONFIG[d.type] || TYPE_CONFIG.dealer;
+      return `
+      <div class="popup-header">
+        <div class="popup-av" style="background:${cfg.color}22;border:1px solid ${cfg.color}44">${cfg.emoji}</div>
+        <div>
+          <div class="popup-name">${d.name}</div>
+          <div class="popup-sub">${cfg.label} • ⭐ ${d.rating}</div>
+        </div>
+      </div>
+      <div class="popup-row"><span class="popup-label">📍 Distance</span><span class="popup-val" style="color:#00D4FF">${d.distance.toFixed(1)} km</span></div>
+      <div class="popup-row"><span class="popup-label">📞 Phone</span><span class="popup-val">${d.phone}</span></div>
+      <div class="popup-row"><span class="popup-label">📌 Address</span><span class="popup-val" style="max-width:120px;text-align:right;font-size:.7rem">${d.address}</span></div>
+      <button class="popup-btn" style="background:#00FF88;color:#050D1A"
+              onclick="window.open('https://maps.google.com/?q=${d.lat},${d.lng}','_blank')">
+        🗺️ Open in Google Maps
+      </button>
+    `;
+    }
+
+    // ─── Render list ──────────────────────────────────────────
+    function renderList() {
+      const sortBy = document.getElementById("sort-by")?.value || "distance";
+      let list = allDealers.filter(d => {
+        const withinRadius = d.distance <= radiusKm;
+        const matchType = activeType === "all" || d.type === activeType;
+        const q = document.getElementById("dealer-search")?.value.toLowerCase() || "";
+        const matchSearch = !q || d.name.toLowerCase().includes(q) || d.owner.toLowerCase().includes(q) || d.address.toLowerCase().includes(q);
+        return withinRadius && matchType && matchSearch;
+      });
+
+      if (sortBy === "rating") list.sort((a, b) => b.rating - a.rating);
+      else if (sortBy === "name") list.sort((a, b) => a.name.localeCompare(b.name));
+      else list.sort((a, b) => a.distance - b.distance);
+
+      filtered = list;
+      document.getElementById("list-count").textContent = `${list.length} found within ${radiusKm} km`;
+
+      const container = document.getElementById("dealer-list");
+      if (!list.length) {
+        container.innerHTML = `<div style="text-align:center;padding:var(--s10)">
+        <div style="font-size:2.5rem;margin-bottom:var(--s4)">📭</div>
+        <div class="text-muted" style="font-size:.875rem">No results within ${radiusKm} km.</div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:var(--s3)" onclick="increaseRadius()">Expand radius</button>
+      </div>`;
+        renderMapMarkers();
+        return;
+      }
+
+      container.innerHTML = list.map(d => {
+        const cfg = TYPE_CONFIG[d.type];
+        const stars = "★".repeat(Math.round(d.rating)) + "☆".repeat(5 - Math.round(d.rating));
+        return `
+        <div class="dealer-card" id="card-${d.id}" onclick="focusDealer(${d.id})">
+          <div class="dealer-avatar" style="background:${cfg.color}18;border:1px solid ${cfg.color}33">
+            ${cfg.emoji}
+          </div>
+          <div class="dealer-info">
+            <div class="dealer-name">${d.name}</div>
+            <div class="dealer-meta">
+              <span style="color:${cfg.color}">${cfg.label}</span>
+              <span>•</span>
+              <span style="color:#F59E0B">${d.rating}★</span>
+              <span style="color:var(--text-3)">(${d.reviews})</span>
+              <span>•</span>
+              <span>📍 ${d.address.split(",")[0]}</span>
+            </div>
+            <div class="dealer-tags">
+              ${d.tags.map(t => `<span class="dtag">${t}</span>`).join("")}
+            </div>
+          </div>
+          <div class="dealer-distance">${d.distance.toFixed(1)}<br><span style="font-size:.6rem;color:var(--text-3)">km</span></div>
+        </div>
+      `;
+      }).join("");
+
+      renderMapMarkers();
+    }
+
+    // ─── Focus on a dealer ────────────────────────────────────
+    function focusDealer(id) {
+      const d = allDealers.find(x => x.id === id);
+      if (!d) return;
+      if (map) {
+        map.panTo({ lat: d.lat, lng: d.lng });
+        map.setZoom(15);
+      }
+      highlightCard(id);
+      openDrawer(d);
+    }
+
+    function highlightCard(id) {
+      if (activeCard) document.getElementById(`card-${activeCard}`)?.classList.remove("active");
+      activeCard = id;
+      const card = document.getElementById(`card-${id}`);
+      if (card) {
+        card.classList.add("active");
+        card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    }
+
+    // ─── Detail drawer ────────────────────────────────────────
+    function openDrawer(d) {
+      const cfg = TYPE_CONFIG[d.type];
+      document.getElementById("detail-drawer-body").innerHTML = `
+      <div style="display:flex;align-items:flex-start;gap:var(--s4);margin-bottom:var(--s5)">
+        <div style="width:56px;height:56px;border-radius:var(--r-lg);background:${cfg.color}18;border:2px solid ${cfg.color}44;display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0">
+          ${cfg.emoji}
+        </div>
+        <div style="flex:1">
+          <div style="font-family:var(--font-display);font-size:1rem;font-weight:900">${d.name}</div>
+          <div style="font-size:.78rem;margin-top:3px">
+            <span style="color:${cfg.color}">${cfg.label}</span>
+            <span style="color:var(--text-3)"> • </span>
+            <span style="color:#F59E0B">★ ${d.rating}</span>
+            <span style="color:var(--text-3)"> (${d.reviews} reviews)</span>
+          </div>
+          <div style="font-size:.75rem;color:var(--text-3);margin-top:4px">👤 ${d.owner}</div>
+        </div>
+      </div>
+
+      <p style="font-size:.84rem;color:var(--text-2);line-height:1.7;margin-bottom:var(--s5);background:var(--surface-2);border-radius:var(--r-md);padding:var(--s3) var(--s4)">
+        ${d.bio}
+      </p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--s3);margin-bottom:var(--s5)">
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:var(--s3)">
+          <div style="font-size:.68rem;color:var(--text-3);margin-bottom:4px">📍 Address</div>
+          <div style="font-size:.82rem;font-weight:600">${d.address}</div>
+        </div>
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:var(--s3)">
+          <div style="font-size:.68rem;color:var(--text-3);margin-bottom:4px">📏 Distance</div>
+          <div style="font-family:var(--font-mono);font-weight:700;color:var(--cyan)">${d.distance.toFixed(1)} km away</div>
+        </div>
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:var(--s3)">
+          <div style="font-size:.68rem;color:var(--text-3);margin-bottom:4px">📞 Contact</div>
+          <div style="font-size:.82rem;font-weight:600;color:var(--green)">${d.phone}</div>
+        </div>
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:var(--s3)">
+          <div style="font-size:.68rem;color:var(--text-3);margin-bottom:4px">📦 Handles</div>
+          <div style="font-size:.75rem;color:var(--text-2)">${d.materials.join(", ")}</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:var(--s2);margin-bottom:var(--s5)">
+        ${d.tags.map(t => `<span class="badge badge-gray">${t}</span>`).join("")}
+      </div>
+
+      <div style="display:flex;gap:var(--s3);flex-wrap:wrap">
+        <a href="tel:${d.phone}" class="btn btn-primary" style="flex:1;text-align:center;text-decoration:none">
+          📞 Call Now
+        </a>
+        <button class="btn btn-secondary" style="flex:1"
+                onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${d.lat},${d.lng}','_blank')">
+          🗺️ Get Directions
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="shareDealer(${d.id})">🔗 Share</button>
+      </div>
+    `;
+      document.getElementById("detail-drawer").classList.add("open");
+    }
+
+    // ─── Location detection ───────────────────────────────────
+    function detectLocation() {
+      const prompt = document.getElementById("locate-prompt");
+      prompt.innerHTML = `<div class="locate-pulse" style="animation:spin 1s linear infinite">🌐</div><div style="color:var(--text-2);font-size:.9rem;margin-top:var(--s4)">Detecting your location…</div>`;
+
+      if (!navigator.geolocation) {
+        showLocationError("Geolocation is not supported by your browser.");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          userLat = pos.coords.latitude;
+          userLng = pos.coords.longitude;
+          reverseGeocode(userLat, userLng);
+          initMap(userLat, userLng);
+        },
+        err => {
+          console.warn("Geolocation error:", err.message);
+          // Fallback to Mysuru (user's city from system prompt)
+          userLat = 12.2958; userLng = 76.6394;
+          document.getElementById("location-label").textContent = "📍 Mysuru, Karnataka (default)";
+          initMap(userLat, userLng);
+        },
+        { timeout: 8000, enableHighAccuracy: true }
+      );
+    }
+
+    function enterCity() {
+      document.getElementById("city-input-wrap").style.display = "block";
+      document.getElementById("city-input").focus();
+    }
+
+    async function searchCity() {
+      const city = document.getElementById("city-input").value.trim();
+      if (!city) return;
+
+      const prompt = document.getElementById("locate-prompt");
+      if (prompt && prompt.querySelector("p")) prompt.querySelector("p").innerText = "Searching for " + city + "...";
+
+      // 1. Try Google Geocoder
+      if (window.google) {
+        try {
+          const geocoder = new google.maps.Geocoder();
+          const response = await new Promise((resolve, reject) => {
+            geocoder.geocode({ address: city + ', India' }, (results, status) => {
+              if (status === 'OK') resolve(results);
+              else reject(status);
+            });
+          });
+
+          if (response && response.length > 0) {
+            const loc = response[0].geometry.location;
+            userLat = loc.lat();
+            userLng = loc.lng();
+            const cityName = response[0].formatted_address.split(",")[0];
+            document.getElementById("location-label").textContent = `📍 ${cityName}`;
+            if (document.getElementById("location-bar-text")) document.getElementById("location-bar-text").textContent = `You're in ${cityName}`;
+            initMap(userLat, userLng);
+            return; // Success
+          }
+        } catch (error) {
+          console.warn("Google Geocoder failed (maybe API key restricted). Falling back to OpenStreetMap...", error);
+        }
+      }
+
+      // 2. Fallback to OpenStreetMap if Google fails or is missing
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=1&countrycodes=in`, {
+          headers: { 'Accept-Language': 'en-US,en' }
+        });
+        const data = await res.json();
+        if (!data || !data.length) {
+          showLocationError("City not found. Try a different spelling.");
+          return;
+        }
+        userLat = parseFloat(data[0].lat);
+        userLng = parseFloat(data[0].lon);
+        const displayName = data[0].display_name.split(",").slice(0, 2).join(",");
+        document.getElementById("location-label").textContent = `📍 ${displayName}`;
+        if (document.getElementById("location-bar-text")) document.getElementById("location-bar-text").textContent = `You're in ${displayName}`;
+        initMap(userLat, userLng);
+      } catch (error) {
+        console.error("OSM Geocoding error:", error);
+        showLocationError("Network error. Could not find location.");
+      }
+    }
+
+    async function reverseGeocode(lat, lng) {
+      if (window.google) {
+        try {
+          const geocoder = new google.maps.Geocoder();
+          const response = await new Promise((resolve, reject) => {
+            geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+              if (status === 'OK') resolve(results);
+              else reject(status);
+            });
+          });
+          if (response && response.length > 0) {
+            const name = response[0].formatted_address.split(",")[0];
+            document.getElementById("location-label").textContent = `📍 ${name}`;
+            if (document.getElementById("location-bar-text")) document.getElementById("location-bar-text").textContent = `You're in ${name}`;
+            return;
+          }
+        } catch (error) {
+          console.warn("Google Reverse Geocoder failed.", error);
+        }
+      }
+
+      // Fallback OpenStreetMap
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
+          headers: { 'Accept-Language': 'en-US,en' }
+        });
+        const data = await res.json();
+        const parts = data.address || {};
+        const name = parts.city || parts.town || parts.village || parts.county || "Your Location";
+        document.getElementById("location-label").textContent = `📍 ${name}`;
+        if (document.getElementById("location-bar-text")) document.getElementById("location-bar-text").textContent = `You're in ${name}`;
+      } catch (error) {
+        if (document.getElementById("location-bar-text")) document.getElementById("location-bar-text").textContent = "Location detected";
+      }
+    }
+
+    function showLocationError(msg) {
+      document.getElementById("locate-prompt").innerHTML = `
+      <div style="font-size:3rem;margin-bottom:var(--s4)">❌</div>
+      <p class="text-muted">${msg}</p>
+      <button class="btn btn-secondary" style="margin-top:var(--s5)" onclick="enterCity()">🔍 Enter City Instead</button>
+    `;
+    }
+
+    // ─── Filters ──────────────────────────────────────────────
+    function setType(type, btn) {
+      activeType = type;
+      document.querySelectorAll(".ftab").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      renderList();
+    }
+
+    function filterList(q) {
+      renderList();
+      if (!map) return;
+      renderMapMarkers();
+    }
+
+    function updateRadius(val) {
+      radiusKm = parseInt(val);
+      document.getElementById("radius-label").textContent = `${val} km`;
+      document.getElementById("radius-display-val").textContent = `${val} km`;
+      if (map && userLat) {
+        drawRadius(userLat, userLng);
+        renderList();
+      }
+    }
+
+    function increaseRadius() {
+      radiusKm = Math.min(50, radiusKm + 10);
+      document.getElementById("radius-slider").value = radiusKm;
+      document.getElementById("radius-label").textContent = `${radiusKm} km`;
+      document.getElementById("radius-display-val").textContent = `${radiusKm} km`;
+      if (map && userLat) { drawRadius(userLat, userLng); renderList(); }
+    }
+
+    function updateCounts() {
+      const types = ["dealer"];
+      const within = allDealers.filter(d => d.distance <= radiusKm);
+      const allEl = document.getElementById("cnt-all");
+      if (allEl) allEl.textContent = within.length;
+
+      types.forEach(t => {
+        const el = document.getElementById(`cnt-${t}`);
+        if (el) el.textContent = within.filter(d => d.type === t).length;
+      });
+    }
+
+    // ─── Map helpers ──────────────────────────────────────────
+    function recenterMap() {
+      if (map && userLat) {
+        map.panTo({ lat: userLat, lng: userLng });
+        map.setZoom(13);
+      }
+    }
+
+    function toggleView() {
+      const panel = document.querySelector(".nearby-panel");
+      panel.style.display = panel.style.display === "none" ? "" : "none";
+    }
+
+    function shareDealer(id) {
+      const d = allDealers.find(x => x.id === id);
+      if (!d) return;
+      const url = `https://www.google.com/maps?q=${d.lat},${d.lng}`;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => Toast.success("Link copied!", "Share this location with friends."));
+      }
+    }
+
+    // ─── Haversine distance formula ───────────────────────────
+    function haversine(lat1, lng1, lat2, lng2) {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    // ─── Init ─────────────────────────────────────────────────
+    document.addEventListener("DOMContentLoaded", () => {
+      populateUserInfo();
+      initScrollReveal();
+      // Auto-detect if permission already granted
+      navigator.permissions?.query({ name: "geolocation" }).then(result => {
+        if (result.state === "granted") detectLocation();
+      }).catch(() => { });
+    });
+
+    // Close drawer on backdrop click
+    document.getElementById("detail-drawer").addEventListener("click", function (e) {
+      if (e.target === this) this.classList.remove("open");
+    });
+  </script>
+</body>
+
+</html>
+kjjwegfiujwe j

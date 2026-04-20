@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CraftCycle Market — Challenges</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♻️</text></svg>">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+
+<body>
+    <div class="sidebar-overlay"></div>
+    <div class="app-shell">
+
+        <!-- ── Sidebar ──────────────────────────────────────────────── -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <div class="logo-mark">
+                    <div class="logo-icon">♻️</div>
+                    <div>
+                        <div class="logo-text">CraftCycle</div>
+                        <div class="logo-sub">Market</div>
+                    </div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section-label">Main</div>
+                <a href="dashboard.html" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+                <a href="marketplace.html" class="nav-item"><span class="nav-icon">🏪</span> Marketplace</a>
+                <a href="scanner.html" class="nav-item"><span class="nav-icon">🔍</span> AI Scanner</a>
+                <a href="tutorial-hub.html" class="nav-item"><span class="nav-icon">🛠️</span> DIY Hub</a>
+                <div class="nav-section-label" style="margin-top:var(--s4)">My Store</div>
+                <a href="my-products.html" class="nav-item"><span class="nav-icon">📦</span> My Products</a>
+                <a href="orders.html" class="nav-item"><span class="nav-icon">🛒</span> Orders</a>
+                <div class="nav-section-label" style="margin-top:var(--s4)">Community</div>
+                <a href="challenges.html" class="nav-item active"><span class="nav-icon">🏆</span> Challenges</a>
+                <a href="community.html" class="nav-item"><span class="nav-icon">🌐</span> Community</a>
+                <div class="nav-section-label" style="margin-top:var(--s4)">Account</div>
+                <a href="profile.html" class="nav-item"><span class="nav-icon">👤</span> Profile</a>
+                <a href="coins.html" class="nav-item"><span class="nav-icon">🪙</span> Green Coins</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="user-avatar" data-user-avatar></div>
+                    <div>
+                        <div style="font-size:0.875rem;font-weight:600" data-user-name>User</div>
+                        <div style="font-size:0.72rem;color:var(--text-3)" data-user-role>Seller</div>
+                    </div>
+                </div>
+                <button class="btn btn-ghost btn-sm w-full" style="margin-top:var(--s3)" data-logout>
+                    🚪 Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- ── Main Content ─────────────────────────────────────────── -->
+        <div class="main-content">
+
+            <!-- Topbar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="hamburger"><span></span><span></span><span></span></button>
+                    <div class="page-title">CHALLENGES</div>
+                </div>
+                <div class="topbar-right">
+                    <button class="notif-btn">🔔<span class="notif-dot"></span></button>
+                    <div class="user-avatar" data-user-avatar></div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <main class="dash-content">
+
+                <div class="card"
+                    style="padding: var(--s8); background: linear-gradient(135deg, rgba(255,215,0,0.08) 0%, rgba(255,140,0,0.04) 100%); border-color: rgba(255,215,0,0.2); margin-bottom: var(--s6);">
+                    <div
+                        style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--s5)">
+                        <div>
+                            <div
+                                style="font-size:0.8rem;color:var(--text-3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:var(--s2)">
+                                Compete & Win 🏆
+                            </div>
+                            <h1 style="font-family:var(--font-display);font-size:1.5rem;margin-bottom:var(--s3)">
+                                Monthly Sustainability <span style="color:var(--yellow)">Challenges</span>
+                            </h1>
+                            <p style="color:var(--text-2); font-size:0.9rem; max-width: 600px;">
+                                Join community challenges by submitting your best upcycled creations. Win Green Coins,
+                                get featured on the homepage, and increase your shop's visibility while helping the
+                                planet!
+                            </p>
+                        </div>
+                        <div style="display:flex;gap:var(--s3);flex-wrap:wrap">
+                            <button class="btn btn-primary"
+                                onclick="Toast.info('Coming Soon', 'Challenge submissions will open shortly!')">Submit
+                                Entry →</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:var(--s6)">
+                    <!-- Challenge 1 -->
+                    <div class="card reveal" style="display: flex; flex-direction: column;">
+                        <div
+                            style="height:150px;background:var(--surface-3);border-radius:var(--r-md) var(--r-md) 0 0;display:flex;align-items:center;justify-content:center;font-size:3rem">
+                            🍾
+                        </div>
+                        <div style="padding:var(--s5); flex-grow: 1; display: flex; flex-direction: column;">
+                            <div
+                                style="display:flex;justify-content:space-between;align-items:start;margin-bottom:var(--s3)">
+                                <span class="badge badge-green">Active</span>
+                                <span style="font-family:var(--font-mono);color:var(--yellow);font-weight:600">🪙 500
+                                    Prize</span>
+                            </div>
+                            <h3 style="margin-bottom:var(--s2)">Glass Bottle Revival</h3>
+                            <p style="color:var(--text-3); font-size: 0.85rem; margin-bottom:var(--s4); flex-grow: 1;">
+                                Create an innovative functional product using at least 3 discarded glass bottles.
+                                Lighting fixtures, self-watering planters, or artistic glassware accepted.
+                            </p>
+                            <div
+                                style="display:flex;justify-content:space-between;align-items:center;font-size:0.75rem;color:var(--text-4); border-top: 1px solid var(--surface-3); padding-top:var(--s3)">
+                                <span>12 Entries</span>
+                                <span>Ends in 5 days</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Challenge 2 -->
+                    <div class="card reveal" style="display: flex; flex-direction: column;">
+                        <div
+                            style="height:150px;background:var(--surface-3);border-radius:var(--r-md) var(--r-md) 0 0;display:flex;align-items:center;justify-content:center;font-size:3rem">
+                            👕
+                        </div>
+                        <div style="padding:var(--s5); flex-grow: 1; display: flex; flex-direction: column;">
+                            <div
+                                style="display:flex;justify-content:space-between;align-items:start;margin-bottom:var(--s3)">
+                                <span class="badge badge-orange">Voting Phase</span>
+                                <span style="font-family:var(--font-mono);color:var(--yellow);font-weight:600">🪙 300
+                                    Prize</span>
+                            </div>
+                            <h3 style="margin-bottom:var(--s2)">Denim Upcycling</h3>
+                            <p style="color:var(--text-3); font-size: 0.85rem; margin-bottom:var(--s4); flex-grow: 1;">
+                                Transform old jeans into something entirely new. Bags, upholstery, or new clothing
+                                items. Community voting is now open!
+                            </p>
+                            <div
+                                style="display:flex;justify-content:space-between;align-items:center;font-size:0.75rem;color:var(--text-4); border-top: 1px solid var(--surface-3); padding-top:var(--s3)">
+                                <span>45 Entries</span>
+                                <a href="#"
+                                    onclick="Toast.success('Vote Cast!', 'Thank you for voting for this entry.'); return false;"
+                                    style="color:var(--green)">Vote Now</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Challenge 3 -->
+                    <div class="card reveal" style="display: flex; flex-direction: column; opacity: 0.7;">
+                        <div
+                            style="height:150px;background:var(--surface-3);border-radius:var(--r-md) var(--r-md) 0 0;display:flex;align-items:center;justify-content:center;font-size:3rem; filter: grayscale(1);">
+                            💡
+                        </div>
+                        <div style="padding:var(--s5); flex-grow: 1; display: flex; flex-direction: column;">
+                            <div
+                                style="display:flex;justify-content:space-between;align-items:start;margin-bottom:var(--s3)">
+                                <span class="badge badge-gray">Ended</span>
+                                <span style="font-family:var(--font-mono);color:var(--text-4);">🪙 1000 Prize</span>
+                            </div>
+                            <h3 style="margin-bottom:var(--s2)">E-Waste Sculptures</h3>
+                            <p style="color:var(--text-3); font-size: 0.85rem; margin-bottom:var(--s4); flex-grow: 1;">
+                                Build a stunning sculpture using only electronic waste (circuit boards, wires, old
+                                keys). Show us the beauty in obsolete tech.
+                            </p>
+                            <div
+                                style="display:flex;justify-content:space-between;align-items:center;font-size:0.75rem;color:var(--text-4); border-top: 1px solid var(--surface-3); padding-top:var(--s3)">
+                                <span>Winner: <strong style="color:var(--text-1)">TechArtisan</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="../assets/js/config.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/js/utils.js"></script>
+    <script>
+        requireAuth();
+        document.addEventListener("DOMContentLoaded", async () => {
+            try {
+                const data = await AuthAPI.me();
+                populateUserInfo(data.user);
+            } catch (e) {
+                console.warn(e);
+            }
+        });
+    </script>
+    <script src="../assets/js/lang.js"></script>
+    <script src="../assets/js/chatbot.js?v=2"></script>
+</body>
+
+</html>

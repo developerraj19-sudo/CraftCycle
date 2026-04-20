@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>CraftCycle Market — Green Coins</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♻️</text></svg>">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="../assets/css/style.css?v=3" />
+</head>
+
+<body>
+    <div class="sidebar-overlay"></div>
+    <div class="app-shell">
+
+        <!-- ── Sidebar ──────────────────────────────────────────────── -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <div class="logo-mark">
+                    <div class="logo-icon">♻️</div>
+                    <div>
+                        <div class="logo-text">CraftCycle</div>
+                        <div class="logo-sub">Market</div>
+                    </div>
+                </div>
+            </div>
+            <nav class="sidebar-nav"></nav>
+            <div class="sidebar-footer"></div>
+        </aside>
+
+        <!-- ── Main Content ─────────────────────────────────────────── -->
+        <div class="main-content">
+
+            <!-- Topbar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="hamburger"><span></span><span></span><span></span></button>
+                    <div class="page-title">GREEN COINS</div>
+                </div>
+                <div class="topbar-right">
+                    <button class="notif-btn">🔔<span class="notif-dot"></span></button>
+                    <div class="user-avatar" data-user-avatar></div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <main class="dash-content">
+
+                <!-- Balance Card -->
+                <div class="card"
+                    style="padding: var(--s8); background: linear-gradient(135deg, rgba(234, 179, 8, 0.1) 0%, rgba(202, 138, 4, 0.05) 100%); border-color: rgba(234, 179, 8, 0.2); margin-bottom: var(--s6); text-align: center;">
+                    <div
+                        style="font-size:0.85rem;color:var(--text-3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:var(--s3)">
+                        Current Balance</div>
+                    <div
+                        style="font-family:var(--font-mono); font-size: 3rem; color: var(--yellow); font-weight: 700; margin-bottom: var(--s2)">
+                        <span style="font-size: 2rem">🪙</span> <span id="coin-balance">0</span>
+                    </div>
+                    <p style="color:var(--text-2);font-size:0.9rem;max-width:400px;margin:0 auto var(--s5)">
+                        Earn Green Coins by scanning waste, selling upcycled products, and winning challenges. Use them
+                        to get discounts on marketplace purchases!
+                    </p>
+                    <div style="display:flex;gap:var(--s3);justify-content:center">
+                        <a href="scanner.html" class="btn btn-primary">Scan to Earn</a>
+                        <button class="btn btn-secondary"
+                            onclick="Toast.info('Coming Soon', 'Reward catalog is being updated!')">Redeem
+                            Rewards</button>
+                    </div>
+                </div>
+
+                <div class="dash-grid-2">
+                    <!-- How to Earn -->
+                    <div class="card">
+                        <h3
+                            style="margin-bottom: var(--s4); border-bottom: 1px solid var(--surface-3); padding-bottom: var(--s3);">
+                            How to Earn</h3>
+                        <ul style="list-style:none; padding:0; display:flex; flex-direction:column; gap:var(--s4);">
+                            <li style="display:flex; align-items:center; gap:var(--s3);">
+                                <div
+                                    style="width:40px;height:40px;background:var(--surface-3);border-radius:var(--r-full);display:flex;align-items:center;justify-content:center;font-size:1.2rem">
+                                    🔍</div>
+                                <div style="flex:1">
+                                    <div style="font-weight:600">Scan Waste Items</div>
+                                    <div style="font-size:0.8rem;color:var(--text-3)">Use AI Scanner to identify
+                                        recyclables</div>
+                                </div>
+                                <div style="font-family:var(--font-mono);color:var(--green)">+2</div>
+                            </li>
+                            <li style="display:flex; align-items:center; gap:var(--s3);">
+                                <div
+                                    style="width:40px;height:40px;background:var(--surface-3);border-radius:var(--r-full);display:flex;align-items:center;justify-content:center;font-size:1.2rem">
+                                    📦</div>
+                                <div style="flex:1">
+                                    <div style="font-weight:600">Sell Products</div>
+                                    <div style="font-size:0.8rem;color:var(--text-3)">Earn coins for every sale on
+                                        marketplace</div>
+                                </div>
+                                <div style="font-family:var(--font-mono);color:var(--green)">+5 per ₹100</div>
+                            </li>
+                            <li style="display:flex; align-items:center; gap:var(--s3);">
+                                <div
+                                    style="width:40px;height:40px;background:var(--surface-3);border-radius:var(--r-full);display:flex;align-items:center;justify-content:center;font-size:1.2rem">
+                                    🏆</div>
+                                <div style="flex:1">
+                                    <div style="font-weight:600">Win Challenges</div>
+                                    <div style="font-size:0.8rem;color:var(--text-3)">Participate in community
+                                        challenges</div>
+                                </div>
+                                <div style="font-family:var(--font-mono);color:var(--green)">Up to 1000</div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Transaction History -->
+                    <div class="card">
+                        <h3
+                            style="margin-bottom: var(--s4); border-bottom: 1px solid var(--surface-3); padding-bottom: var(--s3);">
+                            Recent Transactions</h3>
+                        <div style="display:flex;flex-direction:column;gap:var(--s4)" id="tx-list">
+                            <!-- Example TX -->
+                            <div style="display:flex;justify-content:space-between;align-items:center">
+                                <div>
+                                    <div style="font-weight:600">Welcome Bonus</div>
+                                    <div style="font-size:0.75rem;color:var(--text-4)">Just now</div>
+                                </div>
+                                <span
+                                    style="color:var(--green);font-family:var(--font-mono);font-weight:600">+100</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="../assets/js/config.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/js/utils.js?v=3"></script>
+    <script>
+        requireAuth();
+        document.addEventListener("DOMContentLoaded", async () => {
+            try {
+                const data = await AuthAPI.me();
+                const user = data.user;
+                
+                // Update local storage so sidebar updates
+                Auth.setUser(user); 
+                populateUserInfo();
+                
+                document.getElementById('coin-balance').textContent = user.green_coins?.toLocaleString() || "0";
+
+                // Map actual coin value to UX
+                let txHtml = '';
+                if (user.green_coins >= 100) {
+                    txHtml += `
+                 <div style="display:flex;justify-content:space-between;align-items:center; border-bottom:1px solid var(--surface-3); padding-bottom:var(--s2)">
+                    <div>
+                        <div style="font-weight:600">Welcome Bonus</div>
+                        <div style="font-size:0.75rem;color:var(--text-4)">Account Creation</div>
+                    </div>
+                    <span style="color:var(--green);font-family:var(--font-mono);font-weight:600">+100</span>
+                </div>`;
+                }
+                if (user.green_coins > 100) {
+                    const diff = user.green_coins - 100;
+                    txHtml = `
+                 <div style="display:flex;justify-content:space-between;align-items:center; border-bottom:1px solid var(--surface-3); padding-bottom:var(--s2); margin-bottom:var(--s2)">
+                    <div>
+                        <div style="font-weight:600">AI Scans & Platform Activity</div>
+                        <div style="font-size:0.75rem;color:var(--text-4)">Recent Earnings</div>
+                    </div>
+                    <span style="color:var(--green);font-family:var(--font-mono);font-weight:600">+${diff}</span>
+                </div>` + txHtml;
+                }
+                
+                if (!txHtml && user.green_coins === 0) {
+                     txHtml = '<div style="color:var(--text-4);font-size:0.85rem;padding:var(--s2) 0;">No transactions yet. Start scanning to earn coins!</div>';
+                }
+                
+                document.getElementById('tx-list').innerHTML = txHtml;
+
+            } catch (e) {
+                console.warn(e);
+                // Fallback to local storage if API fails
+                const user = Auth.getUser();
+                if (user) {
+                    document.getElementById('coin-balance').textContent = user.green_coins?.toLocaleString() || "0";
+                }
+            }
+        });
+    </script>
+    <script src="../assets/js/lang.js"></script>
+    <script src="../assets/js/chatbot.js?v=2"></script>
+</body>
+
+</html>
