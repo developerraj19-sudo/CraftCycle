@@ -404,30 +404,26 @@ If asked something outside CraftCycle (politics, unrelated topics), politely red
     showTyping();
 
     try {
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
+      // Call backend API instead of mock logic
+      const response = await fetch(`${CONFIG.API_BASE_URL}/chatbot/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text,
+          history: conversation.slice(0, -1) // Send history without current message
+        })
+      });
 
-      const lowerText = text.toLowerCase();
-      let reply = "";
-
-      if (lowerText.includes("plastic") || lowerText.includes("bottle")) {
-        reply = "A great way to use plastic bottles is to create **self-watering planters** or **vertical garden structures**. You can also cut them into strips to create durable outdoor brooms! 🌿";
-      } else if (lowerText.includes("sell") || lowerText.includes("list") || lowerText.includes("marketplace")) {
-        reply = "To sell items, head over to your **Dashboard**, click 'My Products', and hit '+ Add New Product'. Make sure you include clear photos and mention how much waste your product saves! 📦";
-      } else if (lowerText.includes("coin") || lowerText.includes("reward")) {
-        reply = "You earn **Green Coins** 🪙 by scanning waste, selling products, and participating in challenges. You can use these coins to get discounts on the marketplace!";
-      } else if (lowerText.includes("scan") || lowerText.includes("ai")) {
-        reply = "The **AI Scanner** 🔍 helps you identify recyclable materials. Just point your camera at an item, and I'll tell you if it can be upcycled and give you some project ideas!";
-      } else if (lowerText.includes("hello") || lowerText.includes("hi") || lowerText.includes("hey")) {
-        reply = "Hello there! 👋 I'm CraftBot. How can I help you with your upcycling journey today?";
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        const reply = data.reply;
+        conversation.push({ role: "assistant", content: reply });
+        hideTyping();
+        addMessage("bot", reply);
       } else {
-        reply = "That's an interesting question! While I'm still learning, I recommend checking out the **DIY Hub** 🛠️ for inspiration or asking the **Community** 🌐 forum where other creators might have the answer!";
+        throw new Error(data.message || 'API Error');
       }
-
-      conversation.push({ role: "assistant", content: reply });
-
-      hideTyping();
-      addMessage("bot", reply);
 
       // Badge if panel is closed
       if (!isOpen) {
@@ -436,8 +432,9 @@ If asked something outside CraftCycle (politics, unrelated topics), politely red
       }
 
     } catch (err) {
+      console.error("Chatbot Error:", err);
       hideTyping();
-      addMessage("bot", "Sorry, my gears are jammed. Try again later! ⚙️");
+      addMessage("bot", "I'm having trouble connecting to my AI core. Please check your connection or try again later! ⚙️");
     } finally {
       isTyping = false;
       sendBtn.disabled = false;

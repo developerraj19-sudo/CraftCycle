@@ -27,12 +27,14 @@ def create_app():
     from routes.products    import products_bp
     from routes.scanner     import scanner_bp
     from routes.admin       import admin_bp
+    from routes.chatbot     import chatbot_bp
 
     app.register_blueprint(auth_bp,        url_prefix="/api/v1/auth")
     app.register_blueprint(marketplace_bp, url_prefix="/api/v1/marketplace")
     app.register_blueprint(products_bp,    url_prefix="/api/v1/products")
     app.register_blueprint(scanner_bp,     url_prefix="/api/v1/scanner")
     app.register_blueprint(admin_bp,       url_prefix="/api/v1/admin")
+    app.register_blueprint(chatbot_bp,     url_prefix="/api/v1/chatbot")
 
     # ── Register error handlers ───────────────────────────────
     from utils.errors import register_error_handlers
