@@ -434,7 +434,16 @@ If asked something outside CraftCycle (politics, unrelated topics), politely red
     } catch (err) {
       console.error("Chatbot Error:", err);
       hideTyping();
-      addMessage("bot", "I'm having trouble connecting to my AI core. Please check your connection or try again later! ⚙️");
+      
+      // Provide more specific error feedback based on what happened
+      let errorMsg = "I'm having trouble connecting to my AI core. Please check your internet or try again later! ⚙️";
+      if (err.message && err.message !== "API Error") {
+        errorMsg = `⚠️ AI Engine Error: ${err.message}`;
+      } else if (err.status === 429) {
+        errorMsg = "⚠️ Too many messages! Please wait a moment before asking more questions.";
+      }
+      
+      addMessage("bot", errorMsg);
     } finally {
       isTyping = false;
       sendBtn.disabled = false;

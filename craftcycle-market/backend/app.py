@@ -17,7 +17,14 @@ def create_app():
     db.init_app(app)
     jwt.init_app(app)
     bcrypt.init_app(app)
-    cors.init_app(app, resources={r"/api/*": {"origins": app.config.get("CORS_ORIGINS", "*")}})
+    
+    # Enable CORS for all /api/* routes
+    # In production, CORS_ORIGINS should be set to your Netlify URL
+    cors.init_app(app, resources={r"/api/*": {
+        "origins": app.config.get("CORS_ORIGINS", "*"),
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }})
     mail.init_app(app)
     limiter.init_app(app)
 
