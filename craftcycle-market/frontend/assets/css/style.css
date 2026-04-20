@@ -145,11 +145,13 @@ textarea {
   z-index: 200;
   overflow-y: auto;
   overflow-x: hidden;
-  transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1),
-              box-shadow 0.32s ease;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.35s ease;
   -webkit-overflow-scrolling: touch; /* Momentum scroll on iOS/Android */
   /* Safe area inset for notched devices */
   padding-left: env(safe-area-inset-left, 0px);
+  /* Optimization for Android */
+  touch-action: pan-y;
 }
 
 .sidebar-logo {
@@ -1460,6 +1462,33 @@ table.data-table tr:hover td {
   .topbar {
     height: 56px;
     padding: 0 var(--s3);
+  }
+
+  .nav-item {
+    font-size: 0.8rem;
+    padding: 10px var(--s2);
+  }
+}
+
+/* ── Ultra-thin Android (≤320px) ── */
+@media (max-width: 320px) {
+  .topbar-right .user-avatar {
+    width: 30px;
+    height: 30px;
+    font-size: 0.75rem;
+  }
+
+  .page-title {
+    font-size: 0.7rem;
+    max-width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .btn {
+    padding: 8px 12px;
+    font-size: 0.75rem;
   }
 }
 

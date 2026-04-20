@@ -321,14 +321,16 @@
 
         /* ── HERO ── */
         .hero {
-            min-height: calc(100vh - 68px);
+            min-height: calc(100dvh - 64px);
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: var(--s12) var(--s8);
+            padding: var(--s12) var(--s5);
             position: relative;
             overflow: hidden;
+            /* Ensure smooth touch scrolling */
+            -webkit-overflow-scrolling: touch;
         }
 
         .hero-bg {
@@ -336,8 +338,8 @@
             inset: 0;
             pointer-events: none;
             background:
-                radial-gradient(ellipse 60% 50% at 50% 0%, rgba(0, 255, 136, 0.07) 0%, transparent 70%),
-                radial-gradient(ellipse 40% 40% at 80% 80%, rgba(0, 212, 255, 0.05) 0%, transparent 60%);
+                radial-gradient(ellipse 65% 55% at 50% 0%, rgba(0, 255, 136, 0.08) 0%, transparent 75%),
+                radial-gradient(ellipse 45% 45% at 85% 85%, rgba(0, 212, 255, 0.06) 0%, transparent 65%);
         }
 
         .hero-particles {
@@ -377,32 +379,34 @@
         .hero-content {
             position: relative;
             max-width: 760px;
+            width: 100%;
         }
 
         .hero-badge {
             display: inline-flex;
             align-items: center;
             gap: var(--s2);
-            padding: 6px 16px;
+            padding: 6px 14px;
             border-radius: var(--r-full);
             background: var(--green-glow);
             border: 1px solid rgba(0, 255, 136, 0.3);
-            font-size: 0.78rem;
+            font-size: 0.72rem;
             font-weight: 600;
             color: var(--green);
             letter-spacing: 0.06em;
             text-transform: uppercase;
-            margin-bottom: var(--s6);
+            margin-bottom: var(--s5);
             animation: fadeUp 0.5s ease both;
         }
 
         .hero-title {
             font-family: var(--font-display);
-            font-size: clamp(2.2rem, 6vw, 4rem);
+            font-size: clamp(2rem, 8vw, 4.2rem);
             font-weight: 900;
-            line-height: 1.1;
+            line-height: 1.05;
             margin-bottom: var(--s5);
             animation: fadeUp 0.5s 0.1s ease both;
+            word-break: keep-all;
         }
 
         .hero-title .hl {
@@ -413,10 +417,10 @@
         }
 
         .hero-sub {
-            font-size: 1.05rem;
+            font-size: 1.02rem;
             color: var(--text-2);
-            line-height: 1.75;
-            max-width: 560px;
+            line-height: 1.65;
+            max-width: 580px;
             margin: 0 auto var(--s8);
             animation: fadeUp 0.5s 0.2s ease both;
         }
@@ -425,7 +429,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: var(--s4);
+            gap: var(--s3);
             flex-wrap: wrap;
             animation: fadeUp 0.5s 0.3s ease both;
         }
@@ -893,8 +897,27 @@
                 padding: var(--s10) var(--s5);
             }
 
+            .hero-badge {
+                font-size: 0.68rem;
+                padding: 5px 12px;
+            }
+
+            .hero-title {
+                font-size: 2.1rem;
+            }
+
+            .hero-sub {
+                font-size: 0.95rem;
+                line-height: 1.6;
+            }
+
             .hero-stats {
-                gap: var(--s5);
+                gap: var(--s4);
+                margin-top: var(--s8);
+            }
+
+            .hero-stat-val {
+                font-size: 1.2rem;
             }
 
             .hero-stat-sep {
@@ -911,7 +934,22 @@
             }
 
             .navbar {
-                padding: 0 var(--s5);
+                padding: 0 var(--s4);
+            }
+        }
+
+        @media (max-width: 400px) {
+            .hero-title {
+                font-size: 1.8rem;
+            }
+
+            .hero-actions .btn {
+                width: 100%;
+                font-size: 0.85rem;
+            }
+
+            .impact-grid {
+                grid-template-columns: 1fr;
             }
         }
 
