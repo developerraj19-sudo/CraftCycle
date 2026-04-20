@@ -45,7 +45,7 @@ class User(db.Model):
     # ── Coin helpers ──────────────────────────────────────────
     def award_coins(self, amount: int, type_: str, description: str = "", ref_id: int = None):
         """Add coins to the user and write a ledger entry."""
-        from coin_transaction import CoinTransaction
+        from models.coin_transaction import CoinTransaction
         self.green_coins += amount
         tx = CoinTransaction(
             user_id=self.id,
