@@ -194,6 +194,25 @@ function populateUserInfo() {
       el.textContent = (user.full_name || user.username || "U")[0].toUpperCase();
     }
   });
+
+  // Role-based UI constraints
+  if (user.role === 'buyer') {
+    // Hide 'List Material' button in marketplace
+    const listBtn = document.getElementById("list-btn");
+    if (listBtn) listBtn.style.display = "none";
+    
+    // Hide seller-specific stats & sections on Dashboard
+    const productsGrid = document.getElementById("products-grid");
+    if (productsGrid && productsGrid.parentElement) {
+       productsGrid.parentElement.style.display = "none"; 
+    }
+    const statRevenue = document.getElementById("stat-revenue");
+    if (statRevenue && statRevenue.closest(".stat-card")) statRevenue.closest(".stat-card").style.display = "none";
+    const statListings = document.getElementById("stat-listings");
+    if (statListings && statListings.closest(".stat-card")) statListings.closest(".stat-card").style.display = "none";
+    const revenueChart = document.getElementById("revenue-chart");
+    if (revenueChart && revenueChart.closest(".card.chart-container")) revenueChart.closest(".card.chart-container").style.display = "none";
+  }
 }
 
 /** 

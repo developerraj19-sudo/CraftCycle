@@ -610,9 +610,9 @@
     function setLoading(btnId, loading) {
       const btn = document.getElementById(btnId);
       if (!btn) return;
+      if (!btn.dataset.label) btn.dataset.label = btn.innerHTML;
       btn.disabled = loading;
-      btn.textContent = loading ? "Please wait…" : btn.dataset.label || btn.textContent;
-      if (!btn.dataset.label) btn.dataset.label = btn.textContent;
+      btn.innerHTML = loading ? "Please wait…" : btn.dataset.label;
     }
 
     // ── LOGIN ───────────────────────────────────────────────────
