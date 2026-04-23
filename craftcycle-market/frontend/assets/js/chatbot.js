@@ -12,10 +12,7 @@
 (function () {
   // ── Configuration ─────────────────────────────────────────
   const BOT_NAME = "CraftBot 🌿";
-  const OPENAI_KEY = CONFIG.OPENAI_API_KEY || "";   // set in config.js
-  const MODEL = "gpt-4o";
-  const MAX_TOKENS = 500;
-
+  
   const SYSTEM_PROMPT = `You are CraftBot, the friendly AI assistant for CraftCycle Market — a circular economy marketplace where users buy scrap materials, create upcycled products, and sell them.
 
 Your personality: Helpful, encouraging, eco-conscious, and knowledgeable about upcycling, DIY crafts, and sustainable business.
@@ -229,14 +226,6 @@ If asked something outside CraftCycle (politics, unrelated topics), politely red
     }
     #cb-clear:hover { color: #FF4D4D; }
 
-    /* No API key warning */
-    #cb-no-key {
-      margin: 10px 14px; padding: 10px 14px;
-      background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.3);
-      border-radius: 10px; font-size: 0.78rem; color: #F97316;
-      display: none;
-    }
-
     /* Mobile */
     @media (max-width: 480px) {
       #cb-panel { width: calc(100vw - 32px); right: 16px; bottom: 90px; }
@@ -268,11 +257,6 @@ If asked something outside CraftCycle (politics, unrelated topics), politely red
         <button id="cb-close" title="Close">✕</button>
       </div>
 
-      <!-- No API key warning -->
-      <div id="cb-no-key">
-        ⚠️ OpenAI API key not configured. Set <code>OPENAI_API_KEY</code> in <code>js/config.js</code>.
-      </div>
-
       <!-- Messages -->
       <div id="cb-messages"></div>
 
@@ -297,7 +281,6 @@ If asked something outside CraftCycle (politics, unrelated topics), politely red
   const sendBtn = document.getElementById("cb-send");
   const quickEl = document.getElementById("cb-quick");
   const unreadBadge = document.getElementById("cb-unread");
-  const noKeyEl = document.getElementById("cb-no-key");
   const statusText = document.getElementById("cb-status-text");
 
   // ── Toggle panel ──────────────────────────────────────────
@@ -404,26 +387,28 @@ If asked something outside CraftCycle (politics, unrelated topics), politely red
     showTyping();
 
     try {
-      // Call backend API instead of mock logic
-      const response = await fetch(`${CONFIG.API_BASE_URL}/chatbot/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: text,
-          history: conversation.slice(0, -1) // Send history without current message
-        })
-      });
-
-      const data = await response.json();
+      // Manual Own AI Logic
+      let reply = "I'm not sure about that. Try asking about scrap materials, DIY ideas, or green coins!";
+      const lowerText = text.toLowerCase();
       
-      if (data.status === 'success') {
-        const reply = data.reply;
-        conversation.push({ role: "assistant", content: reply });
-        hideTyping();
-        addMessage("bot", reply);
-      } else {
-        throw new Error(data.message || 'API Error');
+      if (lowerText.includes("plastic") || lowerText.includes("bottle")) {
+        reply = "You can upcycle plastic bottles into beautiful planters or even bird feeders. Cut them in half, paint them, and add some soil!";
+      } else if (lowerText.includes("list") || lowerText.includes("sell") || lowerText.includes("scrap")) {
+        reply = "To list materials, go to the Marketplace and click '+ List Material'. Make sure to add a clear picture, price per kg, and your city.";
+      } else if (lowerText.includes("coin") || lowerText.includes("reward")) {
+        reply = "Green Coins are earned every time you scan waste or make a sustainable sale. You can use them to unlock premium DIY tutorials or get discounts.";
+      } else if (lowerText.includes("scan")) {
+        reply = "The AI Scanner lets you point your camera at any scrap material, and it will instantly suggest upcycling ideas and tell you how many Green Coins you'll earn!";
+      } else if (lowerText.includes("hello") || lowerText.includes("hi") || lowerText.includes("hey")) {
+        reply = "Hello there! How can I help you with your upcycling journey today?";
       }
+
+      // Simulate thinking delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      conversation.push({ role: "assistant", content: reply });
+      hideTyping();
+      addMessage("bot", reply);
 
       // Badge if panel is closed
       if (!isOpen) {

@@ -5,9 +5,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CraftCycle Market — My Products</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♻️</text></svg>">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♻️</text></svg>">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" href="../assets/css/style.css" />
+    <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
 
 <body>
@@ -65,11 +66,12 @@
                     <h1 style="font-family:var(--font-display); font-size:1.5rem;">Inventory</h1>
                     <a href="marketplace.html" class="btn btn-primary">+ Add New Product</a>
                 </div>
-                
-                <div id="products-container" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:var(--s5);">
+
+                <div id="products-container"
+                    style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:var(--s5);">
                     <!-- Products will be dynamically inserted here -->
                 </div>
-                
+
                 <div id="empty-state" class="card" style="padding:var(--s6);text-align:center;display:none;">
                     <div style="font-size:4rem; margin-bottom:var(--s4);">🪑</div>
                     <h2 style="font-family:var(--font-display); margin-bottom:var(--s2);">No Products Yet</h2>
@@ -87,33 +89,33 @@
     <script src="../assets/js/utils.js"></script>
     <script>
         requireAuth();
-        
+
         function loadMyProducts() {
             const user = Auth.getUser() || { full_name: "New Seller" };
             const username = user.full_name;
-            
+
             let scrap = [];
             let diy = [];
-            try { scrap = JSON.parse(localStorage.getItem('craftcycle_scrap_listings')) || []; } catch(e){}
-            try { diy = JSON.parse(localStorage.getItem('craftcycle_diy_listings')) || []; } catch(e){}
-            
+            try { scrap = JSON.parse(localStorage.getItem('craftcycle_scrap_listings')) || []; } catch (e) { }
+            try { diy = JSON.parse(localStorage.getItem('craftcycle_diy_listings')) || []; } catch (e) { }
+
             // For demo purposes, we will match by seller name
-            let myScrap = scrap.map(i => ({...i, _type: 'scrap'})).filter(i => i.seller === username);
-            let myDiy = diy.map(i => ({...i, _type: 'diy'})).filter(i => i.seller === username);
-            
+            let myScrap = scrap.map(i => ({ ...i, _type: 'scrap' })).filter(i => i.seller === username);
+            let myDiy = diy.map(i => ({ ...i, _type: 'diy' })).filter(i => i.seller === username);
+
             const allMyItems = [...myScrap, ...myDiy];
             const container = document.getElementById("products-container");
             const emptyState = document.getElementById("empty-state");
-            
+
             if (allMyItems.length === 0) {
                 container.style.display = "none";
                 emptyState.style.display = "block";
                 return;
             }
-            
+
             container.style.display = "grid";
             emptyState.style.display = "none";
-            
+
             container.innerHTML = allMyItems.map(l => `
                 <div class="card" style="overflow:hidden">
                     <div style="height:150px; background:var(--surface-3); display:flex; align-items:center; justify-content:center;">
