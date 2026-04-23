@@ -716,6 +716,15 @@
 
       // Simulate order processing
       setTimeout(() => {
+        // Impact tracking update
+        try {
+          let impact = JSON.parse(localStorage.getItem('craftcycle_impact')) || { waste_kg: 12.5, co2_kg: 10.0 };
+          const newWaste = checkoutData.items.reduce((s, i) => s + (i.qty || 0), 0);
+          impact.waste_kg += newWaste;
+          impact.co2_kg += (newWaste * 0.8); // Simple ratio for demo
+          localStorage.setItem('craftcycle_impact', JSON.stringify(impact));
+        } catch(e) {}
+
         // Clear cart
         localStorage.removeItem(CART_KEY);
         sessionStorage.removeItem('craftcycle_checkout_summary');

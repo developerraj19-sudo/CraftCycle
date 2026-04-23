@@ -202,7 +202,15 @@
       // Load seller products
       loadProducts();
       loadRevenue(30);
-      animateImpact(12.5, 10.0);   // demo values — replace with real API call
+
+      // Load impact from localStorage or use demo default
+      let impact = { waste_kg: 12.5, co2_kg: 10.0 };
+      try {
+        const storedImpact = JSON.parse(localStorage.getItem('craftcycle_impact'));
+        if (storedImpact) impact = storedImpact;
+      } catch(e) {}
+
+      animateImpact(impact.waste_kg, impact.co2_kg);
     }
 
     // ── Load products ───────────────────────────────────────────

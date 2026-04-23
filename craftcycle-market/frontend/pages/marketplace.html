@@ -750,8 +750,23 @@
 
     // ── Load & render ─────────────────────────────────────
     async function loadListings() {
-      // Direct load ignoring API to ensure visual stability of new items
-      allListings = currentTab === 'scrap' ? getScrapListings() : getDiyListings();
+      let localScrap = [];
+      let localDiy = [];
+      try {
+        localScrap = JSON.parse(localStorage.getItem('craftcycle_scrap_listings'));
+        localDiy = JSON.parse(localStorage.getItem('craftcycle_diy_listings'));
+      } catch (e) {}
+
+      if (!localScrap || localScrap.length === 0) {
+        localScrap = getScrapListings();
+        localStorage.setItem('craftcycle_scrap_listings', JSON.stringify(localScrap));
+      }
+      if (!localDiy || localDiy.length === 0) {
+        localDiy = getDiyListings();
+        localStorage.setItem('craftcycle_diy_listings', JSON.stringify(localDiy));
+      }
+
+      allListings = currentTab === 'scrap' ? localScrap : localDiy;
       applyFilters();
     }
 
@@ -937,21 +952,32 @@
       e.preventDefault();
       const barter = document.getElementById("c-barter").checked;
       const data = {
+        id: Date.now(), // Generate a unique ID
         title: document.getElementById("c-title").value,
         description: document.getElementById("c-desc").value,
         category: document.getElementById("c-cat").value,
         quality: document.getElementById("c-quality").value,
-        quantity_kg: parseFloat(document.getElementById("c-qty").value),
-        price_per_kg: parseFloat(document.getElementById("c-price").value),
+        qty: parseFloat(document.getElementById("c-qty").value),
+        price: parseFloat(document.getElementById("c-price").value),
         location: document.getElementById("c-location").value,
         barter,
         exchange_for: barter ? document.getElementById("c-barter-txt").value : "",
+        views: 0,
+        seller: (typeof Auth !== 'undefined' && Auth.getUser()?.full_name) || "New Seller",
+        sellerInit: (typeof Auth !== 'undefined' && Auth.getUser()?.full_name?.charAt(0)) || "N",
+        image: currentTab === 'scrap' ? "../assets/img/cardboard_rolls.png" : "../assets/img/denim_tote_bag.png" // Placeholder
       };
-      try {
-        await MarketplaceAPI.create(data);
-      } catch { }
-      Toast.success("Listed!", "Your scrap material is now live.");
+      
+      const storageKey = currentTab === 'scrap' ? 'craftcycle_scrap_listings' : 'craftcycle_diy_listings';
+      let currentListings = [];
+      try { currentListings = JSON.parse(localStorage.getItem(storageKey)) || []; } catch(e){}
+      currentListings.unshift(data);
+      localStorage.setItem(storageKey, JSON.stringify(currentListings));
+
+      Toast.success("Listed!", "Your material is now live in the marketplace.");
       closeModal("create-modal");
+      document.querySelector("form").reset();
+      document.getElementById("c-barter-field").style.display = "none";
       loadListings();
     }
 
