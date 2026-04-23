@@ -1,13 +1,146 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=home.html">
-    <title>CraftCycle Market</title>
-    <script>
-        window.location.replace("home.html");
-    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CraftCycle Market — Intro</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♻️</text></svg>">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            overflow: hidden;
+            font-family: sans-serif;
+            position: fixed;
+            inset: 0;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background-color: #000;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        #skip-btn {
+            position: absolute;
+            bottom: max(24px, env(safe-area-inset-bottom, 24px));
+            right: max(20px, env(safe-area-inset-right, 20px));
+            padding: 10px 22px;
+            background: rgba(0, 255, 136, 0.12);
+            border: 1px solid rgba(0, 255, 136, 0.4);
+            color: #00FF88;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 30px;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+        }
+
+        @media (min-width: 768px) {
+            #skip-btn {
+                bottom: 40px;
+                right: 40px;
+                padding: 12px 30px;
+                font-size: 16px;
+            }
+        }
+
+        #skip-btn:hover {
+            background: rgba(0, 255, 136, 0.3);
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+        }
+    </style>
 </head>
+
 <body>
+    <video id="intro-video" autoplay playsinline webkit-playsinline disablePictureInPicture>
+        <source src="intro/intro.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <button id="skip-btn">Skip Intro</button>
+
+    <script>
+        const video = document.getElementById('intro-video');
+        const skipBtn = document.getElementById('skip-btn');
+        const redirectUrl = 'home.html';
+        let redirected = false;
+
+        function goHome() {
+            if (!redirected) {
+                redirected = true;
+                window.location.href = redirectUrl;
+            }
+        }
+
+        video.addEventListener('ended', goHome);
+        skipBtn.addEventListener('click', goHome);
+        video.addEventListener('error', goHome);
+
+        // Try unmuted autoplay first; fall back to muted so the video always starts.
+        function startVideo() {
+            video.muted = false;
+            const playPromise = video.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(() => {
+                    // Unmuted blocked — mute and retry (browsers always allow muted autoplay).
+                    video.muted = true;
+                    video.play().catch(err => {
+                        console.warn("Autoplay completely blocked:", err);
+                    });
+
+                    // Show a subtle tap-to-unmute hint
+                    const hint = document.createElement('div');
+                    hint.id = 'unmute-hint';
+                    hint.textContent = '🔇 Tap to unmute';
+                    hint.style.cssText = `
+                        position:absolute; bottom:max(30px, env(safe-area-inset-bottom,30px));
+                        left:20px; padding:8px 18px;
+                        background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.2);
+                        color:#fff; font-size:13px; border-radius:30px; cursor:pointer;
+                        z-index:10; backdrop-filter:blur(8px); letter-spacing:1px;
+                        transition:opacity .3s;
+                    `;
+                    document.body.appendChild(hint);
+                    hint.addEventListener('click', () => {
+                        video.muted = false;
+                        hint.style.opacity = '0';
+                        setTimeout(() => hint.remove(), 300);
+                    });
+                });
+            }
+        }
+
+        // Start as soon as possible — 'canplay' fires before 'load' if cached.
+        if (video.readyState >= 3) {
+            startVideo();
+        } else {
+            video.addEventListener('canplay', startVideo, { once: true });
+            window.addEventListener('load', startVideo, { once: true });
+        }
+    </script>
 </body>
+
 </html>
