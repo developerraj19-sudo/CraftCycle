@@ -249,8 +249,8 @@ function renderSidebarNav() {
       <div class="nav-section-label" style="margin-top:var(--s4)">Community Activity</div>
       <a href="${p}challenges.html" class="nav-item"><span class="nav-icon">🏆</span><span class="nav-label"> Challenges</span></a>`;
 
-    // Store section (sellers + admin only)
-    if (user?.role === 'seller' || user?.role === 'admin') {
+    // Store section (sellers only)
+    if (user?.role === 'seller') {
       html += `
         <div class="nav-section-label" style="margin-top:var(--s4)">My Store</div>
         <a href="${p}my-products.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-label"> My Products</span></a>
@@ -553,7 +553,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <button class="btn btn-ghost btn-sm" id="mark-read-btn" style="font-size:0.7rem;padding:2px 8px;height:auto">Mark all read</button>
         </div>
         <div class="notif-list">
-          <div class="notif-item">
+          <div class="notif-item" style="cursor:pointer;" onclick="window.location.href='tutorial-hub.html'">
             <div class="notif-icon">🌱</div>
             <div class="notif-content">
               <strong>Welcome to CraftCycle!</strong>
@@ -561,7 +561,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <div class="notif-time">Just now</div>
             </div>
           </div>
-          <div class="notif-item">
+          <div class="notif-item" style="cursor:pointer;" onclick="window.location.href='scanner.html'">
             <div class="notif-icon" style="background:var(--cyan-glow);color:var(--cyan);border-color:rgba(0,212,255,0.2)">🪙</div>
             <div class="notif-content">
               <strong style="color:var(--cyan)">Earn Green Coins</strong>
