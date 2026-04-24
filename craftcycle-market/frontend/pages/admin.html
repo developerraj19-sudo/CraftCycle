@@ -30,8 +30,6 @@
         <div class="nav-section-label">Admin</div>
         <a href="admin.html" class="nav-item active"><span class="nav-icon">📊</span> Dashboard</a>
         <a href="#" class="nav-item" onclick="showTab('users');return false"><span class="nav-icon">👥</span> Users</a>
-        <a href="#" class="nav-item" onclick="showTab('products');return false"><span class="nav-icon">📦</span>
-          Products</a>
         <a href="#" class="nav-item" onclick="showTab('analytics');return false"><span class="nav-icon">📈</span>
           Analytics</a>
         <div class="nav-section-label" style="margin-top:var(--s4)">Platform</div>
@@ -58,7 +56,13 @@
           <span class="badge badge-orange">ADMIN</span>
         </div>
         <div class="topbar-right">
-          <button class="notif-btn">🔔<span class="notif-dot"></span></button>
+          <div class="dropdown">
+            <button class="notif-btn">🔔<span class="notif-dot"></span></button>
+            <div class="dropdown-menu" style="right: 0; left: auto; width: 250px; padding: var(--s3);">
+              <div style="font-weight: 600; margin-bottom: var(--s2); padding-bottom: var(--s2); border-bottom: 1px solid var(--border);">Notifications</div>
+              <div style="font-size: 0.85rem; color: var(--text-2); text-align: center; padding: var(--s3) 0;">No new notifications.</div>
+            </div>
+          </div>
           <div class="user-avatar" data-user-avatar style="border-color:var(--orange)"></div>
         </div>
       </header>
@@ -73,9 +77,9 @@
             <div class="stat-change up" id="kpi-users-new">Loading…</div>
           </div>
           <div class="card stat-card reveal">
-            <div class="stat-label">📦 Active Products</div>
-            <div class="stat-value cyan" id="kpi-products">—</div>
-            <div class="stat-change" id="kpi-pending" style="color:var(--orange)">Pending approval</div>
+            <div class="stat-label">✨ Total Coins</div>
+            <div class="stat-value cyan" id="kpi-coins">—</div>
+            <div class="stat-change" style="color:var(--orange)">In circulation</div>
           </div>
           <div class="card stat-card reveal">
             <div class="stat-label">🌿 Waste Saved</div>
@@ -93,7 +97,6 @@
         <div class="tab-bar">
           <button class="tab-btn active" id="tab-overview" onclick="showTab('overview')">📊 Overview</button>
           <button class="tab-btn" id="tab-users" onclick="showTab('users')">👥 Users</button>
-          <button class="tab-btn" id="tab-products" onclick="showTab('products')">📦 Products</button>
           <button class="tab-btn" id="tab-analytics" onclick="showTab('analytics')">📈 Analytics</button>
         </div>
 
@@ -202,40 +205,6 @@
           </div>
         </div>
 
-        <!-- ── Products Tab ──────────────────────────────────────── -->
-        <div class="tab-panel" id="panel-products">
-          <div style="display:flex;gap:var(--s3);margin-bottom:var(--s5)">
-            <button class="btn btn-secondary btn-sm" id="filter-pending" onclick="loadProducts('pending')">⏳
-              Pending</button>
-            <button class="btn btn-ghost btn-sm" id="filter-active" onclick="loadProducts('active')">✅ Active</button>
-            <button class="btn btn-ghost btn-sm" id="filter-suspended" onclick="loadProducts('suspended')">🚫
-              Suspended</button>
-          </div>
-
-          <div class="card table-wrap">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Product</th>
-                  <th>Seller</th>
-                  <th>Price</th>
-                  <th>Waste Saved</th>
-                  <th>Status</th>
-                  <th>Created</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="products-body">
-                <tr>
-                  <td colspan="8" style="text-align:center;padding:var(--s8)">
-                    <div class="spinner" style="margin:0 auto"></div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
 
         <!-- ── Analytics Tab ─────────────────────────────────────── -->
         <div class="tab-panel" id="panel-analytics">
@@ -297,7 +266,6 @@
       document.getElementById(`tab-${name}`)?.classList.add("active");
 
       if (name === "users") loadUsers();
-      if (name === "products") loadProducts("pending");
       if (name === "analytics") loadAnalytics();
     }
 
@@ -308,8 +276,7 @@
         const k = data.kpis;
         document.getElementById("kpi-users").textContent = (k.total_users || 0).toLocaleString();
         document.getElementById("kpi-users-new").textContent = `+${k.new_users_this_month || 0} this month`;
-        document.getElementById("kpi-products").textContent = (k.total_active_products || 0).toLocaleString();
-        document.getElementById("kpi-pending").textContent = `${k.pending_approval || 0} pending`;
+        document.getElementById("kpi-coins").textContent = (k.total_coins || 0).toLocaleString();
         document.getElementById("kpi-waste").textContent = formatKg(k.total_waste_kg || 0);
         document.getElementById("kpi-co2").textContent = formatKg(k.total_co2_kg || 0);
         document.getElementById("kpi-sellers").textContent = (k.total_sellers || 0).toLocaleString();
@@ -323,8 +290,7 @@
     function loadDemoData() {
       document.getElementById("kpi-users").textContent = "1,247";
       document.getElementById("kpi-users-new").textContent = "+38 this month";
-      document.getElementById("kpi-products").textContent = "342";
-      document.getElementById("kpi-pending").textContent = "14 pending";
+      document.getElementById("kpi-coins").textContent = "45,200";
       document.getElementById("kpi-waste").textContent = "2.3 tonnes";
       document.getElementById("kpi-co2").textContent = "1.8 tonnes";
       document.getElementById("kpi-sellers").textContent = "189";
@@ -397,7 +363,10 @@
           </div>
         </td>
         <td style="font-size:0.82rem;color:var(--text-2)">${u.email}</td>
-        <td><span class="badge badge-${u.role === 'admin' ? 'orange' : u.role === 'seller' ? 'green' : 'cyan'}">${u.role}</span></td>
+        <td>
+          <span class="badge badge-${u.role === 'admin' ? 'orange' : u.role === 'seller' ? 'green' : 'cyan'}">${u.role}</span>
+          ${u.role === 'seller' && u.is_verified ? '<span class="badge badge-green" style="margin-left: 4px;" title="Verified Seller">✓</span>' : ''}
+        </td>
         <td><span class="mono text-green">🪙 ${(u.green_coins || 0).toLocaleString()}</span></td>
         <td class="mono text-muted" style="font-size:0.75rem">${timeAgo(u.created_at)}</td>
         <td><span class="badge badge-${u.is_active ? 'green' : 'red'}">${u.is_active ? 'Active' : 'Suspended'}</span></td>
@@ -405,7 +374,7 @@
           <div class="dropdown">
             <button class="btn btn-ghost btn-sm">⋯ ▾</button>
             <div class="dropdown-menu">
-              <button class="dropdown-item" onclick="updateUser(${u.id},{is_verified:true})">✅ Verify</button>
+              <button class="dropdown-item" onclick="updateUser(${u.id},{is_verified:${!u.is_verified}})">${u.is_verified ? '❌ Remove Verification' : '✅ Verify Seller'}</button>
               <button class="dropdown-item" onclick="updateUser(${u.id},{role:'seller'})">🔨 Make Seller</button>
               <button class="dropdown-item ${u.is_active ? 'danger' : ''}"
                       onclick="updateUser(${u.id},{is_active:${!u.is_active}})">
@@ -449,64 +418,6 @@
       }
     }
 
-    // ── Load products ──────────────────────────────────────────
-    async function loadProducts(status = "pending") {
-      ["pending", "active", "suspended"].forEach(s => {
-        const btn = document.getElementById(`filter-${s}`);
-        btn.className = s === status ? "btn btn-secondary btn-sm" : "btn btn-ghost btn-sm";
-      });
-
-      try {
-        const data = await AdminAPI.products({ status });
-        renderProductsTable(data.products || []);
-      } catch {
-        renderProductsTable(getDemoProducts(status));
-      }
-    }
-
-    function getDemoProducts(status) {
-      return [
-        { id: 1, title: "Reclaimed Wood Clock", seller_id: 2, price: 1299, waste_kg_saved: 1.5, status, created_at: new Date(Date.now() - 86400000).toISOString() },
-        { id: 2, title: "Plastic Bottle Garden", seller_id: 2, price: 450, waste_kg_saved: 0.8, status, created_at: new Date(Date.now() - 172800000).toISOString() },
-        { id: 3, title: "E-Waste Art Lamp", seller_id: 4, price: 850, waste_kg_saved: 0.5, status, created_at: new Date(Date.now() - 259200000).toISOString() },
-        { id: 4, title: "Copper Wire Sculpture", seller_id: 4, price: 2200, waste_kg_saved: 3.0, status, created_at: new Date(Date.now() - 345600000).toISOString() },
-      ];
-    }
-
-    function renderProductsTable(products) {
-      const tbody = document.getElementById("products-body");
-      if (!products.length) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:var(--s8);color:var(--text-3)">No products found</td></tr>`;
-        return;
-      }
-      tbody.innerHTML = products.map(p => `
-      <tr>
-        <td><span class="mono text-muted">#${p.id}</span></td>
-        <td style="font-weight:600;max-width:180px" class="truncate">${p.title}</td>
-        <td class="text-secondary" style="font-size:0.82rem">Seller #${p.seller_id}</td>
-        <td><span class="mono text-green">₹${parseFloat(p.price).toLocaleString()}</span></td>
-        <td><span style="color:var(--cyan)">${p.waste_kg_saved} kg</span></td>
-        <td><span class="badge badge-${p.status === 'active' ? 'green' : p.status === 'pending' ? 'orange' : 'red'}">${p.status}</span></td>
-        <td class="mono text-muted" style="font-size:0.75rem">${timeAgo(p.created_at)}</td>
-        <td>
-          <div style="display:flex;gap:var(--s2)">
-            <button class="btn btn-primary btn-sm" onclick="moderateProduct(${p.id},'active')">✅ Approve</button>
-            <button class="btn btn-danger btn-sm"  onclick="moderateProduct(${p.id},'suspended')">🚫</button>
-          </div>
-        </td>
-      </tr>
-    `).join("");
-    }
-
-    async function moderateProduct(id, status) {
-      try {
-        await AdminAPI.moderateProduct(id, status);
-        Toast.success("Done", `Product ${status === "active" ? "approved" : "suspended"}.`);
-        loadProducts(status === "active" ? "pending" : "active");
-      } catch (err) {
-        Toast.error("Failed", err.data?.error || err.message);
-      }
-    }
 
     // ── Analytics ──────────────────────────────────────────────
     function loadAnalytics() {
