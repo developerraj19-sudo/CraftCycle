@@ -91,12 +91,31 @@ def create_product():
     title    = sanitize_string(data.get("title", ""))
     desc     = sanitize_string(data.get("description", ""))
     category = sanitize_string(data.get("category", ""))
-    price    = data.get("price")
-
     if not title:               errors["title"]       = "Title is required."
     if not desc:                errors["description"] = "Description is required."
     if not category:            errors["category"]    = "Category is required."
-    if not is_positive_number(price): errors["price"] = "Enter a valid price."
+
+    price_val = 0
+    try:
+        price_val = float(data.get("price", 0))
+        if price_val <= 0: errors["price"] = "Price must be greater than 0."
+    except:
+        errors["price"] = "Invalid price format."
+
+    waste_val = 0
+    try:
+        waste_val = float(data.get("waste_kg_saved", 0))
+        if waste_val < 0: errors["waste_kg_saved"] = "Waste saved cannot be negative."
+    except:
+        errors["waste_kg_saved"] = "Invalid waste value."
+
+    stock_val = 1
+    try:
+        stock_val = int(data.get("stock_qty", 1))
+        if stock_val < 0: errors["stock_qty"] = "Stock cannot be negative."
+    except:
+        errors["stock_qty"] = "Invalid stock quantity."
+
     if errors:
         return jsonify(error="Validation failed", details=errors), 422
 
@@ -105,11 +124,11 @@ def create_product():
         title         = title,
         description   = desc,
         category      = category,
-        price         = float(price),
-        stock_qty     = int(data.get("stock_qty", 1)),
+        price         = price_val,
+        stock_qty     = stock_val,
         images        = data.get("images", []),
         materials_used= sanitize_string(data.get("materials_used", "")),
-        waste_kg_saved= float(data.get("waste_kg_saved", 0)),
+        waste_kg_saved= waste_val,
         co2_kg_saved  = float(data.get("co2_kg_saved", 0)),
         time_to_make_h= data.get("time_to_make_h"),
         difficulty    = data.get("difficulty", "medium"),

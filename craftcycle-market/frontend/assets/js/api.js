@@ -116,7 +116,12 @@ async function apiRequest(method, path, { body, formData, params } = {}) {
     : { message: await response.text() };
 
   if (!response.ok) {
-    const err = new Error(data.error || data.message || "Request failed");
+    let msg = data.error || data.message || "Request failed";
+    if (data.details) {
+      const details = Object.entries(data.details).map(([k, v]) => `${k}: ${v}`).join(", ");
+      msg += ` (${details})`;
+    }
+    const err = new Error(msg);
     err.status = response.status;
     err.data   = data;
     throw err;
