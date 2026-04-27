@@ -33,7 +33,14 @@ def list_products():
     seller_id= request.args.get("seller_id", type=int)
     sort     = request.args.get("sort", "newest")  # newest | price_asc | price_desc | popular
 
-    q = Product.query.filter_by(status="active")
+    q = Product.query
+    if not seller_id:
+        q = q.filter_by(status="active")
+    # If seller_id is provided, we might want to show all their products (including pending/suspended)
+    # but for public listing, we usually only show active.
+    # However, for the seller dashboard 'my-products', we need to show all.
+    # So if seller_id is requested, we show all for that seller.
+    # If it's a general list, we only show active.
 
     if category:
         q = q.filter(Product.category.ilike(f"%{category}%"))
@@ -106,7 +113,7 @@ def create_product():
         co2_kg_saved  = float(data.get("co2_kg_saved", 0)),
         time_to_make_h= data.get("time_to_make_h"),
         difficulty    = data.get("difficulty", "medium"),
-        status        = "pending",  # admin must approve
+        status        = "active",
     )
     db.session.add(product)
     db.session.commit()

@@ -859,29 +859,114 @@
     function openListing(id) {
       const l = allListings.find(x => x.id === id);
       if (!l) return;
-      document.getElementById("lmodal-thumb").innerHTML = `<img src="${l.image}" alt="${l.title}" /><button class="lmodal-close" onclick="closeModal('listing-modal')">✕</button>`;
+      
+      const impactScore = Math.min(Math.round((l.qty * (l.price/10))), 100); // Mock sustainability score logic
+      
+      document.getElementById("lmodal-thumb").innerHTML = `
+        <img src="${l.image}" alt="${l.title}" />
+        <div style="position:absolute; bottom:var(--s4); right:var(--s4); background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); padding:var(--s2) var(--s4); border-radius:var(--r-full); border:1px solid var(--green); display:flex; align-items:center; gap:var(--s2)">
+          <span style="font-size:0.7rem; color:var(--text-2); font-weight:700">Sustainability Score</span>
+          <span style="color:var(--green); font-weight:900; font-family:var(--font-mono)">${impactScore}%</span>
+        </div>
+        <button class="lmodal-close" onclick="closeModal('listing-modal')">✕</button>
+      `;
+      
       document.getElementById("lmodal-body").innerHTML = `
-      <div style="display:flex;gap:var(--s2);flex-wrap:wrap;margin-bottom:var(--s4)">
-        <span class="badge badge-${qualityColor(l.quality)}">${l.quality}</span>
-        <span class="badge badge-gray">${l.category}</span>
-        ${l.barter ? '<span class="badge badge-cyan">🔄 Barter OK</span>' : ""}
+      <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:var(--s8)">
+        <div>
+          <div style="display:flex;gap:var(--s2);flex-wrap:wrap;margin-bottom:var(--s4)">
+            <span class="badge badge-${qualityColor(l.quality)}">${l.quality.toUpperCase()} QUALITY</span>
+            <span class="badge badge-gray">${l.category.toUpperCase()}</span>
+            ${l.barter ? '<span class="badge badge-cyan">🔄 BARTER OK</span>' : ""}
+          </div>
+          <h2 style="font-family:var(--font-display);font-size:1.5rem;font-weight:900;margin-bottom:var(--s3);line-height:1.2">${l.title}</h2>
+          <div style="display:flex; align-items:center; gap:var(--s4); margin-bottom:var(--s6); color:var(--text-3); font-size:0.85rem">
+            <span>📍 ${l.location}</span>
+            <span>🕒 Posted 2 days ago</span>
+            <span>👁 ${l.views || 0} views</span>
+          </div>
+          
+          <div style="margin-bottom:var(--s6)">
+            <h3 style="font-size:0.75rem; color:var(--text-3); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:var(--s3)">Description</h3>
+            <p style="color:var(--text-2);line-height:1.75; font-size:0.95rem">${l.description || "No description provided."}</p>
+          </div>
+
+          <div class="lmodal-stats" style="margin-bottom:var(--s6)">
+            <div class="lstat"><div class="lstat-val">₹${(l.price * l.qty).toLocaleString()}</div><div class="lstat-lbl">Total Price</div></div>
+            <div class="lstat"><div class="lstat-val">${l.qty} kg</div><div class="lstat-lbl">Quantity</div></div>
+            <div class="lstat"><div class="lstat-val">₹${l.price}/kg</div><div class="lstat-lbl">Price/KG</div></div>
+          </div>
+
+          <div style="background:var(--green-glow); border:1px solid rgba(0,255,136,0.2); border-radius:var(--r-xl); padding:var(--s5); display:flex; align-items:center; gap:var(--s5)">
+            <div style="font-size:2rem">🌿</div>
+            <div>
+              <div style="font-weight:700; color:var(--green); font-size:0.9rem">Environmental Impact</div>
+              <div style="color:var(--text-2); font-size:0.8rem">Buying this saved <strong class="text-green">${(l.qty * 0.8).toFixed(1)}kg</strong> of CO2 emissions from entering the atmosphere.</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card" style="padding:var(--s5); background:var(--surface-2); position:sticky; top:0">
+            <h3 style="font-size:0.85rem; font-weight:700; margin-bottom:var(--s4)">Buying Details</h3>
+            
+            <div style="display:flex; flex-direction:column; gap:var(--s4); margin-bottom:var(--s6)">
+              <div style="display:flex; align-items:center; gap:var(--s3)">
+                <span style="font-size:1.2rem">💳</span>
+                <div style="font-size:0.8rem">
+                  <div style="font-weight:600; color:var(--text-1)">Secure Payments</div>
+                  <div style="color:var(--text-3)">UPI, Cards, Netbanking</div>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:var(--s3)">
+                <span style="font-size:1.2rem">🚚</span>
+                <div style="font-size:0.8rem">
+                  <div style="font-weight:600; color:var(--text-1)">Fast Delivery</div>
+                  <div style="color:var(--text-3)">Estimated 3-5 business days</div>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:var(--s3)">
+                <span style="font-size:1.2rem">🛡️</span>
+                <div style="font-size:0.8rem">
+                  <div style="font-weight:600; color:var(--text-1)">Buyer Protection</div>
+                  <div style="color:var(--text-3)">100% money-back guarantee</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:var(--s3)">
+              <button class="btn btn-primary w-full" onclick="buyNow(${l.id})">💳 Checkout Now</button>
+              <button class="btn btn-secondary w-full" onclick="addToCart(${l.id})">🛒 Add to Cart</button>
+            </div>
+
+            <div style="margin-top:var(--s6); padding-top:var(--s4); border-top:1px solid var(--border)">
+              <div style="font-size:0.7rem; color:var(--text-3); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:var(--s3)">Seller Info</div>
+              <div style="display:flex;align-items:center;gap:var(--s3)">
+                <div class="listing-seller-av" style="width:40px;height:40px;font-size:1rem">${l.sellerInit || "S"}</div>
+                <div>
+                  <div style="font-weight:700;font-size:0.9rem">${l.seller || "Seller"}</div>
+                  <div style="font-size:0.75rem;color:var(--green)">⭐ 4.9 (120 reviews)</div>
+                </div>
+              </div>
+              <button class="btn btn-ghost btn-sm w-full" style="margin-top:var(--s4)" onclick="contactSeller(${l.id})">💬 Message Seller</button>
+            </div>
+          </div>
+        </div>
       </div>
-      <h2 style="font-family:var(--font-display);font-size:1.15rem;font-weight:900;margin-bottom:var(--s3)">${l.title}</h2>
-      <p style="color:var(--text-2);line-height:1.75;margin-bottom:var(--s5)">${l.description}</p>
-      <div class="lmodal-stats">
-        <div class="lstat"><div class="lstat-val">₹${(l.price * l.qty).toLocaleString()}</div><div class="lstat-lbl">Total Price</div></div>
-        <div class="lstat"><div class="lstat-val">${l.qty} kg</div><div class="lstat-lbl">Quantity</div></div>
-        <div class="lstat"><div class="lstat-val">₹${l.price}/kg</div><div class="lstat-lbl">Per KG</div></div>
-      </div>
-      <div style="display:flex;align-items:center;gap:var(--s3);padding:var(--s4);background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-lg);margin-bottom:var(--s5)">
-        <div class="listing-seller-av" style="width:36px;height:36px;font-size:.9rem">${l.sellerInit || "S"}</div>
-        <div><div style="font-weight:700;font-size:.875rem">${l.seller || "Seller"}</div><div style="font-size:.72rem;color:var(--text-3)">📍 ${l.location}</div></div>
-      </div>
-      <div style="display:flex;gap:var(--s3);flex-wrap:wrap">
-        <button class="btn btn-primary" onclick="buyNow(${l.id})">💳 Buy Now</button>
-        <button class="btn btn-secondary" onclick="addToCart(${l.id})">🛒 Add to Cart</button>
-        <button class="btn btn-ghost" onclick="contactSeller(${l.id})">📞 Contact Seller</button>
-        <button class="btn btn-ghost" onclick="addWishlist(${l.id})" title="Save for later">🤍</button>
+      
+      <div style="margin-top:var(--s10); padding-top:var(--s8); border-top:1px solid var(--border)">
+        <h3 style="font-family:var(--font-display); font-size:1rem; margin-bottom:var(--s6)">You might also like</h3>
+        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:var(--s4)">
+          ${allListings.filter(x => x.id !== id && x.category === l.category).slice(0, 4).map(r => `
+            <div class="card" style="padding:var(--s3); cursor:pointer" onclick="openListing(${r.id})">
+              <div style="height:100px; background:var(--surface-3); border-radius:var(--r-md); margin-bottom:var(--s3); overflow:hidden">
+                <img src="${r.image}" style="width:100%; height:100%; object-fit:cover" />
+              </div>
+              <div style="font-weight:700; font-size:0.8rem; margin-bottom:var(--s1); white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${r.title}</div>
+              <div style="color:var(--green); font-family:var(--font-mono); font-size:0.75rem">₹${r.price}/kg</div>
+            </div>
+          `).join("")}
+        </div>
       </div>
     `;
       document.getElementById("listing-modal").classList.add("open");
@@ -951,34 +1036,38 @@
     async function submitListing(e) {
       e.preventDefault();
       const barter = document.getElementById("c-barter").checked;
-      const data = {
-        id: Date.now(), // Generate a unique ID
+      const btn = e.target.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.textContent = "Publishing...";
+
+      const payload = {
         title: document.getElementById("c-title").value,
         description: document.getElementById("c-desc").value,
         category: document.getElementById("c-cat").value,
         quality: document.getElementById("c-quality").value,
-        qty: parseFloat(document.getElementById("c-qty").value),
-        price: parseFloat(document.getElementById("c-price").value),
-        location: document.getElementById("c-location").value,
-        barter,
-        exchange_for: barter ? document.getElementById("c-barter-txt").value : "",
-        views: 0,
-        seller: (typeof Auth !== 'undefined' && Auth.getUser()?.full_name) || "New Seller",
-        sellerInit: (typeof Auth !== 'undefined' && Auth.getUser()?.full_name?.charAt(0)) || "N",
-        image: currentTab === 'scrap' ? "../assets/img/cardboard_rolls.png" : "../assets/img/denim_tote_bag.png" // Placeholder
+        quantity_kg: parseFloat(document.getElementById("c-qty").value),
+        price_per_kg: parseFloat(document.getElementById("c-price").value),
+        location_city: document.getElementById("c-location").value.split(',')[0].trim(),
+        location_state: document.getElementById("c-location").value.split(',')[1]?.trim() || "",
+        is_barter_ok: barter,
+        barter_for: barter ? document.getElementById("c-barter-txt").value : "",
+        status: "active"
       };
-      
-      const storageKey = currentTab === 'scrap' ? 'craftcycle_scrap_listings' : 'craftcycle_diy_listings';
-      let currentListings = [];
-      try { currentListings = JSON.parse(localStorage.getItem(storageKey)) || []; } catch(e){}
-      currentListings.unshift(data);
-      localStorage.setItem(storageKey, JSON.stringify(currentListings));
 
-      Toast.success("Listed!", "Your material is now live in the marketplace.");
-      closeModal("create-modal");
-      document.querySelector("form").reset();
-      document.getElementById("c-barter-field").style.display = "none";
-      loadListings();
+      try {
+        // Use real backend API
+        await MarketplaceAPI.create(payload);
+        Toast.success("Listed! 🎉", "Your material is now live in the marketplace.");
+        closeModal("create-modal");
+        e.target.reset();
+        document.getElementById("c-barter-field").style.display = "none";
+        loadListings(); // Refresh listings
+      } catch (err) {
+        Toast.error("Failed to list", err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "📤 Publish Listing";
+      }
     }
 
     // Barter field toggle

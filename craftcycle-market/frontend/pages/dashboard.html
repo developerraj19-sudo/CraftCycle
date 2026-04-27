@@ -73,8 +73,8 @@
               </div>
             </div>
             <div style="display:flex;gap:var(--s3);flex-wrap:wrap">
-              <a href="scanner.html" class="btn btn-primary">🔍 Scan Waste</a>
-              <a href="marketplace.html" class="btn btn-secondary">Browse Materials →</a>
+              <button onclick="openUploadModal()" class="btn btn-primary">📤 Quick List Item</button>
+              <a href="scanner.html" class="btn btn-secondary">🔍 Scan Waste</a>
             </div>
           </div>
         </div>
@@ -172,6 +172,56 @@
     </div>
   </div>
 
+  <!-- ── Upload Product Modal ── -->
+  <div class="modal" id="upload-modal" onclick="if(event.target===this)closeUploadModal()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">📦 List New Product</div>
+        <button class="modal-close" onclick="closeUploadModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="upload-form" onsubmit="handleUpload(event)">
+          <div class="form-group">
+            <label class="form-label">Product Title</label>
+            <input type="text" id="p-title" class="form-input" required placeholder="e.g. Recycled Glass Vase" style="width:100%">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea id="p-desc" class="form-input" rows="3" required placeholder="Describe your creation..." style="width:100%"></textarea>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--s4)">
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select id="p-cat" class="form-input" required style="width:100%">
+                <option value="wood">Wood</option>
+                <option value="glass">Glass</option>
+                <option value="plastic">Plastic</option>
+                <option value="metal">Metal</option>
+                <option value="fabric">Fabric</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Price (₹)</label>
+              <input type="number" id="p-price" class="form-input" required placeholder="0.00" style="width:100%">
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--s4)">
+            <div class="form-group">
+              <label class="form-label">Waste Saved (kg)</label>
+              <input type="number" id="p-waste" class="form-input" step="0.1" required placeholder="0.0" style="width:100%">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Stock Qty</label>
+              <input type="number" id="p-stock" class="form-input" required placeholder="1" style="width:100%">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary w-full" style="margin-top:var(--s2)">🚀 Publish Listing</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <script src="../assets/js/config.js"></script>
   <script src="../assets/js/api.js"></script>
   <script src="../assets/js/utils.js?v=3"></script>
@@ -219,6 +269,7 @@
       const grid = document.getElementById("products-grid");
 
       try {
+        // Fetch real products from backend
         const data = await ProductsAPI.list({ seller_id: user?.id, per_page: 6 });
         const products = data.products || [];
 
@@ -229,7 +280,7 @@
           <div style="grid-column:1/-1;text-align:center;padding:var(--s12)">
             <div style="font-size:2.5rem;margin-bottom:var(--s4)">📦</div>
             <div style="color:var(--text-2);margin-bottom:var(--s5)">No products yet.</div>
-            <a href="my-products.html" class="btn btn-primary">+ Add First Product</a>
+            <button onclick="openUploadModal()" class="btn btn-primary">+ Add First Product</button>
           </div>`;
           return;
         }
@@ -246,15 +297,16 @@
             </div>
             <div style="font-weight:700;font-size:0.875rem;margin-bottom:var(--s2)">${truncate(p.title, 40)}</div>
             <div style="display:flex;gap:var(--s4);font-size:0.75rem;color:var(--text-3)">
-              <span>🌿 ${p.waste_kg_saved} kg</span>
-              <span>👁 ${p.view_count}</span>
+              <span>🌿 ${p.waste_kg_saved || 0} kg</span>
+              <span>👁 ${p.view_count || 0}</span>
             </div>
           </div>
         </div>
       `).join("");
 
-      } catch {
-        // Demo mode
+      } catch (err) {
+        console.warn("Backend products fetch failed, using demo data:", err.message);
+        // Demo mode fallback
         grid.innerHTML = [
           { title: "Reclaimed Wood Clock", price: 1299, status: "active", waste: 1.5, views: 24, icon: "🕰️" },
           { title: "Plastic Bottle Garden", price: 450, status: "active", waste: 0.8, views: 12, icon: "🌿" },
@@ -278,6 +330,48 @@
 
       // Trigger scroll reveal
       setTimeout(initScrollReveal, 100);
+    }
+
+    // ── Modal Logic ─────────────────────────────────────────────
+    function openUploadModal() {
+      document.getElementById("upload-modal").classList.add("open");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeUploadModal() {
+      document.getElementById("upload-modal").classList.remove("open");
+      document.body.style.overflow = "";
+    }
+
+    async function handleUpload(e) {
+      e.preventDefault();
+      const btn = e.target.querySelector('button[type="submit"]');
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Publishing...";
+
+      const payload = {
+        title: document.getElementById("p-title").value,
+        description: document.getElementById("p-desc").value,
+        category: document.getElementById("p-cat").value,
+        price: parseFloat(document.getElementById("p-price").value),
+        waste_kg_saved: parseFloat(document.getElementById("p-waste").value),
+        stock_qty: parseInt(document.getElementById("p-stock").value),
+        status: "active"
+      };
+
+      try {
+        await ProductsAPI.create(payload);
+        Toast.success("Success! 🎉", "Your product is now live.");
+        closeUploadModal();
+        e.target.reset();
+        loadProducts(); // Refresh grid
+      } catch (err) {
+        Toast.error("Upload failed", err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
     }
 
     // ── Revenue Chart ───────────────────────────────────────────
