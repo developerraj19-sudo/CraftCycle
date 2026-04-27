@@ -739,35 +739,74 @@
       if (tab === 'scrap') {
         document.getElementById('hero-title').innerHTML = `♻️ Scrap Materials <span class="text-green">Marketplace</span>`;
         document.getElementById('list-btn').textContent = `+ List Material`;
-        allListings = getScrapListings();
       } else {
         document.getElementById('hero-title').innerHTML = `🛠️ DIY Creations <span class="text-green">Marketplace</span>`;
         document.getElementById('list-btn').textContent = `+ List DIY Product`;
-        allListings = getDiyListings();
       }
-      resetFilters();
+      resetFilters(); // This will call applyFilters and loadListings
+      loadListings();
     }
 
     // ── Load & render ─────────────────────────────────────
     async function loadListings() {
-      let localScrap = [];
-      let localDiy = [];
+      const params = {
+        category: currentCat,
+        quality: document.getElementById("quality-filter")?.value,
+        search: document.getElementById("search-input")?.value,
+        barter: document.getElementById("barter-filter")?.checked,
+        sort: document.getElementById("sort-select")?.value,
+        per_page: 100
+      };
+
       try {
-        localScrap = JSON.parse(localStorage.getItem('craftcycle_scrap_listings'));
-        localDiy = JSON.parse(localStorage.getItem('craftcycle_diy_listings'));
-      } catch (e) {}
+        let backendItems = [];
+        if (currentTab === 'scrap') {
+          const data = await MarketplaceAPI.list(params);
+          backendItems = (data.listings || []).map(l => ({
+            id: l.id,
+            title: l.title,
+            description: l.description,
+            category: l.category,
+            quality: l.quality,
+            qty: l.quantity_kg,
+            price: l.price_per_kg,
+            location: `${l.location_city}${l.location_state ? ', ' + l.location_state : ''}`,
+            barter: l.is_barter_ok,
+            views: l.view_count || 0,
+            seller: l.seller?.full_name || "Seller",
+            sellerInit: (l.seller?.full_name || "S").charAt(0),
+            image: l.images?.[0] || "../assets/img/cardboard_rolls.png"
+          }));
+        } else {
+          // DIY Tab -> Fetch from ProductsAPI
+          const data = await ProductsAPI.list(params);
+          backendItems = (data.products || []).map(p => ({
+            id: p.id,
+            title: p.title,
+            description: p.description,
+            category: p.category,
+            quality: "excellent", // Products usually excellent
+            qty: 1, 
+            price: p.price,
+            location: "CraftCycle Hub", // Products might be shipped from central
+            barter: false,
+            views: p.view_count || 0,
+            seller: p.seller?.full_name || "Creator",
+            sellerInit: (p.seller?.full_name || "C").charAt(0),
+            image: p.images?.[0] || "../assets/img/upcycled_wooden_planter.png"
+          }));
+        }
 
-      if (!localScrap || localScrap.length === 0) {
-        localScrap = getScrapListings();
-        localStorage.setItem('craftcycle_scrap_listings', JSON.stringify(localScrap));
+        // Merge with demo data
+        const demoData = currentTab === 'scrap' ? getScrapListings() : getDiyListings();
+        allListings = [...backendItems, ...demoData];
+        
+        applyFilters();
+      } catch (err) {
+        console.error("Backend fetch failed:", err);
+        allListings = currentTab === 'scrap' ? getScrapListings() : getDiyListings();
+        applyFilters();
       }
-      if (!localDiy || localDiy.length === 0) {
-        localDiy = getDiyListings();
-        localStorage.setItem('craftcycle_diy_listings', JSON.stringify(localDiy));
-      }
-
-      allListings = currentTab === 'scrap' ? localScrap : localDiy;
-      applyFilters();
     }
 
     function buildParams() {
