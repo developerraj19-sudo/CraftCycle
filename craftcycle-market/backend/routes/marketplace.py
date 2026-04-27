@@ -76,7 +76,7 @@ def list_listings():
 @marketplace_bp.post("/")
 @jwt_required()
 def create_listing():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user = User.query.get(user_id)
     if not user or not user.is_seller:
         return jsonify(error="Only sellers can create listings."), 403
@@ -147,11 +147,11 @@ def get_listing(listing_id):
 @marketplace_bp.put("/<int:listing_id>")
 @jwt_required()
 def update_listing(listing_id):
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user    = User.query.get(user_id)
     listing = ScrapMaterial.query.get_or_404(listing_id)
 
-    if listing.seller_id != user_id and not user.is_admin:
+    if int(listing.seller_id) != user_id and not user.is_admin:
         return jsonify(error="You can only edit your own listings."), 403
 
     data = request.get_json(silent=True) or {}
@@ -174,11 +174,11 @@ def update_listing(listing_id):
 @marketplace_bp.delete("/<int:listing_id>")
 @jwt_required()
 def delete_listing(listing_id):
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user    = User.query.get(user_id)
     listing = ScrapMaterial.query.get_or_404(listing_id)
 
-    if listing.seller_id != user_id and not user.is_admin:
+    if int(listing.seller_id) != user_id and not user.is_admin:
         return jsonify(error="You can only delete your own listings."), 403
 
     listing.status = "suspended"   # soft delete

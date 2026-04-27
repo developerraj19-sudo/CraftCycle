@@ -89,8 +89,8 @@ def register():
     db.session.commit()
 
     # Issue tokens
-    access  = create_access_token(identity=user.id)
-    refresh = create_refresh_token(identity=user.id)
+    access  = create_access_token(identity=str(user.id))
+    refresh = create_refresh_token(identity=str(user.id))
 
     return jsonify(
         message=f"Account created! You received {welcome} Green Coins 🎉",
@@ -124,8 +124,8 @@ def login():
         return jsonify(error="Your account has been suspended. Contact support."), 403
 
     # Issue tokens
-    access  = create_access_token(identity=user.id)
-    refresh = create_refresh_token(identity=user.id)
+    access  = create_access_token(identity=str(user.id))
+    refresh = create_refresh_token(identity=str(user.id))
 
     return jsonify(
         message="Login successful.",
@@ -144,7 +144,7 @@ def refresh():
     if not user or not user.is_active:
         return jsonify(error="User not found or suspended."), 401
 
-    access = create_access_token(identity=user_id)
+    access = create_access_token(identity=str(user_id))
     return jsonify(access_token=access), 200
 
 
@@ -152,11 +152,89 @@ def refresh():
 @auth_bp.get("/me")
 @jwt_required()
 def me():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user = User.query.get(user_id)
     if not user:
         return jsonify(error="User not found."), 404
     return jsonify(user=user.to_private_dict()), 200
+
+
+# ── PUT /profile ──────────────────────────────────────────────
+@auth_bp.put("/profile")
+@jwt_required()
+def update_profile():
+    user_id = int(get_jwt_identity())
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify(error="User not found."), 404
+
+    data = request.get_json(silent=True) or {}
+    
+    # Allowed fields
+    if "full_name" in data: user.full_name = sanitize_string(data["full_name"])
+    if "bio" in data:       user.bio       = sanitize_string(data["bio"], max_len=1000)
+    if "phone" in data:     user.phone     = sanitize_string(data["phone"], max_len=20)
+    if "city" in data:      user.city      = sanitize_string(data["city"])
+    if "state" in data:     user.state     = sanitize_string(data["state"])
+    if "avatar_url" in data: user.avatar_url = sanitize_string(data["avatar_url"], max_len=500)
+
+    # Username update (with uniqueness check)
+    if "username" in data:
+        new_un = sanitize_string(data["username"])
+        if new_un != user.username:
+            valid, msg = validate_username(new_un)
+            if not valid: return jsonify(error=msg), 422
+            if User.query.filter_by(username=new_un).first():
+                return jsonify(error="Username already taken."), 409
+            user.username = new_un
+
+    db.session.commit()
+    return jsonify(message="Profile updated successfully.", user=user.to_private_dict()), 200
+
+
+# ── POST /become-seller ───────────────────────────────────────
+@auth_bp.post("/become-seller")
+@jwt_required()
+def become_seller():
+    user_id = int(get_jwt_identity())
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify(error="User not found."), 404
+
+    if user.role == "buyer":
+        user.role = "seller"
+        db.session.commit()
+        return jsonify(message="Congratulations! You are now a Seller. Start listing your waste or products!", user=user.to_private_dict()), 200
+    
+    return jsonify(message="You are already a seller or admin.", user=user.to_private_dict()), 200
+
+
+# ── PUT /change-password ──────────────────────────────────────
+@auth_bp.put("/change-password")
+@jwt_required()
+def change_password():
+    user_id = int(get_jwt_identity())
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify(error="User not found."), 404
+
+    data = request.get_json(silent=True) or {}
+    current_pwd = data.get("current_password")
+    new_pwd     = data.get("new_password")
+
+    if not current_pwd or not new_pwd:
+        return jsonify(error="Current and new password are required."), 400
+
+    if not user.check_password(current_pwd):
+        return jsonify(error="Incorrect current password."), 401
+
+    valid, msg = validate_password(new_pwd)
+    if not valid:
+        return jsonify(error=msg), 422
+
+    user.set_password(new_pwd)
+    db.session.commit()
+    return jsonify(message="Password changed successfully."), 200
 
 
 # ── POST /logout ──────────────────────────────────────────────

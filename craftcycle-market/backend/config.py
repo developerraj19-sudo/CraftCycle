@@ -29,10 +29,13 @@ class Config:
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_recycle": 280,
         "pool_pre_ping": True,
-        "connect_args": {
+    }
+    
+    # Only add sslmode for PostgreSQL
+    if _db_url.startswith("postgresql"):
+        SQLALCHEMY_ENGINE_OPTIONS["connect_args"] = {
             "sslmode": "require" if os.getenv("FLASK_ENV") == "production" else "prefer"
         }
-    }
 
     # ── Supabase ──────────────────────────────────────────────
     SUPABASE_URL = os.getenv("SUPABASE_URL")

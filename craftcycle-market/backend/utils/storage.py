@@ -6,15 +6,22 @@ Replaces Cloudinary.
 """
 import os
 import uuid
-from supabase import create_client
+try:
+    from supabase import create_client
+except ImportError:
+    print("Warning: Supabase library not found. Image uploads will be disabled.")
+    create_client = None
 
 SUPABASE_URL = os.getenv('SUPABASE_URL')
 SUPABASE_KEY = os.getenv('SUPABASE_SERVICE_KEY')  # service_role key required for server-side uploads
 
 # Initialize Supabase client
 supabase = None
-if SUPABASE_URL and SUPABASE_KEY:
-    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+if create_client and SUPABASE_URL and SUPABASE_KEY:
+    try:
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+    except Exception as e:
+        print(f"Warning: Failed to initialize Supabase client: {str(e)}")
 
 def upload_image(file_bytes, bucket, original_filename, user_id):
     """

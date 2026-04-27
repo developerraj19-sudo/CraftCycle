@@ -679,7 +679,7 @@
           <div>
 
             <!-- Account Info -->
-            <div class="card section-card">
+          <div class="card section-card">
               <div class="section-header">
                 <div class="section-title">🗂 Account Details</div>
               </div>
@@ -691,6 +691,13 @@
                 <div class="info-row">
                   <span class="info-key">Role</span>
                   <span class="info-val" id="acc-role">—</span>
+                </div>
+                <!-- Become Seller CTA -->
+                <div id="become-seller-box" style="display:none; margin-bottom:var(--s4);">
+                  <div style="padding:1rem; background:rgba(0, 212, 255, 0.05); border-radius:12px; border:1px dashed var(--cyan);">
+                    <p style="font-size:.78rem; color:var(--text-2); margin-bottom:.75rem;">Want to sell your upcycled products or scrap materials?</p>
+                    <button onclick="upgradeToSeller()" class="btn btn-cyan btn-sm" style="width:100%; font-weight:600;">🚀 Become a Seller</button>
+                  </div>
                 </div>
                 <div class="info-row">
                   <span class="info-key">Member Since</span>
@@ -880,6 +887,9 @@
       document.getElementById('acc-id').textContent = u.id ? '#' + u.id : '—';
       document.getElementById('acc-role').textContent = capitalize(u.role || 'user');
       document.getElementById('acc-login').textContent = u.last_login ? timeAgo(u.last_login) : 'Now';
+
+      const sellerBox = document.getElementById('become-seller-box');
+      if (sellerBox) sellerBox.style.display = (u.role === 'buyer') ? 'block' : 'none';
 
       // ── Form fields ────────────────────────────────────────
       document.getElementById('edit-name').value = u.full_name || '';
@@ -1094,6 +1104,22 @@
       a.download = `craftcycle-data-${Date.now()}.json`;
       a.click();
       Toast.success('Export Ready', 'Your data file has been downloaded.');
+    }
+
+    async function upgradeToSeller() {
+      if (!confirm("Are you sure you want to become a seller? You'll be able to list products and materials in the marketplace.")) return;
+      
+      try {
+        const data = await api.post('/auth/become-seller', {});
+        if (data?.user) {
+          currentUser = { ...currentUser, ...data.user };
+          Auth.setUser(currentUser);
+          fillUI(currentUser);
+          Toast.success('Role Updated!', 'You are now a Seller. Start listing!');
+        }
+      } catch (err) {
+        Toast.error('Upgrade Failed', err.message);
+      }
     }
 
     function confirmLogoutAll() {

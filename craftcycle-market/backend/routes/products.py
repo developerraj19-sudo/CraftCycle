@@ -78,10 +78,10 @@ def list_products():
 @products_bp.post("/")
 @jwt_required()
 def create_product():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user = User.query.get(user_id)
-    # if not user or not user.is_seller:
-    #     return jsonify(error="Only sellers can create products."), 403
+    if not user or not user.is_seller:
+        return jsonify(error="Only sellers can list products. Please upgrade your account in the profile page."), 403
     # if not user.is_verified:
     #     return jsonify(error="Your seller account must be verified by an admin before you can create products."), 403
 
@@ -136,9 +136,12 @@ def create_product():
     )
     db.session.add(product)
     db.session.commit()
+    
+    # Refresh to ensure relationships/IDs are fully loaded
+    db.session.refresh(product)
 
     return jsonify(
-        message="Product submitted for review. You'll be notified once approved.",
+        message="Product listing created successfully!",
         product=product.to_dict(),
     ), 201
 

@@ -5,7 +5,8 @@
  */
 
 const CONFIG = {
-  // Backend API base URL (Update this after deploying to Render/Heroku)
+  // Use http://localhost:5000/api/v1 for local development
+  // Use https://craftcycle.onrender.com/api/v1 for production
   API_BASE_URL: "https://craftcycle.onrender.com/api/v1",
 
   // Supabase Configuration (For Realtime Green Coins & Storage)
