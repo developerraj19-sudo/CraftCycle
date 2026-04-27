@@ -129,7 +129,11 @@
                             <input type="number" id="p-stock" class="form-input" required placeholder="1" style="width:100%">
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary w-full" style="margin-top:var(--s2)">🚀 Publish Listing</button>
+                    <div class="form-group">
+                        <label class="form-label">Product Image URL (Optional)</label>
+                        <input type="url" id="p-image" class="form-input" placeholder="https://example.com/image.jpg" style="width:100%">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full" style="margin-top:var(--s4)">🚀 Publish Listing</button>
                 </form>
             </div>
         </div>
@@ -206,23 +210,29 @@
             btn.disabled = true;
             btn.textContent = "Publishing...";
 
+            const imgUrl = document.getElementById("p-image").value;
             const payload = {
                 title: document.getElementById("p-title").value,
                 description: document.getElementById("p-desc").value,
                 category: document.getElementById("p-cat").value,
-                price: parseFloat(document.getElementById("p-price").value),
-                waste_kg_saved: parseFloat(document.getElementById("p-waste").value),
-                stock_qty: parseInt(document.getElementById("p-stock").value),
+                price: parseFloat(document.getElementById("p-price").value) || 0,
+                waste_kg_saved: parseFloat(document.getElementById("p-waste").value) || 0,
+                stock_qty: parseInt(document.getElementById("p-stock").value) || 0,
+                images: imgUrl ? [imgUrl] : [],
                 status: "active"
             };
 
+            console.log("Submitting product payload:", payload);
+
             try {
-                await ProductsAPI.create(payload);
+                const res = await ProductsAPI.create(payload);
+                console.log("Upload response:", res);
                 Toast.success("Success! 🎉", "Your product is now live.");
                 closeUploadModal();
                 e.target.reset();
                 loadMyProducts();
             } catch (err) {
+                console.error("Upload Error Details:", err);
                 Toast.error("Upload failed", err.message);
             } finally {
                 btn.disabled = false;
