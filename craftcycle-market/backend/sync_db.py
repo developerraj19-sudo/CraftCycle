@@ -38,4 +38,21 @@ with app.app_context():
             db.session.rollback()
             print(f"  - Error on column '{col}': {e}")
     
+    # Check order_items too
+    print("\nChecking/Updating 'order_items' table columns...")
+    item_cols = [
+        ('scrap_id', 'INTEGER'),
+        ('seller_id', 'INTEGER'),
+        ('quantity', 'NUMERIC(10, 2) DEFAULT 1'),
+        ('unit', 'VARCHAR(20) DEFAULT \'unit\'')
+    ]
+    for col, type_info in item_cols:
+        try:
+            db.session.execute(text(f'ALTER TABLE order_items ADD COLUMN IF NOT EXISTS {col} {type_info}'))
+            db.session.commit()
+            print(f"  - Column '{col}' checked/added.")
+        except Exception as e:
+            db.session.rollback()
+            print(f"  - Error on column '{col}': {e}")
+    
     print("\nDatabase sync complete!")

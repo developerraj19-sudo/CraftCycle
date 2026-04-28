@@ -36,7 +36,22 @@ def ensure_schema():
                 db.session.commit()
             except Exception as e:
                 db.session.rollback()
-                print(f"Error adding column {col}: {e}")
+                print(f"Error adding column {col} to orders: {e}")
+
+        # Fix order_items table too
+        item_cols = [
+            ('scrap_id', 'INTEGER'),
+            ('seller_id', 'INTEGER'),
+            ('quantity', 'NUMERIC(10, 2) DEFAULT 1'),
+            ('unit', 'VARCHAR(20) DEFAULT \'unit\'')
+        ]
+        for col, type_info in item_cols:
+            try:
+                db.session.execute(text(f'ALTER TABLE order_items ADD COLUMN IF NOT EXISTS {col} {type_info}'))
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                print(f"Error adding column {col} to order_items: {e}")
     except Exception as e:
         print(f"Schema sync error: {e}")
 
@@ -114,8 +129,9 @@ def create_order():
 
     except Exception as e:
         db.session.rollback()
-        # Auto-repair if columns are missing (UndefinedColumn)
-        if "delivery_fee" in str(e) or "platform_fee" in str(e):
+        # Auto-repair if any columns are missing (UndefinedColumn)
+        missing_indicators = ["delivery_fee", "platform_fee", "scrap_id", "seller_id", "quantity"]
+        if any(ind in str(e) for ind in missing_indicators):
             ensure_schema()
             return create_order() # Retry
         
