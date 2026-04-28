@@ -14,15 +14,30 @@ from models.user import User
 orders_bp = Blueprint("orders", __name__)
 
 def ensure_schema():
-    """Helper to add missing columns if they don't exist."""
+    """Helper to add ALL missing columns to the orders table."""
     try:
         from sqlalchemy import text
-        # These are the columns that might be missing from an old 'orders' table
-        db.session.execute(text('ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_fee NUMERIC(10, 2) DEFAULT 0'))
-        db.session.execute(text('ALTER TABLE orders ADD COLUMN IF NOT EXISTS platform_fee NUMERIC(10, 2) DEFAULT 0'))
-        db.session.commit()
+        cols = [
+            ('delivery_fee', 'NUMERIC(10, 2) DEFAULT 0'),
+            ('platform_fee', 'NUMERIC(10, 2) DEFAULT 0'),
+            ('full_name', 'VARCHAR(200)'),
+            ('phone', 'VARCHAR(20)'),
+            ('address_line1', 'VARCHAR(300)'),
+            ('address_line2', 'VARCHAR(300)'),
+            ('city', 'VARCHAR(100)'),
+            ('state', 'VARCHAR(100)'),
+            ('pincode', 'VARCHAR(10)'),
+            ('payment_method', 'VARCHAR(50)'),
+            ('payment_status', 'VARCHAR(50) DEFAULT \'pending\'')
+        ]
+        for col, type_info in cols:
+            try:
+                db.session.execute(text(f'ALTER TABLE orders ADD COLUMN IF NOT EXISTS {col} {type_info}'))
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                print(f"Error adding column {col}: {e}")
     except Exception as e:
-        db.session.rollback()
         print(f"Schema sync error: {e}")
 
 @orders_bp.post("/")
