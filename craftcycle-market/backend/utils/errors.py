@@ -42,4 +42,5 @@ def register_error_handlers(app):
 
     @app.errorhandler(500)
     def internal_error(e):
-        return jsonify(error="Internal server error", message="Something went wrong."), 500
+        # Reveal actual error for debugging (remove in final production)
+        return jsonify(error="Internal server error", message=str(e)), 500
