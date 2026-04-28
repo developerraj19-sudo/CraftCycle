@@ -299,14 +299,28 @@
           return;
         }
 
-        list.innerHTML = orders.slice(0, 5).map(item => `
+        const sales = [];
+        orders.forEach(o => {
+          if (o.items) {
+            o.items.forEach(i => {
+              sales.push({ ...i, order_id: o.id, status: o.status, created_at: o.created_at });
+            });
+          }
+        });
+
+        if (sales.length === 0) {
+          list.innerHTML = `<div style="padding:var(--s10); text-align:center; color:var(--text-3)">No sales yet.</div>`;
+          return;
+        }
+
+        list.innerHTML = sales.slice(0, 5).map(item => `
           <div style="padding:var(--s4); border-bottom:1px solid var(--surface-3); display:flex; justify-content:space-between; align-items:center">
             <div>
               <div style="font-weight:600; font-size:0.9rem">${item.title}</div>
               <div style="font-size:0.75rem; color:var(--text-3)">Order #ORD-${item.order_id} · ${timeAgo(item.created_at)}</div>
             </div>
             <div style="text-align:right">
-              <div style="font-family:var(--font-mono); color:var(--green); font-weight:700">₹${(item.price * item.qty).toLocaleString()}</div>
+              <div style="font-family:var(--font-mono); color:var(--green); font-weight:700">₹${(item.price * item.quantity).toLocaleString()}</div>
               <span class="badge badge-gray" style="font-size:0.6rem">${item.status}</span>
             </div>
           </div>
