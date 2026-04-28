@@ -7,7 +7,9 @@
 const CONFIG = {
   // Use http://localhost:5000/api/v1 for local development
   // Use https://craftcycle.onrender.com/api/v1 for production
-  API_BASE_URL: "https://craftcycle.onrender.com/api/v1",
+  API_BASE_URL: window.location.origin.includes('localhost') 
+    ? "http://localhost:5000/api/v1" 
+    : "/api/v1",
 
   // Supabase Configuration (For Realtime Green Coins & Storage)
   SUPABASE_URL: "https://spyqshsiyojmqphfbcac.supabase.co",
