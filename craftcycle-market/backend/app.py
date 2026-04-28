@@ -65,6 +65,27 @@ def create_app():
             "database": db_status
         }
 
+    # ── Serve Frontend ──────────────────────────────────────────
+    # This serves the static frontend files from the sibling directory
+    frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend"))
+    
+    @app.route("/", defaults={"path": ""})
+    @app.route("/<path:path>")
+    def serve_frontend(path):
+        # Skip API routes
+        if path.startswith("api/"):
+            from flask import abort
+            abort(404)
+            
+        # Try to serve requested file
+        if path != "" and os.path.exists(os.path.join(frontend_dir, path)):
+            from flask import send_from_directory
+            return send_from_directory(frontend_dir, path)
+        
+        # Default to index.html for SPA or root
+        from flask import send_from_directory
+        return send_from_directory(frontend_dir, "index.html")
+
     return app
 
 app = create_app()
