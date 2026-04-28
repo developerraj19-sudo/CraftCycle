@@ -46,7 +46,7 @@ let _refreshing = false;          // prevents multiple simultaneous refreshes
 let _refreshQueue = [];           // queued requests waiting for new token
 
 async function apiRequest(method, path, { body, formData, params } = {}) {
-  const url = new URL(`${CONFIG.API_BASE_URL}${path}`);
+  const url = new URL(`${CONFIG.API_BASE_URL}${path}`, window.location.origin);
 
   // Append query params
   if (params) {
