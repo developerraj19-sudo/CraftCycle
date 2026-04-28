@@ -13,6 +13,18 @@ from models.user import User
 
 orders_bp = Blueprint("orders", __name__)
 
+def ensure_schema():
+    """Helper to add missing columns if they don't exist."""
+    try:
+        from sqlalchemy import text
+        # These are the columns that might be missing from an old 'orders' table
+        db.session.execute(text('ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_fee NUMERIC(10, 2) DEFAULT 0'))
+        db.session.execute(text('ALTER TABLE orders ADD COLUMN IF NOT EXISTS platform_fee NUMERIC(10, 2) DEFAULT 0'))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"Schema sync error: {e}")
+
 @orders_bp.post("/")
 @jwt_required()
 def create_order():
@@ -89,16 +101,8 @@ def create_order():
         db.session.rollback()
         # Auto-repair if columns are missing (UndefinedColumn)
         if "delivery_fee" in str(e) or "platform_fee" in str(e):
-            try:
-                from sqlalchemy import text
-                db.session.execute(text('ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_fee NUMERIC(10, 2) DEFAULT 0'))
-                db.session.execute(text('ALTER TABLE orders ADD COLUMN IF NOT EXISTS platform_fee NUMERIC(10, 2) DEFAULT 0'))
-                db.session.commit()
-                # Try one more time after repair
-                return create_order() 
-            except Exception as repair_err:
-                db.session.rollback()
-                return {"error": f"Database needs repair: {str(repair_err)}. Please run sync_db.py manually."}, 500
+            ensure_schema()
+            return create_order() # Retry
         
         return {"error": str(e)}, 500
 
@@ -108,8 +112,14 @@ def create_order():
 def list_orders():
     """List orders for the current buyer."""
     user_id = get_jwt_identity()
-    orders = Order.query.filter_by(buyer_id=user_id).order_by(Order.created_at.desc()).all()
-    return jsonify({"orders": [o.to_dict() for o in orders]})
+    try:
+        orders = Order.query.filter_by(buyer_id=user_id).order_by(Order.created_at.desc()).all()
+        return jsonify({"orders": [o.to_dict() for o in orders]})
+    except Exception as e:
+        if "delivery_fee" in str(e) or "platform_fee" in str(e):
+            ensure_schema()
+            return list_orders() # Retry
+        return {"error": str(e)}, 500
 
 
 @orders_bp.get("/seller")
@@ -118,18 +128,24 @@ def list_seller_orders():
     """List orders for products owned by the current seller."""
     user_id = get_jwt_identity()
     
-    # Join OrderItem with Order to get orders where this seller has items
-    order_items = OrderItem.query.filter_by(seller_id=user_id).all()
-    order_ids = list(set([oi.order_id for oi in order_items]))
-    
-    orders = Order.query.filter(Order.id.in_(order_ids)).order_by(Order.created_at.desc()).all()
-    
-    # For seller, we might want to only show the items they sold in that order
-    result = []
-    for o in orders:
-        o_dict = o.to_dict()
-        # Filter items to only show those belonging to this seller
-        o_dict["items"] = [oi.to_dict() for oi in o.items if oi.seller_id == user_id]
-        result.append(o_dict)
+    try:
+        # Join OrderItem with Order to get orders where this seller has items
+        order_items = OrderItem.query.filter_by(seller_id=user_id).all()
+        order_ids = list(set([oi.order_id for oi in order_items]))
         
-    return jsonify({"orders": result})
+        orders = Order.query.filter(Order.id.in_(order_ids)).order_by(Order.created_at.desc()).all()
+        
+        # For seller, we might want to only show the items they sold in that order
+        result = []
+        for o in orders:
+            o_dict = o.to_dict()
+            # Filter items to only show those belonging to this seller
+            o_dict["items"] = [oi.to_dict() for oi in o.items if oi.seller_id == user_id]
+            result.append(o_dict)
+            
+        return jsonify({"orders": result})
+    except Exception as e:
+        if "delivery_fee" in str(e) or "platform_fee" in str(e):
+            ensure_schema()
+            return list_seller_orders() # Retry
+        return {"error": str(e)}, 500
