@@ -87,6 +87,19 @@ def create_order():
 
     except Exception as e:
         db.session.rollback()
+        # Auto-repair if columns are missing (UndefinedColumn)
+        if "delivery_fee" in str(e) or "platform_fee" in str(e):
+            try:
+                from sqlalchemy import text
+                db.session.execute(text('ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_fee NUMERIC(10, 2) DEFAULT 0'))
+                db.session.execute(text('ALTER TABLE orders ADD COLUMN IF NOT EXISTS platform_fee NUMERIC(10, 2) DEFAULT 0'))
+                db.session.commit()
+                # Try one more time after repair
+                return create_order() 
+            except Exception as repair_err:
+                db.session.rollback()
+                return {"error": f"Database needs repair: {str(repair_err)}. Please run sync_db.py manually."}, 500
+        
         return {"error": str(e)}, 500
 
 
