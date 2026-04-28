@@ -71,6 +71,7 @@ def create_app():
     
     @app.route("/", defaults={"path": ""})
     @app.route("/<path:path>")
+    @limiter.exempt
     def serve_frontend(path):
         # Skip API routes
         if path.startswith("api/"):
