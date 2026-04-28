@@ -204,3 +204,11 @@ const AdminAPI = {
   products:        (params)      => api.get("/admin/products", params),
   moderateProduct: (id, status)  => api.put(`/admin/products/${id}`, { status }),
 };
+
+
+/** Orders */
+const OrdersAPI = {
+  create:       (payload) => api.post("/orders/", payload),
+  list:         ()        => api.get("/orders/"),
+  sellerOrders: ()        => api.get("/orders/seller"),
+};

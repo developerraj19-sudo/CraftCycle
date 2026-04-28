@@ -151,6 +151,21 @@
           </div>
         </div>
 
+        <!-- Recent Sales (Seller only) -->
+        <div id="sales-section" style="display:none; margin-bottom:var(--s8)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--s5)">
+            <h2 style="font-family:var(--font-display);font-size:0.85rem;letter-spacing:0.1em;text-transform:uppercase">
+              Recent Sales
+            </h2>
+            <a href="orders.html" class="btn btn-ghost btn-sm">Manage All Orders →</a>
+          </div>
+          <div id="sales-list" class="card" style="padding:0; overflow:hidden">
+            <div style="padding:var(--s10); text-align:center; color:var(--text-3)">
+              No sales yet.
+            </div>
+          </div>
+        </div>
+
         <!-- Recent Products -->
         <div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--s5)">
@@ -249,6 +264,12 @@
         });
         document.getElementById("stat-coins").textContent = (user.green_coins || 0).toLocaleString();
 
+        // Show/Hide sections based on role
+        if (user.role === 'seller') {
+          document.getElementById('sales-section').style.display = 'block';
+          loadSales();
+        }
+
       } catch (err) {
         console.warn("Could not refresh user:", err.message);
       }
@@ -265,6 +286,34 @@
       } catch(e) {}
 
       animateImpact(impact.waste_kg, impact.co2_kg);
+    }
+
+    async function loadSales() {
+      const list = document.getElementById("sales-list");
+      try {
+        const data = await OrdersAPI.list_seller();
+        const orders = data.orders || [];
+
+        if (orders.length === 0) {
+          list.innerHTML = `<div style="padding:var(--s10); text-align:center; color:var(--text-3)">No sales yet.</div>`;
+          return;
+        }
+
+        list.innerHTML = orders.slice(0, 5).map(item => `
+          <div style="padding:var(--s4); border-bottom:1px solid var(--surface-3); display:flex; justify-content:space-between; align-items:center">
+            <div>
+              <div style="font-weight:600; font-size:0.9rem">${item.title}</div>
+              <div style="font-size:0.75rem; color:var(--text-3)">Order #ORD-${item.order_id} · ${timeAgo(item.created_at)}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-family:var(--font-mono); color:var(--green); font-weight:700">₹${(item.price * item.qty).toLocaleString()}</div>
+              <span class="badge badge-gray" style="font-size:0.6rem">${item.status}</span>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        list.innerHTML = `<div style="padding:var(--s5); color:var(--red)">Error loading sales: ${err.message}</div>`;
+      }
     }
 
     // ── Load products ───────────────────────────────────────────

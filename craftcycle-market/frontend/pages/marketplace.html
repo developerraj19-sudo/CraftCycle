@@ -1023,11 +1023,11 @@
       const l = allListings.find(x => x.id === id);
       if (!l) return;
       const cart = getCart();
-      const existing = cart.find(i => i.id === id);
+      const existing = cart.find(i => i.id === id && i.type === currentTab);
       if (existing) {
         existing.qty += l.qty;
       } else {
-        cart.push({ id: l.id, name: l.title, price: l.price, qty: l.qty, image: l.image, category: l.category, quality: l.quality, location: l.location });
+        cart.push({ id: l.id, type: currentTab, name: l.title, price: l.price, qty: l.qty, image: l.image, category: l.category, quality: l.quality, location: l.location });
       }
       saveCart(cart);
       updateCartBadge();
@@ -1038,7 +1038,7 @@
       if (!requireAuthForAction("Login to purchase scrap materials.")) return;
       const l = allListings.find(x => x.id === id);
       if (!l) return;
-      const cart = [{ id: l.id, name: l.title, price: l.price, qty: l.qty, image: l.image, category: l.category, quality: l.quality, location: l.location }];
+      const cart = [{ id: l.id, type: currentTab, name: l.title, price: l.price, qty: l.qty, image: l.image, category: l.category, quality: l.quality, location: l.location }];
       const subtotal = l.price * l.qty;
       const fee = Math.round(subtotal * 0.02);
       sessionStorage.setItem('craftcycle_checkout_summary', JSON.stringify({

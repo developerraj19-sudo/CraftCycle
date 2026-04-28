@@ -35,6 +35,7 @@ def create_app():
     from routes.scanner     import scanner_bp
     from routes.admin       import admin_bp
     from routes.chatbot     import chatbot_bp
+    from routes.orders      import orders_bp
 
     app.register_blueprint(auth_bp,        url_prefix="/api/v1/auth")
     app.register_blueprint(marketplace_bp, url_prefix="/api/v1/marketplace")
@@ -42,6 +43,7 @@ def create_app():
     app.register_blueprint(scanner_bp,     url_prefix="/api/v1/scanner")
     app.register_blueprint(admin_bp,       url_prefix="/api/v1/admin")
     app.register_blueprint(chatbot_bp,     url_prefix="/api/v1/chatbot")
+    app.register_blueprint(orders_bp,      url_prefix="/api/v1/orders")
 
     # ── Register error handlers ───────────────────────────────
     from utils.errors import register_error_handlers

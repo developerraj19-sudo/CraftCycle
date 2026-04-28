@@ -39,44 +39,9 @@
             <main class="dash-content">
                 <h1 style="font-family:var(--font-display); font-size:1.5rem; margin-bottom:var(--s6);">My Orders</h1>
 
-                <div class="card" style="margin-bottom: var(--s5);">
-                    <div
-                        style="padding: var(--s4); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--surface-3);">
-                        <div>
-                            <div style="font-size: 0.8rem; color: var(--text-3);">Order #ORD-88219</div>
-                            <div style="font-weight: 600;">Reclaimed Teak Wood Planks</div>
-                        </div>
-                        <div style="text-align: right;">
-                            <span class="badge badge-green">Delivered</span>
-                            <div style="font-family: var(--font-mono); color: var(--green); margin-top: 4px;">₹ 1,125.00
-                            </div>
-                        </div>
-                    </div>
-                    <div
-                        style="padding: var(--s4); background: rgba(255,255,255,0.02); display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 0.8rem; color: var(--text-3);">Placed: Oct 12, 2024</span>
-                        <button class="btn btn-ghost btn-sm">View Details</button>
-                    </div>
-                </div>
-
-                <div class="card" style="margin-bottom: var(--s5);">
-                    <div
-                        style="padding: var(--s4); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--surface-3);">
-                        <div>
-                            <div style="font-size: 0.8rem; color: var(--text-3);">Order #ORD-71932</div>
-                            <div style="font-weight: 600;">Mixed Electronic Waste Batch</div>
-                        </div>
-                        <div style="text-align: right;">
-                            <span class="badge badge-orange">Shipped</span>
-                            <div style="font-family: var(--font-mono); color: var(--green); margin-top: 4px;">₹ 255.00
-                            </div>
-                        </div>
-                    </div>
-                    <div
-                        style="padding: var(--s4); background: rgba(255,255,255,0.02); display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 0.8rem; color: var(--text-3);">Placed: Oct 15, 2024</span>
-                        <button class="btn btn-ghost btn-sm">Track Package</button>
-                    </div>
+                <div id="orders-container">
+                    <div class="skeleton" style="height:120px; margin-bottom:var(--s5)"></div>
+                    <div class="skeleton" style="height:120px; margin-bottom:var(--s5)"></div>
                 </div>
 
             </main>
@@ -88,8 +53,64 @@
     <script>
         requireAuth();
         document.addEventListener("DOMContentLoaded", async () => {
-            try { const data = await AuthAPI.me(); populateUserInfo(data.user); } catch (e) { }
+            try { 
+                const userData = await AuthAPI.me(); 
+                populateUserInfo(userData.user); 
+                loadOrders();
+            } catch (e) { }
         });
+
+        async function loadOrders() {
+            const container = document.getElementById('orders-container');
+            try {
+                const data = await OrdersAPI.list();
+                const orders = data.orders || [];
+
+                if (orders.length === 0) {
+                    container.innerHTML = `
+                        <div class="card" style="padding:var(--s10); text-align:center">
+                            <div style="font-size:3rem; margin-bottom:var(--s4)">📦</div>
+                            <div class="text-muted">You haven't placed any orders yet.</div>
+                            <a href="marketplace.html" class="btn btn-primary" style="margin-top:var(--s5)">Go to Marketplace</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = orders.map(order => `
+                    <div class="card reveal" style="margin-bottom: var(--s5);">
+                        <div style="padding: var(--s4); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--surface-3);">
+                            <div>
+                                <div style="font-size: 0.8rem; color: var(--text-3);">Order #ORD-${order.id}</div>
+                                <div style="font-weight: 600;">${order.items.map(i => i.title).join(', ')}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <span class="badge badge-${getStatusColor(order.status)}">${order.status}</span>
+                                <div style="font-family: var(--font-mono); color: var(--green); margin-top: 4px;">₹ ${order.total_amount.toLocaleString()}</div>
+                            </div>
+                        </div>
+                        <div style="padding: var(--s4); background: rgba(255,255,255,0.02); display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.8rem; color: var(--text-3);">Placed: ${new Date(order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                            <button class="btn btn-ghost btn-sm">View Details</button>
+                        </div>
+                    </div>
+                `).join('');
+
+                initScrollReveal();
+            } catch (err) {
+                container.innerHTML = `<div class="text-error">Failed to load orders: ${err.message}</div>`;
+            }
+        }
+
+        function getStatusColor(status) {
+            switch(status) {
+                case 'delivered': return 'green';
+                case 'shipped': return 'cyan';
+                case 'processing': return 'orange';
+                case 'cancelled': return 'red';
+                default: return 'gray';
+            }
+        }
     </script>
     <script src="../assets/js/lang.js"></script>
     <script src="../assets/js/chatbot.js?v=2"></script>

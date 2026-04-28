@@ -708,20 +708,48 @@
     }
 
     // ── Place Order ──────────────────────────────────────────
-    function placeOrder(e) {
+    async function placeOrder(e) {
       e.preventDefault();
       const btn = document.getElementById('place-order-btn');
+      const originalText = btn.textContent;
       btn.disabled = true;
       btn.textContent = '⏳ Processing…';
 
-      // Simulate order processing
-      setTimeout(() => {
-        // Impact tracking update
+      // Prepare payload
+      const payload = {
+        total_amount: checkoutData.total,
+        delivery_fee: deliveryFee,
+        platform_fee: checkoutData.fee,
+        shipping: {
+          full_name: `${document.getElementById('fname').value} ${document.getElementById('lname').value}`,
+          phone: document.getElementById('phone').value,
+          address_line1: document.getElementById('addr1').value,
+          address_line2: document.getElementById('addr2').value,
+          city: document.getElementById('city').value,
+          state: document.getElementById('state').value,
+          pincode: document.getElementById('pin').value,
+        },
+        payment: {
+          method: selectedPayment,
+        },
+        items: checkoutData.items.map(i => ({
+          title: i.name,
+          price: i.price,
+          qty: i.qty,
+          unit: i.type === 'scrap' ? 'kg' : 'unit',
+          [i.type === 'scrap' ? 'scrap_id' : 'product_id']: i.id
+        }))
+      };
+
+      try {
+        const res = await OrdersAPI.create(payload);
+        
+        // Impact tracking update (keep local for immediate UI feedback, but real data is now in DB)
         try {
           let impact = JSON.parse(localStorage.getItem('craftcycle_impact')) || { waste_kg: 12.5, co2_kg: 10.0 };
           const newWaste = checkoutData.items.reduce((s, i) => s + (i.qty || 0), 0);
           impact.waste_kg += newWaste;
-          impact.co2_kg += (newWaste * 0.8); // Simple ratio for demo
+          impact.co2_kg += (newWaste * 0.8); 
           localStorage.setItem('craftcycle_impact', JSON.stringify(impact));
         } catch(e) {}
 
@@ -729,15 +757,15 @@
         localStorage.removeItem(CART_KEY);
         sessionStorage.removeItem('craftcycle_checkout_summary');
 
-        // Generate order ID
-        const orderId = 'CC-' + Math.floor(100000 + Math.random() * 900000);
-        document.getElementById('order-id-display').textContent = orderId;
-
         // Show success
+        document.getElementById('order-id-display').textContent = `ORD-${res.order_id}`;
         document.getElementById('success-modal').classList.add('open');
+      } catch (err) {
+        Toast.error("Order Failed", err.message);
+      } finally {
         btn.disabled = false;
-        btn.textContent = '🔒 Place Order';
-      }, 1800);
+        btn.textContent = originalText;
+      }
     }
 
     // ── Helpers ──────────────────────────────────────────────
