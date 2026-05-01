@@ -116,6 +116,73 @@ def create_app():
         from flask import send_from_directory
         return send_from_directory(frontend_dir, "index.html")
 
+    # ── Auto-Sync Database Schema ──────────────────────────────
+    # Run this once during app initialization to fix missing columns
+    # in case Render's Start Command is ignoring the Procfile.
+    with app.app_context():
+        try:
+            import sync_db
+            # Ensure it doesn't sys.exit(1) on failure, just logs
+            try:
+                db.create_all()
+            except Exception as e:
+                print(f"[AutoSync] create_all error: {e}")
+                
+            from sqlalchemy import text
+            enum_conversions = [
+                ("orders",      "status",         "VARCHAR(20)",  "'pending'"),
+                ("orders",      "payment_status", "VARCHAR(20)",  "'pending'"),
+                ("scrap_materials", "status",     "VARCHAR(20)",  "'active'"),
+                ("products",    "status",         "VARCHAR(20)",  "'active'"),
+            ]
+            for table, col, new_type, default_val in enum_conversions:
+                try:
+                    db.session.execute(text(f"ALTER TABLE {table} ALTER COLUMN {col} TYPE {new_type} USING {col}::TEXT"))
+                    db.session.execute(text(f"ALTER TABLE {table} ALTER COLUMN {col} SET DEFAULT {default_val}"))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
+            orders_cols = [
+                ("delivery_fee",   "NUMERIC(10,2) DEFAULT 0"),
+                ("platform_fee",   "NUMERIC(10,2) DEFAULT 0"),
+                ("full_name",      "VARCHAR(200)"),
+                ("phone",          "VARCHAR(20)"),
+                ("address_line1",  "VARCHAR(300)"),
+                ("address_line2",  "VARCHAR(300)"),
+                ("city",           "VARCHAR(100)"),
+                ("state",          "VARCHAR(100)"),
+                ("pincode",        "VARCHAR(10)"),
+                ("payment_method", "VARCHAR(50)"),
+                ("payment_status", "VARCHAR(20) DEFAULT 'pending'"),
+                ("status",         "VARCHAR(20) DEFAULT 'pending'"),
+            ]
+            for col, type_info in orders_cols:
+                try:
+                    db.session.execute(text(f"ALTER TABLE orders ADD COLUMN IF NOT EXISTS {col} {type_info}"))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
+            items_cols = [
+                ("product_id", "INTEGER"),
+                ("scrap_id",   "INTEGER"),
+                ("seller_id",  "INTEGER"),
+                ("title",      "VARCHAR(200) DEFAULT 'Unknown Item'"),
+                ("price",      "NUMERIC(10,2) DEFAULT 0"),
+                ("quantity",   "NUMERIC(10,2) DEFAULT 1"),
+                ("unit",       "VARCHAR(20) DEFAULT 'unit'"),
+            ]
+            for col, type_info in items_cols:
+                try:
+                    db.session.execute(text(f"ALTER TABLE order_items ADD COLUMN IF NOT EXISTS {col} {type_info}"))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+            print("[AutoSync] Database schema verification complete.")
+        except Exception as e:
+            print(f"[AutoSync] Database sync error: {e}")
+
     return app
 
 app = create_app()
