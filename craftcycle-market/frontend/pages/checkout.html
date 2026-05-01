@@ -734,9 +734,8 @@
         },
         items: checkoutData.items.map(i => {
           // Detect if item is scrap material or a crafted product
-          const isScrap = i.type === 'scrap' || i.is_scrap === true ||
-                          (i.category && ['wood','metal','plastic','fabric','paper',
-                           'glass','e-waste','organic','rubber'].includes(i.category));
+          // Strictly use type or is_scrap flag, do not use category as DIY products share material categories
+          const isScrap = i.type === 'scrap' || i.is_scrap === true;
           const itemPayload = {
             title: i.name || i.title || 'Unknown Item',
             price: i.price || 0,
