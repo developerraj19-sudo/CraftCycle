@@ -13,75 +13,6 @@ from models.user import User
 
 orders_bp = Blueprint("orders", __name__)
 
-def ensure_schema():
-    """Fix schema: convert ENUMs to VARCHAR, add missing columns."""
-    try:
-        from sqlalchemy import text
-
-        # Step 1: Convert PostgreSQL ENUM columns → VARCHAR.
-        # This fixes "invalid input value for enum" 500 errors on INSERT.
-        enum_fixes = [
-            ("orders", "status",         "VARCHAR(20)", "'pending'"),
-            ("orders", "payment_status", "VARCHAR(20)", "'pending'"),
-        ]
-        for tbl, col, new_type, default in enum_fixes:
-            try:
-                db.session.execute(text(
-                    f"ALTER TABLE {tbl} ALTER COLUMN {col} TYPE {new_type} USING {col}::TEXT"
-                ))
-                db.session.execute(text(
-                    f"ALTER TABLE {tbl} ALTER COLUMN {col} SET DEFAULT {default}"
-                ))
-                db.session.commit()
-            except Exception:
-                db.session.rollback()  # Already VARCHAR or column doesn't exist — safe to ignore
-
-        # Step 2: Add any missing columns
-        cols = [
-            ('delivery_fee',   'NUMERIC(10, 2) DEFAULT 0'),
-            ('platform_fee',   'NUMERIC(10, 2) DEFAULT 0'),
-            ('full_name',      'VARCHAR(200)'),
-            ('phone',          'VARCHAR(20)'),
-            ('address_line1',  'VARCHAR(300)'),
-            ('address_line2',  'VARCHAR(300)'),
-            ('city',           'VARCHAR(100)'),
-            ('state',          'VARCHAR(100)'),
-            ('pincode',        'VARCHAR(10)'),
-            ('payment_method', 'VARCHAR(50)'),
-            ('payment_status', "VARCHAR(20) DEFAULT 'pending'"),
-            ('status',         "VARCHAR(20) DEFAULT 'pending'"),
-        ]
-        for col, type_info in cols:
-            try:
-                db.session.execute(text(
-                    f'ALTER TABLE orders ADD COLUMN IF NOT EXISTS {col} {type_info}'
-                ))
-                db.session.commit()
-            except Exception as e:
-                db.session.rollback()
-                print(f"[ensure_schema] orders.{col}: {e}")
-
-        # Fix order_items table too
-        item_cols = [
-            ('scrap_id',  'INTEGER'),
-            ('seller_id', 'INTEGER'),
-            ('quantity',  'NUMERIC(10, 2) DEFAULT 1'),
-            ('unit',      "VARCHAR(20) DEFAULT 'unit'"),
-        ]
-        for col, type_info in item_cols:
-            try:
-                db.session.execute(text(
-                    f'ALTER TABLE order_items ADD COLUMN IF NOT EXISTS {col} {type_info}'
-                ))
-                db.session.commit()
-            except Exception as e:
-                db.session.rollback()
-                print(f"[ensure_schema] order_items.{col}: {e}")
-
-    except Exception as e:
-        print(f"[ensure_schema] Outer error: {e}")
-
-
 @orders_bp.post("/")
 @jwt_required()
 def create_order():
@@ -91,12 +22,6 @@ def create_order():
 
     if not data or "items" not in data:
         return {"error": "Missing order data"}, 400
-
-    # Proactively ensure all required columns exist (self-healing schema)
-    try:
-        ensure_schema()
-    except Exception as schema_err:
-        print(f"[orders] Schema check warning (non-fatal): {schema_err}")
 
     shipping = data.get("shipping", {})
     payment = data.get("payment", {})
