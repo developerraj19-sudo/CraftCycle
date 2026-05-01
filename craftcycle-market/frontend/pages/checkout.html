@@ -732,13 +732,25 @@
         payment: {
           method: selectedPayment,
         },
-        items: checkoutData.items.map(i => ({
-          title: i.name,
-          price: i.price,
-          qty: i.qty,
-          unit: i.type === 'scrap' ? 'kg' : 'unit',
-          [i.type === 'scrap' ? 'scrap_id' : 'product_id']: i.id
-        }))
+        items: checkoutData.items.map(i => {
+          // Detect if item is scrap material or a crafted product
+          const isScrap = i.type === 'scrap' || i.is_scrap === true ||
+                          (i.category && ['wood','metal','plastic','fabric','paper',
+                           'glass','e-waste','organic','rubber'].includes(i.category));
+          const itemPayload = {
+            title: i.name || i.title || 'Unknown Item',
+            price: i.price || 0,
+            qty: i.qty || 1,
+            unit: isScrap ? 'kg' : 'unit',
+          };
+          // Only include the ID key if it's a valid number
+          if (isScrap && i.id) {
+            itemPayload.scrap_id = i.id;
+          } else if (!isScrap && i.id) {
+            itemPayload.product_id = i.id;
+          }
+          return itemPayload;
+        })
       };
 
       try {
@@ -761,7 +773,9 @@
         document.getElementById('order-id-display').textContent = `ORD-${res.order_id}`;
         document.getElementById('success-modal').classList.add('open');
       } catch (err) {
-        Toast.error("Order Failed", err.message);
+        console.error('Place order error:', err);
+        const msg = err.message || err.data?.error || 'Something went wrong. Please try again.';
+        Toast.error("Order Failed", msg);
       } finally {
         btn.disabled = false;
         btn.textContent = originalText;
