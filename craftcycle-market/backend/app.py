@@ -180,11 +180,12 @@ def create_app():
                 except Exception:
                     db.session.rollback()
 
-            # Fix existing NOT NULL constraints on product_id, scrap_id, and legacy unit_price which block order placement
+            # Fix existing NOT NULL constraints on product_id, scrap_id, and legacy unit_price/total_price which block order placement
             try:
                 db.session.execute(text("ALTER TABLE order_items ALTER COLUMN product_id DROP NOT NULL"))
                 db.session.execute(text("ALTER TABLE order_items ALTER COLUMN scrap_id DROP NOT NULL"))
                 db.session.execute(text("ALTER TABLE order_items ALTER COLUMN unit_price DROP NOT NULL"))
+                db.session.execute(text("ALTER TABLE order_items ALTER COLUMN total_price DROP NOT NULL"))
                 db.session.commit()
             except Exception:
                 db.session.rollback()

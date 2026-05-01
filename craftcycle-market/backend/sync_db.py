@@ -106,6 +106,7 @@ with app.app_context():
         db.session.execute(text("ALTER TABLE order_items ALTER COLUMN product_id DROP NOT NULL"))
         db.session.execute(text("ALTER TABLE order_items ALTER COLUMN scrap_id DROP NOT NULL"))
         db.session.execute(text("ALTER TABLE order_items ALTER COLUMN unit_price DROP NOT NULL"))
+        db.session.execute(text("ALTER TABLE order_items ALTER COLUMN total_price DROP NOT NULL"))
         db.session.commit()
     except Exception as e:
         db.session.rollback()
