@@ -83,8 +83,11 @@ with app.app_context():
     # ── 4. Add missing columns to 'order_items' ───────────────
     print("\n[4] Adding missing columns to 'order_items'...")
     items_cols = [
+        ("product_id", "INTEGER"),
         ("scrap_id",   "INTEGER"),
         ("seller_id",  "INTEGER"),
+        ("title",      "VARCHAR(200) DEFAULT 'Unknown Item'"),
+        ("price",      "NUMERIC(10,2) DEFAULT 0"),
         ("quantity",   "NUMERIC(10,2) DEFAULT 1"),
         ("unit",       "VARCHAR(20) DEFAULT 'unit'"),
     ]
