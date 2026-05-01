@@ -66,7 +66,10 @@ def create_order():
         return {"error": "Missing order data"}, 400
 
     # Proactively ensure all required columns exist (self-healing schema)
-    ensure_schema()
+    try:
+        ensure_schema()
+    except Exception as schema_err:
+        print(f"[orders] Schema check warning (non-fatal): {schema_err}")
 
     shipping = data.get("shipping", {})
     payment = data.get("payment", {})

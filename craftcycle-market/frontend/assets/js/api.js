@@ -101,7 +101,9 @@ async function apiRequest(method, path, { body, formData, params } = {}) {
         _refreshing   = false;
         Auth.clear();
         window.dispatchEvent(new CustomEvent("auth:logout"));
-        throw { status: 401, message: "Session expired. Please log in again." };
+        const sessionErr = new Error("Session expired. Please log in again.");
+        sessionErr.status = 401;
+        throw sessionErr;
       }
     } catch (err) {
       _refreshing = false;
@@ -111,15 +113,25 @@ async function apiRequest(method, path, { body, formData, params } = {}) {
 
   // ── Parse response ─────────────────────────────────────────
   const contentType = response.headers.get("content-type") || "";
-  const data = contentType.includes("application/json")
-    ? await response.json()
-    : { message: await response.text() };
+  let data;
+  try {
+    data = contentType.includes("application/json")
+      ? await response.json()
+      : { message: await response.text() };
+  } catch (_) {
+    data = { message: `Server error (HTTP ${response.status})` };
+  }
 
   if (!response.ok) {
-    let msg = data.error || data.message || "Request failed";
+    // Extract the most useful error message from any response shape
+    let msg = data.error || data.message || data.msg || data.detail || "Request failed";
+    // If the message is an HTML page (Flask crash), give a friendlier message
+    if (typeof msg === "string" && msg.trim().startsWith("<")) {
+      msg = `Server error (HTTP ${response.status}). Check backend logs.`;
+    }
     if (data.details) {
       const details = Object.entries(data.details).map(([k, v]) => `${k}: ${v}`).join(", ");
-      msg += ` (${details})`;
+      msg += ` — ${details}`;
     }
     const err = new Error(msg);
     err.status = response.status;

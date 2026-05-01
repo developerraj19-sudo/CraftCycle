@@ -49,6 +49,25 @@ def create_app():
     from utils.errors import register_error_handlers
     register_error_handlers(app)
 
+    # ── JWT error callbacks (always return JSON) ───────────────
+    from flask import jsonify as _jsonify
+
+    @jwt.expired_token_loader
+    def expired_token_callback(jwt_header, jwt_payload):
+        return _jsonify(error="Token expired", message="Your session has expired. Please log in again."), 401
+
+    @jwt.invalid_token_loader
+    def invalid_token_callback(reason):
+        return _jsonify(error="Invalid token", message=f"Authentication failed: {reason}"), 401
+
+    @jwt.unauthorized_loader
+    def missing_token_callback(reason):
+        return _jsonify(error="Unauthorized", message="Authentication token is required."), 401
+
+    @jwt.revoked_token_loader
+    def revoked_token_callback(jwt_header, jwt_payload):
+        return _jsonify(error="Token revoked", message="Your session was revoked. Please log in again."), 401
+
     # ── Health check ──────────────────────────────────────────
     @app.get("/api/v1/health")
     def health():
