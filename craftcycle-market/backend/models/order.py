@@ -15,7 +15,7 @@ class Order(db.Model):
     total_amount     = db.Column(db.Numeric(10, 2), nullable=False)
     delivery_fee     = db.Column(db.Numeric(10, 2), default=0)
     platform_fee     = db.Column(db.Numeric(10, 2), default=0)
-    status           = db.Column(db.Enum("pending", "processing", "shipped", "delivered", "cancelled"), default="pending")
+    status           = db.Column(db.String(20), nullable=False, default="pending")
     
     # Shipping info
     full_name        = db.Column(db.String(200))
@@ -27,7 +27,7 @@ class Order(db.Model):
     pincode          = db.Column(db.String(10))
     
     payment_method   = db.Column(db.String(50))
-    payment_status   = db.Column(db.Enum("pending", "paid", "failed"), default="pending")
+    payment_status   = db.Column(db.String(20), nullable=False, default="pending")
     
     created_at       = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at       = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

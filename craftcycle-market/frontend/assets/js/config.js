@@ -5,11 +5,16 @@
  */
 
 const CONFIG = {
-  // Use http://localhost:5000/api/v1 for local development
-  // Use https://craftcycle.onrender.com/api/v1 for production
-  API_BASE_URL: window.location.origin.includes('localhost') 
-    ? "http://localhost:5000/api/v1" 
-    : "/api/v1",
+  // Automatically detect the right API base URL:
+  // - localhost → local dev server
+  // - craftcycle.onrender.com → same-origin (relative path works)
+  // - craftcycle.pages.dev or any other host → must call Render explicitly
+  API_BASE_URL: (() => {
+    const h = window.location.hostname;
+    if (h === 'localhost' || h === '127.0.0.1') return 'http://localhost:5000/api/v1';
+    if (h.includes('onrender.com')) return '/api/v1';       // same-origin on Render
+    return 'https://craftcycle.onrender.com/api/v1';        // pages.dev → Render
+  })(),
 
   // Supabase Configuration (For Realtime Green Coins & Storage)
   SUPABASE_URL: "https://spyqshsiyojmqphfbcac.supabase.co",

@@ -18,12 +18,22 @@ def create_app():
     jwt.init_app(app)
     bcrypt.init_app(app)
     
-    # Enable CORS for all /api/* routes
-    # In production, CORS_ORIGINS should be set to your Netlify URL
+    # Enable CORS — allow Render (same-origin) + Cloudflare Pages + localhost
+    allowed_origins = app.config.get("CORS_ORIGINS", "*")
+    if allowed_origins == "*" or allowed_origins == ["*"]:
+        allowed_origins = [
+            "https://craftcycle.pages.dev",
+            "https://craftcycle.onrender.com",
+            "http://localhost:5000",
+            "http://localhost:5500",
+            "http://127.0.0.1:5000",
+            "http://127.0.0.1:5500",
+        ]
     cors.init_app(app, resources={r"/api/*": {
-        "origins": app.config.get("CORS_ORIGINS", "*"),
+        "origins": allowed_origins,
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
+        "allow_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": True,
     }})
     mail.init_app(app)
     limiter.init_app(app)

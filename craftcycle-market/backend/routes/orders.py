@@ -18,17 +18,18 @@ def ensure_schema():
     try:
         from sqlalchemy import text
         cols = [
-            ('delivery_fee', 'NUMERIC(10, 2) DEFAULT 0'),
-            ('platform_fee', 'NUMERIC(10, 2) DEFAULT 0'),
-            ('full_name', 'VARCHAR(200)'),
-            ('phone', 'VARCHAR(20)'),
-            ('address_line1', 'VARCHAR(300)'),
-            ('address_line2', 'VARCHAR(300)'),
-            ('city', 'VARCHAR(100)'),
-            ('state', 'VARCHAR(100)'),
-            ('pincode', 'VARCHAR(10)'),
+            ('delivery_fee',   'NUMERIC(10, 2) DEFAULT 0'),
+            ('platform_fee',   'NUMERIC(10, 2) DEFAULT 0'),
+            ('full_name',      'VARCHAR(200)'),
+            ('phone',          'VARCHAR(20)'),
+            ('address_line1',  'VARCHAR(300)'),
+            ('address_line2',  'VARCHAR(300)'),
+            ('city',           'VARCHAR(100)'),
+            ('state',          'VARCHAR(100)'),
+            ('pincode',        'VARCHAR(10)'),
             ('payment_method', 'VARCHAR(50)'),
-            ('payment_status', 'VARCHAR(50) DEFAULT \'pending\'')
+            ('payment_status', "VARCHAR(20) DEFAULT 'pending'"),
+            ('status',         "VARCHAR(20) DEFAULT 'pending'"),
         ]
         for col, type_info in cols:
             try:
