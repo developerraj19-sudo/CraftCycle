@@ -179,6 +179,15 @@ def create_app():
                     db.session.commit()
                 except Exception:
                     db.session.rollback()
+
+            # Fix existing NOT NULL constraints on product_id and scrap_id which block order placement
+            try:
+                db.session.execute(text("ALTER TABLE order_items ALTER COLUMN product_id DROP NOT NULL"))
+                db.session.execute(text("ALTER TABLE order_items ALTER COLUMN scrap_id DROP NOT NULL"))
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+
             print("[AutoSync] Database schema verification complete.")
         except Exception as e:
             print(f"[AutoSync] Database sync error: {e}")

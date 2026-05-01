@@ -102,6 +102,14 @@ with app.app_context():
             db.session.rollback()
             print(f"    order_items.{col}: {e}")
 
+    try:
+        db.session.execute(text("ALTER TABLE order_items ALTER COLUMN product_id DROP NOT NULL"))
+        db.session.execute(text("ALTER TABLE order_items ALTER COLUMN scrap_id DROP NOT NULL"))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"    order_items NOT NULL drop error: {e}")
+
     print("\n" + "=" * 60)
     print("  DB Sync Complete!")
     print("=" * 60)
