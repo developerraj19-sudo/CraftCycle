@@ -14,9 +14,29 @@ from models.user import User
 orders_bp = Blueprint("orders", __name__)
 
 def ensure_schema():
-    """Helper to add ALL missing columns to the orders table."""
+    """Fix schema: convert ENUMs to VARCHAR, add missing columns."""
     try:
         from sqlalchemy import text
+
+        # Step 1: Convert PostgreSQL ENUM columns → VARCHAR.
+        # This fixes "invalid input value for enum" 500 errors on INSERT.
+        enum_fixes = [
+            ("orders", "status",         "VARCHAR(20)", "'pending'"),
+            ("orders", "payment_status", "VARCHAR(20)", "'pending'"),
+        ]
+        for tbl, col, new_type, default in enum_fixes:
+            try:
+                db.session.execute(text(
+                    f"ALTER TABLE {tbl} ALTER COLUMN {col} TYPE {new_type} USING {col}::TEXT"
+                ))
+                db.session.execute(text(
+                    f"ALTER TABLE {tbl} ALTER COLUMN {col} SET DEFAULT {default}"
+                ))
+                db.session.commit()
+            except Exception:
+                db.session.rollback()  # Already VARCHAR or column doesn't exist — safe to ignore
+
+        # Step 2: Add any missing columns
         cols = [
             ('delivery_fee',   'NUMERIC(10, 2) DEFAULT 0'),
             ('platform_fee',   'NUMERIC(10, 2) DEFAULT 0'),
@@ -33,28 +53,34 @@ def ensure_schema():
         ]
         for col, type_info in cols:
             try:
-                db.session.execute(text(f'ALTER TABLE orders ADD COLUMN IF NOT EXISTS {col} {type_info}'))
+                db.session.execute(text(
+                    f'ALTER TABLE orders ADD COLUMN IF NOT EXISTS {col} {type_info}'
+                ))
                 db.session.commit()
             except Exception as e:
                 db.session.rollback()
-                print(f"Error adding column {col} to orders: {e}")
+                print(f"[ensure_schema] orders.{col}: {e}")
 
         # Fix order_items table too
         item_cols = [
-            ('scrap_id', 'INTEGER'),
+            ('scrap_id',  'INTEGER'),
             ('seller_id', 'INTEGER'),
-            ('quantity', 'NUMERIC(10, 2) DEFAULT 1'),
-            ('unit', 'VARCHAR(20) DEFAULT \'unit\'')
+            ('quantity',  'NUMERIC(10, 2) DEFAULT 1'),
+            ('unit',      "VARCHAR(20) DEFAULT 'unit'"),
         ]
         for col, type_info in item_cols:
             try:
-                db.session.execute(text(f'ALTER TABLE order_items ADD COLUMN IF NOT EXISTS {col} {type_info}'))
+                db.session.execute(text(
+                    f'ALTER TABLE order_items ADD COLUMN IF NOT EXISTS {col} {type_info}'
+                ))
                 db.session.commit()
             except Exception as e:
                 db.session.rollback()
-                print(f"Error adding column {col} to order_items: {e}")
+                print(f"[ensure_schema] order_items.{col}: {e}")
+
     except Exception as e:
-        print(f"Schema sync error: {e}")
+        print(f"[ensure_schema] Outer error: {e}")
+
 
 @orders_bp.post("/")
 @jwt_required()
