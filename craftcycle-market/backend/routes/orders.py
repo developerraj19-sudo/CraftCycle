@@ -98,15 +98,9 @@ def create_order():
 
     except Exception as e:
         db.session.rollback()
-        print(f"Order creation error: {e}")
-        # Auto-repair if any columns are missing (UndefinedColumn), then retry once
-        missing_indicators = ["delivery_fee", "platform_fee", "scrap_id", "seller_id", "quantity", "payment_method"]
-        if any(ind in str(e).lower() for ind in missing_indicators):
-            ensure_schema()
-            return create_order()  # Retry after schema fix
-        
-        return {"error": f"Order failed: {str(e)}"}, 500
-
+        import traceback
+        traceback.print_exc()
+        return {"error": f"Database error: {str(e)}"}, 500
 
 @orders_bp.get("/")
 @jwt_required()
@@ -117,9 +111,6 @@ def list_orders():
         orders = Order.query.filter_by(buyer_id=user_id).order_by(Order.created_at.desc()).all()
         return jsonify({"orders": [o.to_dict() for o in orders]})
     except Exception as e:
-        if "delivery_fee" in str(e) or "platform_fee" in str(e):
-            ensure_schema()
-            return list_orders() # Retry
         return {"error": str(e)}, 500
 
 
@@ -146,7 +137,4 @@ def list_seller_orders():
             
         return jsonify({"orders": result})
     except Exception as e:
-        if "delivery_fee" in str(e) or "platform_fee" in str(e):
-            ensure_schema()
-            return list_seller_orders() # Retry
         return {"error": str(e)}, 500
