@@ -200,11 +200,11 @@ function populateUserInfo() {
     // Hide 'List Material' button in marketplace
     const listBtn = document.getElementById("list-btn");
     if (listBtn) listBtn.style.display = "none";
-    
+
     // Hide seller-specific stats & sections on Dashboard
     const productsGrid = document.getElementById("products-grid");
     if (productsGrid && productsGrid.parentElement) {
-       productsGrid.parentElement.style.display = "none"; 
+      productsGrid.parentElement.style.display = "none";
     }
     const statRevenue = document.getElementById("stat-revenue");
     if (statRevenue && statRevenue.closest(".stat-card")) statRevenue.closest(".stat-card").style.display = "none";
@@ -253,14 +253,15 @@ function renderSidebarNav() {
     if (user?.role === 'seller') {
       html += `
         <div class="nav-section-label" style="margin-top:var(--s4)">My Store</div>
-        <a href="${p}my-products.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-label"> My Products</span></a>`;
+        <a href="${p}my-products.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-label"> My Products</span></a>
+        <a href="${p}orders.html"      class="nav-item"><span class="nav-icon">🛒</span><span class="nav-label"> Orders</span></a>`;
     }
 
     // Account section
     html += `
       <div class="nav-section-label" style="margin-top:var(--s4)">Account</div>
       <a href="${p}dashboard.html" class="nav-item"><span class="nav-icon">📊</span><span class="nav-label"> Dashboard</span></a>
-      <a href="${p}orders.html"    class="nav-item"><span class="nav-icon">🛒</span><span class="nav-label"> My Orders</span></a>
+      <a href="${p}buyer-orders.html" class="nav-item"><span class="nav-icon">🛍️</span><span class="nav-label"> My Orders</span></a>
       <a href="${p}profile.html"   class="nav-item"><span class="nav-icon">👤</span><span class="nav-label"> Profile</span></a>
       <a href="${p}coins.html"     class="nav-item"><span class="nav-icon">🪙</span><span class="nav-label"> Green Coins</span></a>`;
 
@@ -629,13 +630,13 @@ window.addEventListener('coins:updated', (e) => {
   document.querySelectorAll('[data-user-coins]').forEach(el => {
     // Animate the number ticking up
     const from = parseInt(el.textContent.replace(/,/g, '')) || 0;
-    const to   = coins;
+    const to = coins;
     if (from === to) { el.textContent = to.toLocaleString(); return; }
     const duration = 800;
-    const start    = Date.now();
+    const start = Date.now();
     function tick() {
       const progress = Math.min((Date.now() - start) / duration, 1);
-      const eased    = 1 - Math.pow(1 - progress, 3);
+      const eased = 1 - Math.pow(1 - progress, 3);
       el.textContent = Math.round(from + (to - from) * eased).toLocaleString();
       if (progress < 1) requestAnimationFrame(tick);
     }

@@ -63,7 +63,7 @@
         async function loadOrders() {
             const container = document.getElementById('orders-container');
             try {
-                const data = await OrdersAPI.sellerOrders();
+                const data = await OrdersAPI.list();
                 const orders = data.orders || [];
 
                 if (orders.length === 0) {
