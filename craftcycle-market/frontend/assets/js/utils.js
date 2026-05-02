@@ -253,14 +253,14 @@ function renderSidebarNav() {
     if (user?.role === 'seller') {
       html += `
         <div class="nav-section-label" style="margin-top:var(--s4)">My Store</div>
-        <a href="${p}my-products.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-label"> My Products</span></a>
-        <a href="${p}orders.html"      class="nav-item"><span class="nav-icon">🛒</span><span class="nav-label"> Orders</span></a>`;
+        <a href="${p}my-products.html" class="nav-item"><span class="nav-icon">📦</span><span class="nav-label"> My Products</span></a>`;
     }
 
     // Account section
     html += `
       <div class="nav-section-label" style="margin-top:var(--s4)">Account</div>
       <a href="${p}dashboard.html" class="nav-item"><span class="nav-icon">📊</span><span class="nav-label"> Dashboard</span></a>
+      <a href="${p}orders.html"    class="nav-item"><span class="nav-icon">🛒</span><span class="nav-label"> My Orders</span></a>
       <a href="${p}profile.html"   class="nav-item"><span class="nav-icon">👤</span><span class="nav-label"> Profile</span></a>
       <a href="${p}coins.html"     class="nav-item"><span class="nav-icon">🪙</span><span class="nav-label"> Green Coins</span></a>`;
 
