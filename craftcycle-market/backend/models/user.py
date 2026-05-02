@@ -15,7 +15,7 @@ class User(db.Model):
     email         = db.Column(db.String(255), nullable=False, unique=True)
     password_hash = db.Column(db.String(255), nullable=False)
     full_name     = db.Column(db.String(150), nullable=False)
-    role          = db.Column(db.Enum("buyer","seller","admin"), nullable=False, default="buyer")
+    role          = db.Column(db.String(20), nullable=False, default="buyer")
     avatar_url    = db.Column(db.String(500))
     bio           = db.Column(db.Text)
     phone         = db.Column(db.String(20))

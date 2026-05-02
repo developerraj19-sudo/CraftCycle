@@ -32,7 +32,7 @@ class ScrapMaterial(db.Model):
     barter_for     = db.Column(db.String(300))
     images         = db.Column(db.JSON)   # list of image URLs
     tags           = db.Column(db.JSON)   # list of tag strings
-    status         = db.Column(db.Enum("active","sold","suspended"), nullable=False, default="active")
+    status         = db.Column(db.String(20), nullable=False, default="active")
     view_count     = db.Column(db.Integer, default=0)
     created_at     = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at     = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

@@ -15,7 +15,7 @@ class CoinTransaction(db.Model):
     amount      = db.Column(db.Integer, nullable=False)     # positive=earn, negative=spend
     balance     = db.Column(db.Integer, nullable=False)     # balance AFTER this tx
     type        = db.Column(
-        db.Enum("welcome","scan","sale","purchase","challenge","review","referral","admin","refund"),
+        db.String(20),
         nullable=False
     )
     description = db.Column(db.String(300))

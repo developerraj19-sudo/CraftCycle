@@ -133,7 +133,10 @@ def create_app():
                 ("orders",      "status",         "VARCHAR(20)",  "'pending'"),
                 ("orders",      "payment_status", "VARCHAR(20)",  "'pending'"),
                 ("scrap_materials", "status",     "VARCHAR(20)",  "'active'"),
-                ("products",    "status",         "VARCHAR(20)",  "'active'"),
+                ("products",    "status",         "VARCHAR(20)",  "'pending'"),
+                ("products",    "difficulty",     "VARCHAR(20)",  "'medium'"),
+                ("users",       "role",           "VARCHAR(20)",  "'buyer'"),
+                ("coin_transactions", "type",     "VARCHAR(20)",  "'welcome'"),
             ]
             for table, col, new_type, default_val in enum_conversions:
                 try:
