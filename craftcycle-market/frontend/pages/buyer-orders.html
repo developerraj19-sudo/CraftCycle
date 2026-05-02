@@ -186,25 +186,25 @@
             const steps = ['pending', 'processing', 'shipped', 'delivered'];
             let currentIndex = steps.indexOf(status);
             if (status === 'cancelled') {
-                return \`<div style="color:var(--red); font-weight:bold; text-align:center; width:100%">Order Cancelled</div>\`;
+                return `<div style="color:var(--red); font-weight:bold; text-align:center; width:100%">Order Cancelled</div>`;
             }
             
             if (currentIndex === -1) currentIndex = 0;
 
-            let html = \`<div style="position:absolute; top:14px; left:12%; right:12%; height:4px; background:var(--surface-3); z-index:1;">
-                <div style="height:100%; background:var(--green); width:\${(currentIndex / (steps.length - 1)) * 100}%; transition:width 0.5s;"></div>
-            </div>\`;
+            let html = `<div style="position:absolute; top:14px; left:12%; right:12%; height:4px; background:var(--surface-3); z-index:1;">
+                <div style="height:100%; background:var(--green); width:${(currentIndex / (steps.length - 1)) * 100}%; transition:width 0.5s;"></div>
+            </div>`;
 
             steps.forEach((step, index) => {
                 const isActive = index <= currentIndex;
                 const color = isActive ? 'var(--green)' : 'var(--surface-3)';
                 const icon = step === 'pending' ? '📝' : step === 'processing' ? '⚙️' : step === 'shipped' ? '🚚' : '✅';
-                html += \`
+                html += `
                     <div style="position:relative; z-index:2; text-align:center; flex:1">
-                        <div style="width:32px; height:32px; border-radius:50%; background:\${isActive ? 'var(--green)' : 'var(--surface-2)'}; border:3px solid \${color}; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:0.9rem; box-shadow:0 0 10px \${isActive ? 'rgba(0,255,136,0.3)' : 'transparent'}; color:\${isActive ? '#000' : 'inherit'}">\${icon}</div>
-                        <div style="font-size:0.75rem; margin-top:8px; color:\${isActive ? 'var(--text-1)' : 'var(--text-3)'}; text-transform:capitalize; font-weight:\${isActive ? '600' : '400'}">\${step}</div>
+                        <div style="width:32px; height:32px; border-radius:50%; background:${isActive ? 'var(--green)' : 'var(--surface-2)'}; border:3px solid ${color}; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:0.9rem; box-shadow:0 0 10px ${isActive ? 'rgba(0,255,136,0.3)' : 'transparent'}; color:${isActive ? '#000' : 'inherit'}">${icon}</div>
+                        <div style="font-size:0.75rem; margin-top:8px; color:${isActive ? 'var(--text-1)' : 'var(--text-3)'}; text-transform:capitalize; font-weight:${isActive ? '600' : '400'}">${step}</div>
                     </div>
-                \`;
+                `;
             });
             return html;
         }
