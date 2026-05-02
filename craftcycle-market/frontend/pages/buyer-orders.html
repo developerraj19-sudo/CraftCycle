@@ -47,6 +47,36 @@
             </main>
         </div>
     </div>
+
+    <!-- Order Details Modal -->
+    <div id="order-modal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
+        <div class="modal-content card" style="width:90%; max-width:600px; max-height:90vh; overflow-y:auto; position:relative; padding:var(--s6)">
+            <button onclick="closeModal()" style="position:absolute; top:15px; right:15px; background:none; border:none; color:var(--text-2); font-size:1.5rem; cursor:pointer">&times;</button>
+            <h2 style="font-family:var(--font-display); margin-bottom:var(--s4)" id="modal-order-title">Order Details</h2>
+            
+            <div class="tracking-container" style="margin-bottom:var(--s6); padding:var(--s4); background:var(--surface-2); border-radius:12px;">
+                <h3 style="margin-bottom:var(--s3); font-size:1rem;">Tracking Status</h3>
+                <div id="modal-tracking-timeline" style="display:flex; justify-content:space-between; position:relative;">
+                    <!-- Timeline injected here -->
+                </div>
+            </div>
+
+            <div style="margin-bottom:var(--s4)">
+                <h3 style="margin-bottom:var(--s2); font-size:1rem; border-bottom:1px solid var(--surface-3); padding-bottom:5px;">Items</h3>
+                <div id="modal-items-list"></div>
+            </div>
+
+            <div style="margin-bottom:var(--s4)">
+                <h3 style="margin-bottom:var(--s2); font-size:1rem; border-bottom:1px solid var(--surface-3); padding-bottom:5px;">Shipping Details</h3>
+                <div id="modal-shipping-details" style="font-size:0.9rem; color:var(--text-2)"></div>
+            </div>
+
+            <div>
+                <h3 style="margin-bottom:var(--s2); font-size:1rem; border-bottom:1px solid var(--surface-3); padding-bottom:5px;">Payment Summary</h3>
+                <div id="modal-payment-summary" style="font-size:0.9rem; color:var(--text-2)"></div>
+            </div>
+        </div>
+    </div>
     <script src="../assets/js/config.js"></script>
     <script src="../assets/js/api.js"></script>
     <script src="../assets/js/utils.js"></script>
@@ -60,13 +90,15 @@
             } catch (e) { }
         });
 
+        let allOrders = [];
+
         async function loadOrders() {
             const container = document.getElementById('orders-container');
             try {
                 const data = await OrdersAPI.list();
-                const orders = data.orders || [];
+                allOrders = data.orders || [];
 
-                if (orders.length === 0) {
+                if (allOrders.length === 0) {
                     container.innerHTML = `
                         <div class="card" style="padding:var(--s10); text-align:center">
                             <div style="font-size:3rem; margin-bottom:var(--s4)">📦</div>
@@ -77,7 +109,7 @@
                     return;
                 }
 
-                container.innerHTML = orders.map(order => `
+                container.innerHTML = allOrders.map(order => `
                     <div class="card reveal" style="margin-bottom: var(--s5);">
                         <div style="padding: var(--s4); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--surface-3);">
                             <div>
@@ -91,7 +123,7 @@
                         </div>
                         <div style="padding: var(--s4); background: rgba(255,255,255,0.02); display: flex; justify-content: space-between; align-items: center;">
                             <span style="font-size: 0.8rem; color: var(--text-3);">Placed: ${new Date(order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                            <button class="btn btn-ghost btn-sm">View Details</button>
+                            <button class="btn btn-ghost btn-sm" onclick="openOrderDetails(${order.id})">View Details</button>
                         </div>
                     </div>
                 `).join('');
@@ -100,6 +132,81 @@
             } catch (err) {
                 container.innerHTML = `<div class="text-error">Failed to load orders: ${err.message}</div>`;
             }
+        }
+
+        function openOrderDetails(orderId) {
+            const order = allOrders.find(o => o.id === orderId);
+            if (!order) return;
+
+            document.getElementById('modal-order-title').textContent = `Order #ORD-${order.id}`;
+            document.getElementById('modal-tracking-timeline').innerHTML = renderTracking(order.status);
+            
+            document.getElementById('modal-items-list').innerHTML = order.items.map(i => `
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.9rem;">
+                    <span>${i.quantity} ${i.unit} x ${i.title}</span>
+                    <span style="font-family:var(--font-mono)">₹ ${i.price.toLocaleString()}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('modal-shipping-details').innerHTML = `
+                <div style="margin-bottom:4px"><strong>Name:</strong> ${order.shipping?.full_name || 'N/A'}</div>
+                <div style="margin-bottom:4px"><strong>Phone:</strong> ${order.shipping?.phone || 'N/A'}</div>
+                <div style="margin-bottom:4px"><strong>Address:</strong> ${order.shipping?.address_line1 || 'N/A'} ${order.shipping?.address_line2 || ''}</div>
+                <div><strong>Location:</strong> ${order.shipping?.city || 'N/A'}, ${order.shipping?.state || 'N/A'} ${order.shipping?.pincode || ''}</div>
+            `;
+
+            document.getElementById('modal-payment-summary').innerHTML = `
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px">
+                    <span>Payment Method:</span>
+                    <span style="text-transform:uppercase">${order.payment?.method || 'COD'}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px">
+                    <span>Payment Status:</span>
+                    <span class="badge badge-${order.payment?.status === 'paid' ? 'green' : 'orange'}">${order.payment?.status || 'Pending'}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-top:8px; padding-top:8px; border-top:1px solid var(--surface-3); font-weight:bold; color:var(--green)">
+                    <span>Total Amount:</span>
+                    <span style="font-family:var(--font-mono)">₹ ${order.total_amount.toLocaleString()}</span>
+                </div>
+            `;
+
+            const modal = document.getElementById('order-modal');
+            modal.style.display = 'flex';
+            modal.style.opacity = '0';
+            setTimeout(() => modal.style.opacity = '1', 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('order-modal');
+            modal.style.opacity = '0';
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        function renderTracking(status) {
+            const steps = ['pending', 'processing', 'shipped', 'delivered'];
+            let currentIndex = steps.indexOf(status);
+            if (status === 'cancelled') {
+                return \`<div style="color:var(--red); font-weight:bold; text-align:center; width:100%">Order Cancelled</div>\`;
+            }
+            
+            if (currentIndex === -1) currentIndex = 0;
+
+            let html = \`<div style="position:absolute; top:14px; left:12%; right:12%; height:4px; background:var(--surface-3); z-index:1;">
+                <div style="height:100%; background:var(--green); width:\${(currentIndex / (steps.length - 1)) * 100}%; transition:width 0.5s;"></div>
+            </div>\`;
+
+            steps.forEach((step, index) => {
+                const isActive = index <= currentIndex;
+                const color = isActive ? 'var(--green)' : 'var(--surface-3)';
+                const icon = step === 'pending' ? '📝' : step === 'processing' ? '⚙️' : step === 'shipped' ? '🚚' : '✅';
+                html += \`
+                    <div style="position:relative; z-index:2; text-align:center; flex:1">
+                        <div style="width:32px; height:32px; border-radius:50%; background:\${isActive ? 'var(--green)' : 'var(--surface-2)'}; border:3px solid \${color}; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:0.9rem; box-shadow:0 0 10px \${isActive ? 'rgba(0,255,136,0.3)' : 'transparent'}; color:\${isActive ? '#000' : 'inherit'}">\${icon}</div>
+                        <div style="font-size:0.75rem; margin-top:8px; color:\${isActive ? 'var(--text-1)' : 'var(--text-3)'}; text-transform:capitalize; font-weight:\${isActive ? '600' : '400'}">\${step}</div>
+                    </div>
+                \`;
+            });
+            return html;
         }
 
         function getStatusColor(status) {
