@@ -306,7 +306,7 @@
       `).join('');
 
       try {
-        const data = await OrdersAPI.list_seller();
+        const data = await OrdersAPI.sellerOrders();
         const orders = data.orders || [];
 
         if (orders.length === 0) {
