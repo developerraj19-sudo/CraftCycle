@@ -754,17 +754,27 @@
           <div class="locate-prompt" id="locate-prompt">
             <div class="locate-pulse">📍</div>
             <h2 style="font-family:var(--font-display);font-size:1.3rem;font-weight:900;margin-bottom:var(--s3)">
-              Find Nearby Creators
+              Find Scrap Dealers in Your City
             </h2>
             <p class="text-secondary" style="max-width:340px;line-height:1.7;margin-bottom:var(--s6)">
-              Share your location to discover scrap dealers, DIY creators, and sellers within your area.
+              Select a major city or enter your own to discover nearby scrap dealers and recycling hubs.
             </p>
+            
+            <!-- Quick Cities -->
+            <div style="display:flex;gap:var(--s2);flex-wrap:wrap;justify-content:center;margin-bottom:var(--s6)">
+              <button class="btn btn-ghost btn-sm" style="border:1px solid var(--border)" onclick="document.getElementById('city-input').value='Mangalore';searchCity()">Mangalore</button>
+              <button class="btn btn-ghost btn-sm" style="border:1px solid var(--border)" onclick="document.getElementById('city-input').value='Mysore';searchCity()">Mysore</button>
+              <button class="btn btn-ghost btn-sm" style="border:1px solid var(--border)" onclick="document.getElementById('city-input').value='Bangalore';searchCity()">Bangalore</button>
+              <button class="btn btn-ghost btn-sm" style="border:1px solid var(--border)" onclick="document.getElementById('city-input').value='Pune';searchCity()">Pune</button>
+              <button class="btn btn-ghost btn-sm" style="border:1px solid var(--border)" onclick="document.getElementById('city-input').value='Delhi';searchCity()">Delhi</button>
+            </div>
+
             <div style="display:flex;gap:var(--s3);flex-wrap:wrap;justify-content:center">
               <button class="btn btn-primary" onclick="detectLocation()">
-                📍 Use My Location
+                📍 Auto-Detect
               </button>
               <button class="btn btn-secondary" onclick="enterCity()">
-                🔍 Enter City Instead
+                🔍 Search Other City
               </button>
             </div>
             <div id="city-input-wrap" style="display:none;margin-top:var(--s5);width:100%;max-width:320px">
@@ -774,9 +784,6 @@
                 <button class="btn btn-primary btn-sm" onclick="searchCity()">Go</button>
               </div>
             </div>
-            <p style="font-size:.72rem;color:var(--text-3);margin-top:var(--s5)">
-              🔒 Location is used only to find nearby creators — never stored
-            </p>
           </div>
 
           <!-- Actual map -->
@@ -860,17 +867,32 @@
     };
 
     // ─── Seed data generator (realistic Indian locations) ────
+    // ─── Seed data dataset (Static Global List) ──────────────
+    const GLOBAL_DEALERS = [
+      // MANGALORE
+      { id: 1, type: "dealer", name: "Rajan Scrap Mart", owner: "K. Rajan", lat: 12.9141 + 0.01, lng: 74.8560 + 0.01, rating: 4.6, reviews: 84, phone: "+91 98440 11223", address: "Near Old Bus Stand, Mangalore", materials: ["metal", "copper", "iron"], tags: ["24/7 pickup"], bio: "Best prices for copper and iron scrap in Mangalore." },
+      { id: 2, type: "dealer", name: "Green Scrap Solutions", owner: "Priya Menon", lat: 12.9141 - 0.02, lng: 74.8560 + 0.01, rating: 4.8, reviews: 127, phone: "+91 97435 88201", address: "Industrial Area, Mangalore", materials: ["e-waste", "plastic"], tags: ["certified"], bio: "Certified e-waste recycler in Mangalore area." },
+      
+      // MYSORE
+      { id: 3, type: "dealer", name: "Mysuru Eco Hub", owner: "M. Subramaniam", lat: 12.2958 + 0.015, lng: 76.6394 - 0.01, rating: 4.3, reviews: 56, phone: "+91 90087 34512", address: "Main Road, Mysore", materials: ["paper", "glass"], tags: ["home pickup"], bio: "Specializing in paper and glass recycling in Mysore city." },
+      { id: 4, type: "dealer", name: "Royal Scrap Traders", owner: "Abdul Karim", lat: 12.2958 - 0.01, lng: 76.6394 + 0.02, rating: 4.5, reviews: 91, phone: "+91 88012 77654", address: "Bypass Junction, Mysore", materials: ["all types"], tags: ["instant payment"], bio: "Wholesale scrap trading with instant cash payments in Mysore." },
+
+      // BANGALORE
+      { id: 5, type: "dealer", name: "Bangalore Metal Works", owner: "Ramesh V.", lat: 12.9716 + 0.03, lng: 77.5946 - 0.02, rating: 4.7, reviews: 103, phone: "+91 99001 24567", address: "Whitefield, Bangalore", materials: ["steel", "aluminium"], tags: ["industrial"], bio: "Industrial-grade metal scrap specialist in Bangalore." },
+      { id: 6, type: "dealer", name: "Tech City Recyclers", owner: "Deepak S.", lat: 12.9716 - 0.02, lng: 77.5946 + 0.04, rating: 4.9, reviews: 245, phone: "+91 98860 55443", address: "Electronic City, Bangalore", materials: ["ewaste", "plastic"], tags: ["certified"], bio: "Corporate e-waste management for Bangalore's IT sector." },
+
+      // PUNE
+      { id: 7, type: "dealer", name: "Pune Scrap Mart", owner: "Sanjay P.", lat: 18.5204 + 0.01, lng: 73.8567 + 0.02, rating: 4.4, reviews: 78, phone: "+91 94220 11223", address: "Hinjewadi Phase 1, Pune", materials: ["metal", "plastic"], tags: ["bulk collection"], bio: "Reliable scrap collection for Pune's residential and commercial sectors." },
+      { id: 8, type: "dealer", name: "Maratha Recyclers", owner: "Ajit D.", lat: 18.5204 - 0.03, lng: 73.8567 - 0.01, rating: 4.6, reviews: 112, phone: "+91 95530 88776", address: "Kothrud, Pune", materials: ["paper", "cardboard"], tags: ["daily pickup"], bio: "Efficient paper and cardboard recycling in Pune West." },
+
+      // DELHI
+      { id: 9, type: "dealer", name: "Capital Waste Hub", owner: "Vikas G.", lat: 28.6139 + 0.04, lng: 77.2090 + 0.01, rating: 4.2, reviews: 65, phone: "+91 91123 44556", address: "Okhla Industrial Area, Delhi", materials: ["all types"], tags: ["wholesale"], bio: "Largest wholesale scrap yard in South Delhi." },
+      { id: 10, type: "dealer", name: "New Delhi Eco Park", owner: "Sunita R.", lat: 28.6139 - 0.02, lng: 77.2090 - 0.03, rating: 4.8, reviews: 189, phone: "+91 92234 55667", address: "Rohini Sector 7, Delhi", materials: ["plastic", "glass"], tags: ["home delivery"], bio: "Eco-friendly recycling services across North Delhi." },
+    ];
+
     function generateDealers(centerLat, centerLng) {
-      const spread = (r) => (Math.random() - 0.5) * r;
-      return [
-        // Scrap Dealers
-        { id: 1, type: "dealer", name: "Rajan Scrap Mart", owner: "K. Rajan", lat: centerLat + spread(0.12), lng: centerLng + spread(0.12), rating: 4.6, reviews: 84, phone: "+91 98440 11223", address: "Near Old Bus Stand", materials: ["metal", "copper", "iron"], tags: ["24/7 pickup", "bulk deals"], bio: "20+ years in metal recycling. Best prices for copper and iron scrap." },
-        { id: 2, type: "dealer", name: "Green Scrap Solutions", owner: "Priya Menon", lat: centerLat + spread(0.09), lng: centerLng + spread(0.11), rating: 4.8, reviews: 127, phone: "+91 97435 88201", address: "Industrial Area, Sector 4", materials: ["e-waste", "plastic", "metal"], tags: ["certified", "pickup service"], bio: "Certified e-waste recycler. We handle everything from old phones to servers." },
-        { id: 3, type: "dealer", name: "Eco Recycle Hub", owner: "M. Subramaniam", lat: centerLat + spread(0.15), lng: centerLng + spread(0.08), rating: 4.3, reviews: 56, phone: "+91 90087 34512", address: "Main Road, Opp. Petrol Bunk", materials: ["paper", "cardboard", "glass"], tags: ["home pickup", "daily rates"], bio: "Specializing in paper, cardboard, and glass recycling with daily market rates." },
-        { id: 4, type: "dealer", name: "Metro Scrap Traders", owner: "Abdul Karim", lat: centerLat + spread(0.06), lng: centerLng + spread(0.14), rating: 4.5, reviews: 91, phone: "+91 88012 77654", address: "Bypass Road Junction", materials: ["all types"], tags: ["wholesale", "instant payment"], bio: "Wholesale scrap trading with instant cash payments. All material types accepted." },
-        { id: 5, type: "dealer", name: "CityWaste Collectors", owner: "Lakshmi Devi", lat: centerLat + spread(0.18), lng: centerLng + spread(0.06), rating: 4.1, reviews: 38, phone: "+91 94425 63210", address: "Gandhi Nagar, 3rd Cross", materials: ["household", "metal"], tags: ["residential", "weekly rounds"], bio: "Doorstep household scrap collection every Wednesday and Saturday." },
-        { id: 6, type: "dealer", name: "Varsha Metal Works", owner: "Ramesh V.", lat: centerLat + spread(0.10), lng: centerLng + spread(0.17), rating: 4.7, reviews: 103, phone: "+91 99001 24567", address: "KIADB Industrial Estate", materials: ["steel", "aluminium", "brass"], tags: ["industrial", "export grade"], bio: "Industrial-grade metal scrap. Aluminium and brass our specialty. Export quality." },
-      ];
+      // No longer generating random data, using the GLOBAL_DEALERS list
+      return JSON.parse(JSON.stringify(GLOBAL_DEALERS));
     }
 
     // ─── Init map ─────────────────────────────────────────────
