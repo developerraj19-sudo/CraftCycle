@@ -816,6 +816,14 @@
 
     // ── Load & Populate ──────────────────────────────────────
     async function loadProfile() {
+      // Show skeleton shimmer on stat values while loading
+      ['st-coins','st-scans','st-orders','st-rank','hero-coins','hero-listings','hero-waste'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.innerHTML = '<span class="skeleton" style="display:inline-block;width:40px;height:20px;border-radius:4px;vertical-align:middle;"></span>';
+        }
+      });
+
       // Start with cached user for instant display
       currentUser = Auth.getUser();
       if (currentUser) fillUI(currentUser);

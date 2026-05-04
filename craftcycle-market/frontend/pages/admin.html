@@ -265,6 +265,12 @@
 
     // ── Load KPIs ──────────────────────────────────────────────
     async function loadDashboard() {
+      // Show skeleton shimmer on KPI values
+      ['kpi-users','kpi-coins','kpi-waste','kpi-sellers'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '<span class="skeleton" style="display:inline-block;width:60px;height:28px;border-radius:4px;"></span>';
+      });
+
       try {
         const data = await AdminAPI.dashboard();
         const k = data.kpis;
@@ -385,6 +391,25 @@
     // ── Load users ─────────────────────────────────────────────
     async function loadUsers(page = 1) {
       userPage = page;
+      // Show skeleton rows while loading
+      const tbody = document.getElementById('users-body');
+      if (tbody) {
+        tbody.innerHTML = Array(5).fill(`
+          <tr>
+            <td><span class="skeleton" style="display:inline-block;width:28px;height:14px;border-radius:3px;"></span></td>
+            <td><div style="display:flex;align-items:center;gap:8px">
+              <div class="skeleton" style="width:30px;height:30px;border-radius:50%;"></div>
+              <div><div class="skeleton" style="height:13px;width:100px;margin-bottom:4px;"></div><div class="skeleton" style="height:10px;width:70px;"></div></div>
+            </div></td>
+            <td><span class="skeleton" style="display:inline-block;width:120px;height:13px;border-radius:3px;"></span></td>
+            <td><span class="skeleton" style="display:inline-block;width:50px;height:18px;border-radius:10px;"></span></td>
+            <td><span class="skeleton" style="display:inline-block;width:50px;height:13px;border-radius:3px;"></span></td>
+            <td><span class="skeleton" style="display:inline-block;width:60px;height:13px;border-radius:3px;"></span></td>
+            <td><span class="skeleton" style="display:inline-block;width:50px;height:18px;border-radius:10px;"></span></td>
+            <td><span class="skeleton" style="display:inline-block;width:60px;height:28px;border-radius:6px;"></span></td>
+          </tr>
+        `).join('');
+      }
       const params = {
         page,
         per_page: 15,

@@ -1048,7 +1048,29 @@
     }
 
     // ─── Render list ──────────────────────────────────────────
-    function renderList() {
+    // ─── Render list ──────────────────────────────────────────
+    function renderList(showSkeleton = false) {
+      const container = document.getElementById("dealer-list");
+      
+      if (showSkeleton) {
+        container.innerHTML = Array(5).fill(`
+          <div class="dealer-card skeleton" style="pointer-events:none">
+            <div class="dealer-avatar skeleton" style="border:none"></div>
+            <div class="dealer-info">
+              <div class="skeleton" style="height:14px;width:70%;margin-bottom:8px"></div>
+              <div class="skeleton" style="height:10px;width:40%;margin-bottom:8px"></div>
+              <div style="display:flex;gap:4px">
+                <div class="skeleton" style="height:14px;width:40px;border-radius:4px"></div>
+                <div class="skeleton" style="height:14px;width:40px;border-radius:4px"></div>
+              </div>
+            </div>
+            <div class="dealer-distance skeleton" style="height:24px;width:40px"></div>
+          </div>
+        `).join('');
+        setTimeout(() => renderList(false), 1000);
+        return;
+      }
+
       const sortBy = document.getElementById("sort-by")?.value || "distance";
       let list = allDealers.filter(d => {
         const withinRadius = d.distance <= radiusKm;
@@ -1065,7 +1087,6 @@
       filtered = list;
       document.getElementById("list-count").textContent = `${list.length} found within ${radiusKm} km`;
 
-      const container = document.getElementById("dealer-list");
       if (!list.length) {
         container.innerHTML = `<div style="text-align:center;padding:var(--s10)">
         <div style="font-size:2.5rem;margin-bottom:var(--s4)">📭</div>
@@ -1193,6 +1214,15 @@
     function detectLocation() {
       const prompt = document.getElementById("locate-prompt");
       prompt.innerHTML = `<div class="locate-pulse" style="animation:spin 1s linear infinite">🌐</div><div style="color:var(--text-2);font-size:.9rem;margin-top:var(--s4)">Detecting your location…</div>`;
+      
+      // Update counts and location label with skeletons
+      document.getElementById("location-label").innerHTML = `<div class="skeleton" style="height:14px;width:120px;display:inline-block"></div>`;
+      ["all", "dealer"].forEach(id => {
+        const el = document.getElementById(`cnt-${id}`);
+        if (el) el.innerHTML = `<div class="skeleton" style="height:14px;width:20px;display:inline-block"></div>`;
+      });
+      
+      renderList(true);
 
       if (!navigator.geolocation) {
         showLocationError("Geolocation is not supported by your browser.");
@@ -1413,5 +1443,4 @@
   </script>
 </body>
 
-</html>
-kjjwegfiujwe j
+</html>

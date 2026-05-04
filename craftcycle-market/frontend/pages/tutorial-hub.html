@@ -1037,14 +1037,71 @@
       updatePublicNav();
       allTutorials = getTutorials();
       filtered = [...allTutorials];
-      renderTutorials();
-      renderLeaderboard();
+      
+      // Initial skeletons for premium feel
+      renderTutorials(true);
+      renderLeaderboard(true);
       setDailyTip();
       updateProgress();
     });
 
     // ── Render tutorials grid ─────────────────────────────────
-    function renderTutorials() {
+    function renderTutorials(showSkeleton = false) {
+      const grid = document.getElementById("tutorials-grid");
+
+      if (showSkeleton) {
+        grid.innerHTML = Array(displayed).fill(`
+          <div class="card tutorial-card" style="pointer-events:none">
+            <div class="tcard-thumb skeleton"></div>
+            <div class="tcard-body">
+              <div class="tcard-meta">
+                <div class="skeleton" style="height:14px;width:60px"></div>
+                <div class="skeleton" style="height:14px;width:60px"></div>
+              </div>
+              <div class="skeleton" style="height:18px;width:80%;margin:12px 0"></div>
+              <div class="skeleton" style="height:12px;width:95%;margin-bottom:8px"></div>
+              <div class="skeleton" style="height:12px;width:70%"></div>
+              <div style="display:flex;justify-content:space-between;margin-top:16px">
+                <div class="skeleton" style="height:14px;width:50px"></div>
+                <div class="skeleton" style="height:14px;width:50px"></div>
+              </div>
+            </div>
+            <div class="tcard-footer">
+              <div class="skeleton" style="height:24px;width:100px;border-radius:var(--r-md)"></div>
+              <div class="skeleton" style="height:32px;width:80px;border-radius:var(--r-md)"></div>
+            </div>
+          </div>
+        `).join('');
+        
+        // Featured card special skeleton
+        const skeletons = grid.children;
+        if (skeletons.length > 0) {
+          skeletons[0].className = "card featured-card";
+          skeletons[0].innerHTML = `
+            <div class="featured-thumb skeleton"></div>
+            <div class="featured-body">
+              <div style="display:flex;gap:var(--s2);margin-bottom:var(--s4)">
+                <div class="skeleton" style="height:16px;width:80px"></div>
+                <div class="skeleton" style="height:16px;width:80px"></div>
+              </div>
+              <div class="skeleton" style="height:24px;width:60%;margin-bottom:var(--s4)"></div>
+              <div class="skeleton" style="height:14px;width:90%;margin-bottom:var(--s2)"></div>
+              <div class="skeleton" style="height:14px;width:85%;margin-bottom:var(--s5)"></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--s3);margin-bottom:var(--s5)">
+                ${Array(4).fill('<div class="skeleton" style="height:45px;border-radius:var(--r-md)"></div>').join('')}
+              </div>
+              <div style="display:flex;gap:var(--s3)">
+                <div class="skeleton" style="height:40px;width:140px"></div>
+                <div class="skeleton" style="height:40px;width:120px"></div>
+              </div>
+            </div>
+          `;
+        }
+
+        setTimeout(() => renderTutorials(false), 800);
+        return;
+      }
+
       const sort = document.getElementById("sort-select").value;
 
       // Apply filters
@@ -1064,7 +1121,6 @@
       filtered = list;
       document.getElementById("result-count").textContent = `${list.length} tutorial${list.length !== 1 ? "s" : ""} found`;
 
-      const grid = document.getElementById("tutorials-grid");
       grid.innerHTML = "";
 
       if (!list.length) {
@@ -1371,7 +1427,24 @@
     function diffIcon(d) { return d === "easy" ? "🟢" : d === "medium" ? "🟡" : "🔴"; }
 
     // ── Leaderboard ───────────────────────────────────────────
-    function renderLeaderboard() {
+    function renderLeaderboard(showSkeleton = false) {
+      const container = document.getElementById("creator-leaderboard");
+      
+      if (showSkeleton) {
+        container.innerHTML = Array(5).fill(`
+          <div class="leaderboard-item" style="pointer-events:none">
+            <div class="skeleton" style="width:28px;height:28px;border-radius:50%"></div>
+            <div class="skeleton" style="width:32px;height:32px;border-radius:50%"></div>
+            <div style="flex:1">
+              <div class="skeleton" style="height:12px;width:60%;margin-bottom:6px"></div>
+              <div class="skeleton" style="height:10px;width:40%"></div>
+            </div>
+          </div>
+        `).join('');
+        setTimeout(() => renderLeaderboard(false), 1200);
+        return;
+      }
+
       const creators = [
         { name: "Riya Sharma", initial: "R", tutorials: 4, color: "rank-1" },
         { name: "Raj Mehta", initial: "R", tutorials: 3, color: "rank-2" },
@@ -1380,7 +1453,7 @@
         { name: "Deepa Rao", initial: "D", tutorials: 2, color: "rank-n" },
         { name: "Suresh Kumar", initial: "S", tutorials: 1, color: "rank-n" },
       ];
-      document.getElementById("creator-leaderboard").innerHTML = creators.map((c, i) => `
+      container.innerHTML = creators.map((c, i) => `
       <div class="leaderboard-item">
         <div class="rank-badge ${c.color}">${i + 1}</div>
         <div style="width:32px;height:32px;border-radius:50%;background:var(--green-glow);border:1px solid rgba(0,255,136,0.3);

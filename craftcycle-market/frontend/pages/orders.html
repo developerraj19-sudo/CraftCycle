@@ -97,6 +97,27 @@
 
         async function loadOrders() {
             const container = document.getElementById('orders-container');
+
+            // Show skeleton loading state
+            container.innerHTML = Array(4).fill(`
+                <div class="card" style="padding:var(--s4); margin-bottom:var(--s5);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--surface-3); padding-bottom:var(--s3); margin-bottom:var(--s3);">
+                        <div style="width:60%">
+                            <div class="skeleton" style="height:12px; width:40%; margin-bottom:6px; border-radius:4px;"></div>
+                            <div class="skeleton" style="height:16px; width:80%; border-radius:4px;"></div>
+                        </div>
+                        <div style="text-align:right; width:30%">
+                            <div class="skeleton" style="height:20px; width:70%; margin-left:auto; margin-bottom:6px; border-radius:10px;"></div>
+                            <div class="skeleton" style="height:16px; width:60%; margin-left:auto; border-radius:4px;"></div>
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div class="skeleton" style="height:12px; width:30%; border-radius:4px;"></div>
+                        <div class="skeleton" style="height:30px; width:100px; border-radius:6px;"></div>
+                    </div>
+                </div>
+            `).join('');
+
             try {
                 const data = await OrdersAPI.sellerOrders();
                 allOrders = data.orders || [];

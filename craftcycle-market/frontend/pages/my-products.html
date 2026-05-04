@@ -149,6 +149,28 @@
             const container = document.getElementById("products-container");
             const emptyState = document.getElementById("empty-state");
 
+            // Show skeletons before fetching
+            container.style.display = "grid";
+            emptyState.style.display = "none";
+            container.innerHTML = Array(4).fill(`
+                <div class="card" style="overflow:hidden">
+                    <div class="skeleton" style="height:150px; width:100%"></div>
+                    <div style="padding:var(--s4)">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:var(--s2);">
+                            <div class="skeleton" style="height:16px; width:40px; border-radius:10px;"></div>
+                            <div class="skeleton" style="height:16px; width:40px; border-radius:10px;"></div>
+                        </div>
+                        <div class="skeleton" style="height:16px; width:70%; margin-bottom:var(--s2);"></div>
+                        <div class="skeleton" style="height:12px; width:50%; margin-bottom:var(--s2);"></div>
+                        <div class="skeleton" style="height:12px; width:40%; margin-bottom:var(--s3);"></div>
+                        <div style="display:flex; gap:var(--s2); margin-top:var(--s3);">
+                            <div class="skeleton" style="height:32px; flex:1; border-radius:6px"></div>
+                            <div class="skeleton" style="height:32px; flex:1; border-radius:6px"></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
             try {
                 const data = await ProductsAPI.list({ seller_id: user?.id });
                 const items = data.products || [];

@@ -749,6 +749,20 @@
 
     // ── Load & render ─────────────────────────────────────
     async function loadListings() {
+      // Show skeleton loading state
+      document.getElementById("listings-grid").innerHTML = Array(8).fill(`
+        <div class="listing-card card" style="pointer-events:none">
+          <div class="skeleton" style="height:160px; width:100%"></div>
+          <div class="listing-body">
+            <div class="skeleton" style="height:16px; width:80%; margin-bottom:8px"></div>
+            <div class="skeleton" style="height:12px; width:50%; margin-bottom:12px"></div>
+            <div class="skeleton" style="height:20px; width:40%; margin-bottom:12px"></div>
+            <div class="skeleton" style="height:40px; width:100%"></div>
+          </div>
+        </div>
+      `).join('');
+      document.getElementById("pagination").innerHTML = '';
+
       const params = {
         category: currentCat,
         quality: document.getElementById("quality-filter")?.value,

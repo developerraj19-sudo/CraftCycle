@@ -795,6 +795,30 @@
 
     // ── Load posts from localStorage or seed ──────────────────
     function loadPosts() {
+      // Show skeleton feed while loading
+      document.getElementById('community-feed').innerHTML = Array(3).fill(`
+        <div class="card post-card" style="pointer-events:none">
+          <div class="post-header">
+            <div class="skeleton" style="width:44px;height:44px;border-radius:50%;flex-shrink:0"></div>
+            <div style="flex:1">
+              <div class="skeleton" style="height:14px;width:40%;margin-bottom:6px"></div>
+              <div class="skeleton" style="height:11px;width:60%"></div>
+            </div>
+          </div>
+          <div class="post-body" style="margin-top:12px">
+            <div class="skeleton" style="height:13px;width:100%;margin-bottom:6px"></div>
+            <div class="skeleton" style="height:13px;width:85%;margin-bottom:6px"></div>
+            <div class="skeleton" style="height:13px;width:70%"></div>
+          </div>
+          <div style="height:180px;margin-top:12px" class="skeleton"></div>
+          <div class="post-footer">
+            <div class="skeleton" style="height:32px;flex:1;border-radius:6px"></div>
+            <div class="skeleton" style="height:32px;flex:1;border-radius:6px;margin-left:8px"></div>
+            <div class="skeleton" style="height:32px;flex:1;border-radius:6px;margin-left:8px"></div>
+          </div>
+        </div>
+      `).join('');
+
       const stored = localStorage.getItem("cc_community_posts");
       const seed = getSeedPosts();
       let userPosts = stored ? JSON.parse(stored) : [];

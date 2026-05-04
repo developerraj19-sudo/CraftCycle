@@ -189,11 +189,25 @@
     <script>
         requireAuth();
         document.addEventListener("DOMContentLoaded", async () => {
+            // Show a page-level loading shimmer on the challenges grid
+            const grid = document.querySelector('[style*="grid-template-columns:repeat(auto-fill,minmax(300px"]');
+            if (grid) {
+                grid.querySelectorAll('.card.reveal').forEach(card => {
+                    card.style.opacity = '0';
+                    card.style.transition = 'opacity 0.4s ease';
+                });
+            }
             try {
                 const data = await AuthAPI.me();
                 populateUserInfo(data.user);
             } catch (e) {
                 console.warn(e);
+            }
+            // Fade in cards
+            if (grid) {
+                grid.querySelectorAll('.card.reveal').forEach((card, i) => {
+                    setTimeout(() => { card.style.opacity = ''; }, i * 80);
+                });
             }
         });
     </script>

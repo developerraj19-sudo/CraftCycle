@@ -468,6 +468,25 @@
       }
 
       document.getElementById("scan-overlay").classList.add("active");
+      
+      // Prepare results area with skeletons
+      const grid = document.getElementById("suggestions-grid");
+      const chip = document.getElementById("material-chip");
+      document.getElementById("results").style.display = "block";
+      chip.innerHTML = `<div class="skeleton" style="height:14px;width:150px;display:inline-block"></div>`;
+      grid.innerHTML = Array(3).fill(`
+        <div class="card suggestion-card skeleton" style="pointer-events:none">
+          <div class="skeleton" style="height:20px;width:60%;margin-bottom:var(--s4)"></div>
+          <div class="skeleton" style="height:24px;width:80px;border-radius:var(--r-full);margin-bottom:var(--s4)"></div>
+          <div class="skeleton" style="height:14px;width:90%;margin-bottom:var(--s2)"></div>
+          <div class="skeleton" style="height:14px;width:85%;margin-bottom:var(--s5)"></div>
+          <div class="suggestion-meta">
+            ${Array(4).fill('<div><div class="skeleton" style="height:20px;width:40px;margin:0 auto"></div></div>').join('')}
+          </div>
+          <div class="skeleton" style="height:40px;width:100%;margin-top:var(--s5);border-radius:var(--r-md)"></div>
+        </div>
+      `).join('');
+
       const statuses = ["Detecting material type…", "Analyzing composition…", "Searching upcycle database…", "Calculating resale value…", "Generating product ideas…"];
       let i = 0;
       const interval = setInterval(() => { document.getElementById("scan-status").textContent = statuses[i++ % statuses.length]; }, 900);
@@ -539,6 +558,19 @@
 
     async function loadHistory() {
       const container = document.getElementById("history");
+
+      // Show skeleton while fetching
+      container.innerHTML = Array(3).fill(`
+        <div class="card" style="padding:var(--s4);margin-bottom:var(--s3);display:flex;align-items:center;gap:var(--s4);pointer-events:none">
+          <div class="skeleton" style="width:40px;height:40px;border-radius:var(--r-md);flex-shrink:0"></div>
+          <div style="flex:1">
+            <div class="skeleton" style="height:14px;width:55%;margin-bottom:6px"></div>
+            <div class="skeleton" style="height:11px;width:30%"></div>
+          </div>
+          <div class="skeleton" style="height:12px;width:60px"></div>
+        </div>
+      `).join('');
+
       try {
         const data = await ScannerAPI.history();
         if (!data.scans?.length) { container.innerHTML = `<div class="card" style="padding:var(--s8);text-align:center"><div style="font-size:2rem;margin-bottom:var(--s3)">🔍</div><div class="text-muted">No scans yet.</div></div>`; return; }

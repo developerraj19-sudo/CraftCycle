@@ -1132,7 +1132,7 @@
                     <a href="pages/marketplace.html" class="btn btn-secondary btn-lg">Browse Marketplace →</a>
                 </div>
 
-                <div class="hero-stats">
+                <div class="hero-stats" id="hero-stats">
                     <div>
                         <div class="hero-stat-val">12K+</div>
                         <div class="hero-stat-label">Creators</div>
@@ -1580,6 +1580,41 @@
                 ? 'rgba(5,13,26,0.97)'
                 : 'rgba(5,13,26,0.85)';
         });
+
+        // ── Home Page Skeletons & CountUp ───────────────────────────
+        (function initHomeSkeletons() {
+            const heroStats = document.getElementById('hero-stats');
+            const impactGrid = document.querySelector('.impact-grid');
+            
+            // Save original HTML
+            const heroOriginal = heroStats.innerHTML;
+            const impactOriginal = impactGrid.innerHTML;
+
+            // Apply Skeletons
+            heroStats.querySelectorAll('.hero-stat-val').forEach(el => {
+                el.innerHTML = `<div class="skeleton" style="height:24px;width:60px;border-radius:4px"></div>`;
+            });
+            impactGrid.querySelectorAll('.impact-val').forEach(el => {
+                el.innerHTML = `<div class="skeleton" style="height:32px;width:100px;border-radius:6px;margin:0 auto"></div>`;
+            });
+
+            // "Fetch" simulated data
+            setTimeout(() => {
+                heroStats.innerHTML = heroOriginal;
+                impactGrid.innerHTML = impactOriginal;
+                
+                // Optional: Trigger count-up or reveal
+                document.querySelectorAll('.hero-stat-val, .impact-val').forEach(el => {
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(10px)';
+                    el.style.transition = 'all 0.6s cubic-bezier(0.22, 1, 0.36, 1)';
+                    requestAnimationFrame(() => {
+                        el.style.opacity = '1';
+                        el.style.transform = 'translateY(0)';
+                    });
+                });
+            }, 1000);
+        })();
     </script>
 
 </body>

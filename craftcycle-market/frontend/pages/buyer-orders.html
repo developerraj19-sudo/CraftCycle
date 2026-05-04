@@ -94,6 +94,15 @@
 
         async function loadOrders() {
             const container = document.getElementById('orders-container');
+            
+            // Show skeleton loading state
+            container.innerHTML = Array(3).fill(`
+                <div class="card" style="padding:var(--s4); margin-bottom:var(--s5);">
+                    <div class="skeleton" style="height:20px; width:30%; margin-bottom:var(--s3)"></div>
+                    <div class="skeleton" style="height:14px; width:60%"></div>
+                </div>
+            `).join('');
+
             try {
                 const data = await OrdersAPI.list();
                 allOrders = data.orders || [];
