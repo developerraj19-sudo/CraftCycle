@@ -693,12 +693,8 @@
 
           <!-- Filter tabs -->
           <div class="filter-tabs">
-            <button class="ftab active" data-type="all" onclick="setType('all',this)">All</button>
-            <button class="ftab" data-type="dealer" onclick="setType('dealer',this)">
-              🏭 Dealers <span class="ftab-count" id="cnt-dealer">0</span>
-            </button>
-            <button class="ftab" data-type="seller" onclick="setType('seller',this)">
-              🏪 Sellers <span class="ftab-count" id="cnt-seller">0</span>
+            <button class="ftab active" data-type="dealer" onclick="setType('dealer',this)">
+              🏭 Scrap Dealers <span class="ftab-count" id="cnt-dealer">0</span>
             </button>
           </div>
 
@@ -818,9 +814,6 @@
               <div class="legend-dot" style="background:#00FF88"></div><span>Scrap Dealer</span>
             </div>
             <div class="legend-item">
-              <div class="legend-dot" style="background:#F97316"></div><span>Seller</span>
-            </div>
-            <div class="legend-item">
               <div class="legend-dot" style="background:#F59E0B"></div><span>You 📍</span>
             </div>
           </div>
@@ -863,8 +856,7 @@
 
     // ─── Type config ─────────────────────────────────────────
     const TYPE_CONFIG = {
-      dealer: { emoji: "♻️", label: "Scrap Dealer", color: "#00FF88", cls: "marker-dealer" },
-      seller: { emoji: "🏪", label: "Seller", color: "#F97316", cls: "marker-seller" },
+      dealer: { emoji: "🏭", label: "Scrap Dealer", color: "#00FF88", cls: "marker-dealer" },
     };
 
     // ─── Seed data generator (realistic Indian locations) ────
@@ -876,11 +868,8 @@
         { id: 2, type: "dealer", name: "Green Scrap Solutions", owner: "Priya Menon", lat: centerLat + spread(0.09), lng: centerLng + spread(0.11), rating: 4.8, reviews: 127, phone: "+91 97435 88201", address: "Industrial Area, Sector 4", materials: ["e-waste", "plastic", "metal"], tags: ["certified", "pickup service"], bio: "Certified e-waste recycler. We handle everything from old phones to servers." },
         { id: 3, type: "dealer", name: "Eco Recycle Hub", owner: "M. Subramaniam", lat: centerLat + spread(0.15), lng: centerLng + spread(0.08), rating: 4.3, reviews: 56, phone: "+91 90087 34512", address: "Main Road, Opp. Petrol Bunk", materials: ["paper", "cardboard", "glass"], tags: ["home pickup", "daily rates"], bio: "Specializing in paper, cardboard, and glass recycling with daily market rates." },
         { id: 4, type: "dealer", name: "Metro Scrap Traders", owner: "Abdul Karim", lat: centerLat + spread(0.06), lng: centerLng + spread(0.14), rating: 4.5, reviews: 91, phone: "+91 88012 77654", address: "Bypass Road Junction", materials: ["all types"], tags: ["wholesale", "instant payment"], bio: "Wholesale scrap trading with instant cash payments. All material types accepted." },
-        
-        // Sellers
-        { id: 7, type: "seller", name: "EcoHome Decor", owner: "Amit Singh", lat: centerLat + spread(0.07), lng: centerLng + spread(0.13), rating: 4.9, reviews: 210, phone: "+91 98860 12345", address: "Whitefield Main Road", materials: ["wood", "metal"], tags: ["premium", "handmade"], bio: "Premium upcycled home decor items. Every piece tells a story of sustainability." },
-        { id: 8, type: "seller", name: "ReCraft Studio", owner: "Zara Khan", lat: centerLat + spread(0.14), lng: centerLng + spread(0.05), rating: 4.7, reviews: 156, phone: "+91 97750 67890", address: "Indiranagar 100ft Rd", materials: ["textiles", "plastic"], tags: ["fashion", "modern"], bio: "Modern fashion and accessories made entirely from reclaimed textiles and plastic waste." },
-        { id: 9, type: "seller", name: "The Green Workshop", owner: "Vikram Rao", lat: centerLat + spread(0.11), lng: centerLng + spread(0.16), rating: 4.5, reviews: 89, phone: "+91 96630 54321", address: "Jayanagar 4th Block", materials: ["glass", "ewaste"], tags: ["creative", "affordable"], bio: "Turning glass bottles and electronic components into beautiful lamps and desk accessories." },
+        { id: 5, type: "dealer", name: "CityWaste Collectors", owner: "Lakshmi Devi", lat: centerLat + spread(0.18), lng: centerLng + spread(0.06), rating: 4.1, reviews: 38, phone: "+91 94425 63210", address: "Gandhi Nagar, 3rd Cross", materials: ["household", "metal"], tags: ["residential", "weekly rounds"], bio: "Doorstep household scrap collection every Wednesday and Saturday." },
+        { id: 6, type: "dealer", name: "Varsha Metal Works", owner: "Ramesh V.", lat: centerLat + spread(0.10), lng: centerLng + spread(0.17), rating: 4.7, reviews: 103, phone: "+91 99001 24567", address: "KIADB Industrial Estate", materials: ["steel", "aluminium", "brass"], tags: ["industrial", "export grade"], bio: "Industrial-grade metal scrap. Aluminium and brass our specialty. Export quality." },
       ];
     }
 
@@ -1227,7 +1216,7 @@
       
       // Update counts and location label with skeletons
       document.getElementById("location-label").innerHTML = `<div class="skeleton" style="height:14px;width:120px;display:inline-block"></div>`;
-      ["all", "dealer", "seller"].forEach(id => {
+      ["dealer"].forEach(id => {
         const el = document.getElementById(`cnt-${id}`);
         if (el) el.innerHTML = `<div class="skeleton" style="height:14px;width:20px;display:inline-block"></div>`;
       });
@@ -1394,11 +1383,8 @@
     }
 
     function updateCounts() {
-      const types = ["dealer", "seller"];
+      const types = ["dealer"];
       const within = allDealers.filter(d => d.distance <= radiusKm);
-      const allEl = document.getElementById("cnt-all");
-      if (allEl) allEl.textContent = within.length;
-
       types.forEach(t => {
         const el = document.getElementById(`cnt-${t}`);
         if (el) el.textContent = within.filter(d => d.type === t).length;
