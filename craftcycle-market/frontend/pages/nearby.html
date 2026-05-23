@@ -9,9 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="../assets/css/style.css" />
 
-  <!-- Google Maps -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY_HERE&callback=initMapInit"
-    async defer></script>
+  <!-- Google Maps will be loaded dynamically -->
 
   <style>
     /* ─── Page shell ─────────────────────────────────────────── */
@@ -849,6 +847,25 @@
     window.initMapInit = function () {
       window.gmapsLoaded = true;
     };
+
+    // Load Google Maps API key from backend dynamically
+    async function loadGoogleMaps() {
+      try {
+        const baseUrl = typeof CONFIG !== 'undefined' && CONFIG.API_BASE_URL ? CONFIG.API_BASE_URL : '/api/v1';
+        const res = await fetch(`${baseUrl}/config/maps-key`);
+        const data = await res.json();
+        const key = data.key || 'YOUR_GOOGLE_MAPS_API_KEY_HERE';
+        
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&callback=initMapInit`;
+        script.async = true;
+        script.defer = true;
+        document.head.appendChild(script);
+      } catch (e) {
+        console.error("Failed to load Maps API key", e);
+      }
+    }
+    loadGoogleMaps();
 
     // ─── State ────────────────────────────────────────────────
     let map = null, userMarker = null, radiusCircle = null;

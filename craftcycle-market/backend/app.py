@@ -78,6 +78,12 @@ def create_app():
     def revoked_token_callback(jwt_header, jwt_payload):
         return _jsonify(error="Token revoked", message="Your session was revoked. Please log in again."), 401
 
+    # ── Config endpoints ──────────────────────────────────────
+    @app.get("/api/v1/config/maps-key")
+    @limiter.exempt
+    def maps_key():
+        return {"key": os.getenv("GOOGLE_MAPS_API_KEY", "")}
+
     # ── Health check ──────────────────────────────────────────
     @app.get("/api/v1/health")
     def health():
