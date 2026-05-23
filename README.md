@@ -1,6 +1,8 @@
 <div align="center">
-  <h1 href="craftcycle.pages.dev/">♻️ CraftCycle</h1>
+  <img src="https://via.placeholder.com/150x150/2d6a4f/ffffff?text=CraftCycle" alt="CraftCycle Logo" width="150" height="150" />
+  <h1><a href="https://craftcycle.pages.dev">♻️ CraftCycle</a></h1>
   <p><strong>Online Eco-Commerce Platform for the Circular Economy</strong></p>
+  <p>🌍 <strong>Live Website: <a href="https://craftcycle.pages.dev">craftcycle.pages.dev</a></strong></p>
   
   [![Python](https://img.shields.io/badge/Python-3.x-blue.svg)](https://www.python.org/)
   [![Flask](https://img.shields.io/badge/Flask-Framework-black.svg)](https://flask.palletsprojects.com/)
