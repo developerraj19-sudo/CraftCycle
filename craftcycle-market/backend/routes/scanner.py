@@ -68,13 +68,14 @@ def analyze():
 
     try:
         import google.generativeai as genai
+        import io
+        from PIL import Image
+        import re
+
         genai.configure(api_key=api_key)
 
-        mime = f"image/{ext if ext != 'jpg' else 'jpeg'}"
-        image_part = {
-            "mime_type": mime,
-            "data": image_bytes
-        }
+        # Gemini supports PIL Image directly
+        img = Image.open(io.BytesIO(image_bytes))
 
         prompt = """
 You are an expert at upcycling and circular economy. Analyse the waste material in the image.
@@ -100,14 +101,15 @@ Respond ONLY with a valid JSON object — no markdown, no commentary.
 Provide exactly 3 suggestions, ranging from easy to harder.
 """
         model = genai.GenerativeModel("gemini-1.5-flash")
-        response = model.generate_content([image_part, prompt])
+        response = model.generate_content([img, prompt])
 
         raw = response.text.strip()
-        # Strip markdown fences if present
-        if raw.startswith("```"):
-            raw = raw.split("```")[1]
-            if raw.startswith("json"):
-                raw = raw[4:]
+        
+        # Robust JSON extraction
+        match = re.search(r'\{.*\}', raw, re.DOTALL)
+        if match:
+            raw = match.group(0)
+            
         result = json.loads(raw)
 
     except json.JSONDecodeError:
