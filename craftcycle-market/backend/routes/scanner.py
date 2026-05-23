@@ -101,22 +101,23 @@ Respond ONLY with a valid JSON object — no markdown, no commentary.
 Provide exactly 3 suggestions, ranging from easy to harder.
 """
         model = genai.GenerativeModel("gemini-1.5-flash")
-        response = model.generate_content([img, prompt])
+        
+        # Enforce JSON output format directly from Gemini
+        response = model.generate_content(
+            [img, prompt],
+            generation_config=genai.types.GenerationConfig(
+                response_mime_type="application/json",
+            )
+        )
 
         raw = response.text.strip()
-        
-        # Robust JSON extraction
-        match = re.search(r'\{.*\}', raw, re.DOTALL)
-        if match:
-            raw = match.group(0)
-            
         result = json.loads(raw)
 
-    except json.JSONDecodeError:
-        return jsonify(error="AI returned an unexpected response. Please try again."), 502
+    except json.JSONDecodeError as e:
+        return jsonify(error=f"JSON Parse Error: {e} - Raw: {raw}"), 502
     except Exception as e:
         current_app.logger.error(f"Gemini error: {e}")
-        return jsonify(error="AI analysis failed. Please try again later."), 502
+        return jsonify(error=f"Gemini error: {str(e)}"), 502
 
     # ── Save to DB + award coins ──────────────────────────────
     coins = current_app.config.get("SCAN_COINS", 2)
