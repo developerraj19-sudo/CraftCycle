@@ -1,6 +1,5 @@
 <div align="center">
-  <img src="https://via.placeholder.com/150x150/2d6a4f/ffffff?text=CraftCycle" alt="CraftCycle Logo" width="150" height="150" />
-  <h1>♻️ CraftCycle</h1>
+  <h1 href="craftcycle.pages.dev/">♻️ CraftCycle</h1>
   <p><strong>Online Eco-Commerce Platform for the Circular Economy</strong></p>
   
   [![Python](https://img.shields.io/badge/Python-3.x-blue.svg)](https://www.python.org/)
