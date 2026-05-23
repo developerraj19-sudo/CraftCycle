@@ -61,17 +61,20 @@ def analyze():
             from_cache=True,
         ), 200
 
-    # ── Call OpenAI Vision API ────────────────────────────────
-    api_key = current_app.config.get("OPENAI_API_KEY", "")
+    # ── Call Gemini Vision API ────────────────────────────────
+    api_key = current_app.config.get("GEMINI_API_KEY", "")
     if not api_key:
         return jsonify(error="AI scanner not configured.", code="no_api_key"), 503
 
     try:
-        from openai import OpenAI
-        client = OpenAI(api_key=api_key)
+        import google.generativeai as genai
+        genai.configure(api_key=api_key)
 
-        b64 = base64.b64encode(image_bytes).decode("utf-8")
         mime = f"image/{ext if ext != 'jpg' else 'jpeg'}"
+        image_part = {
+            "mime_type": mime,
+            "data": image_bytes
+        }
 
         prompt = """
 You are an expert at upcycling and circular economy. Analyse the waste material in the image.
@@ -96,21 +99,10 @@ Respond ONLY with a valid JSON object — no markdown, no commentary.
 
 Provide exactly 3 suggestions, ranging from easy to harder.
 """
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            max_tokens=1500,
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "image_url", "image_url": {"url": f"data:{mime};base64,{b64}"}},
-                        {"type": "text", "text": prompt},
-                    ],
-                }
-            ],
-        )
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        response = model.generate_content([image_part, prompt])
 
-        raw = response.choices[0].message.content.strip()
+        raw = response.text.strip()
         # Strip markdown fences if present
         if raw.startswith("```"):
             raw = raw.split("```")[1]
@@ -121,7 +113,7 @@ Provide exactly 3 suggestions, ranging from easy to harder.
     except json.JSONDecodeError:
         return jsonify(error="AI returned an unexpected response. Please try again."), 502
     except Exception as e:
-        current_app.logger.error(f"OpenAI error: {e}")
+        current_app.logger.error(f"Gemini error: {e}")
         return jsonify(error="AI analysis failed. Please try again later."), 502
 
     # ── Save to DB + award coins ──────────────────────────────
