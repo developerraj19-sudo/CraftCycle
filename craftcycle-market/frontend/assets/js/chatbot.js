@@ -330,8 +330,9 @@ If asked something outside CraftCycle (politics, unrelated topics), politely red
     const el = document.createElement("div");
     el.className = `cb-msg ${role}`;
 
-    // Format markdown-lite: **bold**, newlines
-    const formatted = text
+    // Escape HTML then format markdown-lite: **bold**, newlines
+    const escapeHTML = str => str.replace(/[&<>'"]/g, tag => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'}[tag]));
+    const formatted = escapeHTML(text)
       .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
       .replace(/\n/g, "<br>");
 

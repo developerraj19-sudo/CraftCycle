@@ -107,13 +107,17 @@ def create_app():
             from flask import abort
             abort(404)
             
+        from flask import send_from_directory
+        from werkzeug.exceptions import NotFound
+
         # Try to serve requested file
-        if path != "" and os.path.exists(os.path.join(frontend_dir, path)):
-            from flask import send_from_directory
-            return send_from_directory(frontend_dir, path)
+        if path != "":
+            try:
+                return send_from_directory(frontend_dir, path)
+            except NotFound:
+                pass
         
         # Default to index.html for SPA or root
-        from flask import send_from_directory
         return send_from_directory(frontend_dir, "index.html")
 
     # ── Auto-Sync Database Schema ──────────────────────────────

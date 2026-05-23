@@ -891,7 +891,8 @@
       const user = Auth.getUser();
       const isOwn = user?.username === post.author;
 
-      const formattedContent = post.content
+      const escapeHTML = str => str.replace(/[&<>'"]/g, tag => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'}[tag]));
+      const formattedContent = escapeHTML(post.content)
         .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
         .replace(/✅/g, '<span style="color:var(--green)">✅</span>')
         .replace(/\n/g, "<br>");
@@ -977,12 +978,13 @@
     }
 
     function renderComment(c) {
+      const escapeHTML = str => str.replace(/[&<>'"]/g, tag => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'}[tag]));
       return `
       <div class="comment">
-        <div class="comment-avatar">${c.authorInitial || c.authorName[0]}</div>
+        <div class="comment-avatar">${escapeHTML(c.authorInitial || c.authorName[0])}</div>
         <div>
-          <div class="comment-author">${c.authorName}</div>
-          <div class="comment-text">${c.text}</div>
+          <div class="comment-author">${escapeHTML(c.authorName)}</div>
+          <div class="comment-text">${escapeHTML(c.text)}</div>
           <div class="comment-time">${timeAgo(c.time)}</div>
         </div>
       </div>

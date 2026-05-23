@@ -91,5 +91,5 @@ def chat():
     # If all models failed
     return jsonify({
         "status": "error",
-        "message": f"All AI models failed. Last Error: {last_error}"
+        "message": "All AI models failed. Please try again later."
     }), 500

@@ -12,7 +12,7 @@ const CONFIG = {
   API_BASE_URL: (() => {
     const h = window.location.hostname;
     if (h === 'localhost' || h === '127.0.0.1') return 'http://localhost:5000/api/v1';
-    if (h.includes('onrender.com')) return '/api/v1';       // same-origin on Render
+    if (h.endsWith('.onrender.com') || h === 'craftcycle.onrender.com') return '/api/v1';       // same-origin on Render
     return 'https://craftcycle.onrender.com/api/v1';        // pages.dev → Render
   })(),
 
