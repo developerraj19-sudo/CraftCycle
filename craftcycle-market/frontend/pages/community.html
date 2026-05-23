@@ -891,36 +891,49 @@
       const user = Auth.getUser();
       const isOwn = user?.username === post.author;
 
-      const escapeHTML = str => str.replace(/[&<>'"]/g, tag => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'}[tag]));
+      const escapeHTML = str => {
+        if (str == null) return '';
+        return String(str).replace(/[&<>'"]/g, tag => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'}[tag]));
+      };
+
       const formattedContent = escapeHTML(post.content)
         .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
         .replace(/✅/g, '<span style="color:var(--green)">✅</span>')
         .replace(/\n/g, "<br>");
 
+      const safeAuthorInitial = escapeHTML(post.authorInitial);
+      const safeAuthorName = escapeHTML(post.authorName);
+      const safeAuthorRole = escapeHTML(post.authorRole);
+      const safeAuthorId = escapeHTML(post.author);
+      const safePostId = escapeHTML(post.id);
+      const safeImageEmoji = escapeHTML(post.imageEmoji);
+      const safeLikes = escapeHTML(post.likes);
+      const safeCommentsLen = escapeHTML(post.comments ? post.comments.length : 0);
+
       const el = document.createElement("div");
       el.className = "card post-card reveal";
-      el.id = `post-${post.id}`;
+      el.id = `post-${safePostId}`;
 
       el.innerHTML = `
       <div class="post-header">
-        <div class="post-author-avatar">${post.authorInitial}</div>
+        <div class="post-author-avatar">${safeAuthorInitial}</div>
         <div style="flex:1">
           <div style="display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap">
-            <span class="post-author-name">${post.authorName}</span>
+            <span class="post-author-name">${safeAuthorName}</span>
             ${post.verified ? '<span class="badge badge-green" style="font-size:0.6rem;padding:2px 6px">✓ Verified</span>' : ""}
             <span class="post-category-tag badge badge-${cat.color}">${cat.icon} ${cat.label}</span>
           </div>
           <div class="post-author-meta">
-            <span>${post.authorRole}</span>
+            <span>${safeAuthorRole}</span>
             <span>• ${timeAgo(post.timestamp)}</span>
           </div>
         </div>
         ${!isOwn ? `
           <button class="btn btn-sm follow-btn ${isFollow ? 'following btn-ghost' : 'btn-secondary'}"
-                  onclick="toggleFollow('${post.author}', this)">
+                  onclick="toggleFollow('${safeAuthorId}', this)">
             ${isFollow ? "✓ Following" : "+ Follow"}
           </button>` : ""}
-        <button class="btn btn-ghost btn-sm" style="padding:6px 8px" onclick="reportPost('${post.id}')">⋯</button>
+        <button class="btn btn-ghost btn-sm" style="padding:6px 8px" onclick="reportPost('${safePostId}')">⋯</button>
       </div>
 
       <div class="post-body">
@@ -930,46 +943,46 @@
       ${post.imageEmoji ? `
         <div class="post-image-placeholder">
           <div style="text-align:center">
-            <div style="font-size:5rem">${post.imageEmoji}</div>
+            <div style="font-size:5rem">${safeImageEmoji}</div>
             <div style="font-size:0.72rem;color:var(--text-3);margin-top:var(--s2)">Image preview</div>
           </div>
         </div>` : ""}
 
       <div class="post-tags">
-        ${post.tags.map(t => `<span class="tag-chip">#${t}</span>`).join("")}
+        ${(post.tags || []).map(t => `<span class="tag-chip">#${escapeHTML(t)}</span>`).join("")}
       </div>
 
       <!-- Action Bar -->
       <div class="post-footer">
-        <button class="post-action-btn ${isLiked ? "liked" : ""}" id="like-btn-${post.id}"
-                onclick="toggleLike('${post.id}')">
-          ${isLiked ? "❤️" : "🤍"} <span id="like-count-${post.id}">${post.likes}</span>
+        <button class="post-action-btn ${isLiked ? "liked" : ""}" id="like-btn-${safePostId}"
+                onclick="toggleLike('${safePostId}')">
+          ${isLiked ? "❤️" : "🤍"} <span id="like-count-${safePostId}">${safeLikes}</span>
         </button>
-        <button class="post-action-btn" onclick="toggleComments('${post.id}')">
-          💬 <span>${post.comments.length}</span>
+        <button class="post-action-btn" onclick="toggleComments('${safePostId}')">
+          💬 <span>${safeCommentsLen}</span>
         </button>
-        <button class="post-action-btn" onclick="sharePost('${post.id}', '${post.authorName}')">
+        <button class="post-action-btn" onclick="sharePost('${safePostId}', '${safeAuthorName}')">
           🔗 Share
         </button>
-        <button class="post-action-btn ${isSaved ? "saved" : ""}" id="save-btn-${post.id}"
-                onclick="toggleSave('${post.id}')">
+        <button class="post-action-btn ${isSaved ? "saved" : ""}" id="save-btn-${safePostId}"
+                onclick="toggleSave('${safePostId}')">
           ${isSaved ? "🔖" : "📌"} ${isSaved ? "Saved" : "Save"}
         </button>
       </div>
 
       <!-- Comments Section -->
-      <div class="comments-section" id="comments-${post.id}">
+      <div class="comments-section" id="comments-${safePostId}">
         <!-- Existing comments -->
-        <div id="comment-list-${post.id}">
-          ${post.comments.map(c => renderComment(c)).join("")}
+        <div id="comment-list-${safePostId}">
+          ${(post.comments || []).map(c => renderComment(c)).join("")}
         </div>
         <!-- New comment input -->
         <div class="comment-input-row">
           <div class="user-avatar" data-user-avatar style="width:30px;height:30px;font-size:0.75rem"></div>
           <input class="comment-input" placeholder="Write a comment…"
-                 id="comment-input-${post.id}"
-                 onkeydown="if(event.key==='Enter')submitComment('${post.id}')" />
-          <button class="btn btn-primary btn-sm" onclick="submitComment('${post.id}')">Send</button>
+                 id="comment-input-${safePostId}"
+                 onkeydown="if(event.key==='Enter')submitComment('${safePostId}')" />
+          <button class="btn btn-primary btn-sm" onclick="submitComment('${safePostId}')">Send</button>
         </div>
       </div>
     `;
