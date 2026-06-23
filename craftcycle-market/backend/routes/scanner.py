@@ -100,35 +100,52 @@ Respond ONLY with a valid JSON object — no markdown, no commentary.
 
 Provide exactly 3 suggestions, ranging from easy to harder.
 """
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        models_to_try = [
+            "gemini-2.5-flash",
+            "gemini-2.0-flash",
+            "gemini-2.5-flash-lite",
+            "gemini-3.5-flash",
+            "gemini-flash-latest"
+        ]
         
-        # Enforce JSON output format directly from Gemini
-        response = model.generate_content(
-            [img, prompt],
-            generation_config=genai.types.GenerationConfig(
-                response_mime_type="application/json",
-            )
-        )
+        last_error_str = None
+        result = None
+        raw = ""
 
-        raw = response.text.strip()
-        result = json.loads(raw)
+        for model_name in models_to_try:
+            try:
+                model = genai.GenerativeModel(model_name)
+                
+                # Enforce JSON output format directly from Gemini
+                response = model.generate_content(
+                    [img, prompt],
+                    generation_config=genai.types.GenerationConfig(
+                        response_mime_type="application/json",
+                    )
+                )
+
+                raw = response.text.strip()
+                result = json.loads(raw)
+                break # Success, exit the loop
+            except Exception as e:
+                error_str = str(e)
+                print(f"Scanner Model {model_name} failed: {error_str}")
+                last_error_str = error_str
+                continue
+                
+        if not result:
+            if last_error_str and ("429" in last_error_str or "ResourceExhausted" in last_error_str or "quota" in last_error_str.lower()):
+                return jsonify({
+                    "status": "error",
+                    "message": "All Google Gemini API models are currently at max capacity. Your free tier quota is exhausted. Please wait a minute or upgrade your API key."
+                }), 429
+            return jsonify({
+                "status": "error",
+                "message": "Failed to analyze image with AI. Please try again."
+            }), 500
 
     except json.JSONDecodeError as e:
         return jsonify(error=f"JSON Parse Error: {e} - Raw: {raw}"), 502
-    except Exception as e:
-        error_str = str(e)
-        print(f"Gemini API error: {error_str}")
-        
-        if "429" in error_str or "ResourceExhausted" in error_str or "quota" in error_str.lower():
-            return jsonify({
-                "status": "error",
-                "message": "Google Gemini API rate limit exceeded. Your free tier quota is exhausted. Please wait a minute or upgrade your API key."
-            }), 429
-            
-        return jsonify({
-            "status": "error",
-            "message": "Failed to analyze image with AI. Please try again."
-        }), 500
 
     # ── Save to DB + award coins ──────────────────────────────
     coins = current_app.config.get("SCAN_COINS", 2)

@@ -53,37 +53,51 @@ def chat():
             "message": "AI Key Missing. Please add GEMINI_API_KEY to Render Environment Variables."
         }), 503
 
-    try:
-        model = genai.GenerativeModel(
-            model_name="gemini-2.5-flash",
-            system_instruction=SYSTEM_PROMPT
-        )
+    models_to_try = [
+        "gemini-2.5-flash",
+        "gemini-2.0-flash",
+        "gemini-2.5-flash-lite",
+        "gemini-3.5-flash",
+        "gemini-flash-latest"
+    ]
+    
+    last_error_str = None
 
-        formatted_history = []
-        for msg in history[-5:]:
-            role = "model" if msg.get("role") in ["assistant", "bot", "model"] else "user"
-            formatted_history.append({"role": role, "parts": [msg.get("content", "")]})
+    for model_name in models_to_try:
+        try:
+            model = genai.GenerativeModel(
+                model_name=model_name,
+                system_instruction=SYSTEM_PROMPT
+            )
 
-        chat_session = model.start_chat(history=formatted_history)
-        response = chat_session.send_message(user_message)
+            formatted_history = []
+            for msg in history[-5:]:
+                role = "model" if msg.get("role") in ["assistant", "bot", "model"] else "user"
+                formatted_history.append({"role": role, "parts": [msg.get("content", "")]})
 
-        return jsonify({
-            "status": "success",
-            "reply": response.text,
-            "model_used": "gemini-2.5-flash"
-        })
-    except Exception as e:
-        error_str = str(e)
-        print(f"Gemini failed: {error_str}")
-        
-        # Check if it's a rate limit / quota error
-        if "429" in error_str or "ResourceExhausted" in error_str or "quota" in error_str.lower():
+            chat_session = model.start_chat(history=formatted_history)
+            response = chat_session.send_message(user_message)
+
             return jsonify({
-                "status": "error",
-                "message": "Google Gemini API rate limit exceeded. Your free tier quota is exhausted. Please wait a minute or upgrade your API key."
-            }), 429
-            
+                "status": "success",
+                "reply": response.text,
+                "model_used": model_name
+            })
+        except Exception as e:
+            error_str = str(e)
+            print(f"ChatBot Model {model_name} failed: {error_str}")
+            last_error_str = error_str
+            # Move to next model on failure
+            continue
+
+    # If all models fail
+    if last_error_str and ("429" in last_error_str or "ResourceExhausted" in last_error_str or "quota" in last_error_str.lower()):
         return jsonify({
             "status": "error",
-            "message": "AI model failed. Please try again later."
-        }), 500
+            "message": "All Google Gemini AI models are currently at maximum capacity. Your free tier quota is exhausted. Please wait a minute or upgrade your API key."
+        }), 429
+        
+    return jsonify({
+        "status": "error",
+        "message": "AI model failed. Please try again later."
+    }), 500
