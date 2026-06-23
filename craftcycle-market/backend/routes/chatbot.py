@@ -73,7 +73,16 @@ def chat():
             "model_used": "gemini-2.5-flash"
         })
     except Exception as e:
-        print(f"Gemini failed: {e}")
+        error_str = str(e)
+        print(f"Gemini failed: {error_str}")
+        
+        # Check if it's a rate limit / quota error
+        if "429" in error_str or "ResourceExhausted" in error_str or "quota" in error_str.lower():
+            return jsonify({
+                "status": "error",
+                "message": "Google Gemini API rate limit exceeded. Your free tier quota is exhausted. Please wait a minute or upgrade your API key."
+            }), 429
+            
         return jsonify({
             "status": "error",
             "message": "AI model failed. Please try again later."

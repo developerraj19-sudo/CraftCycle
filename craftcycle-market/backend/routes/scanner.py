@@ -116,8 +116,19 @@ Provide exactly 3 suggestions, ranging from easy to harder.
     except json.JSONDecodeError as e:
         return jsonify(error=f"JSON Parse Error: {e} - Raw: {raw}"), 502
     except Exception as e:
-        current_app.logger.error(f"Gemini error: {e}")
-        return jsonify(error=f"Gemini error: {str(e)}"), 502
+        error_str = str(e)
+        print(f"Gemini API error: {error_str}")
+        
+        if "429" in error_str or "ResourceExhausted" in error_str or "quota" in error_str.lower():
+            return jsonify({
+                "status": "error",
+                "message": "Google Gemini API rate limit exceeded. Your free tier quota is exhausted. Please wait a minute or upgrade your API key."
+            }), 429
+            
+        return jsonify({
+            "status": "error",
+            "message": "Failed to analyze image with AI. Please try again."
+        }), 500
 
     # ── Save to DB + award coins ──────────────────────────────
     coins = current_app.config.get("SCAN_COINS", 2)
