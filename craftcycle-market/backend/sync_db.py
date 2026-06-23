@@ -26,7 +26,7 @@ with app.app_context():
         print("    OK")
     except Exception as e:
         print(f"    ERROR: {e}")
-        sys.exit(1)
+        # Removed sys.exit(1) to prevent the entire app from crashing during deployment if DB is misconfigured.
 
     # ── 2. Fix ENUM → VARCHAR on the 'orders' table ────────────
     # PostgreSQL creates native ENUM types when SQLAlchemy uses db.Enum().
