@@ -119,6 +119,16 @@ If asked something outside CraftCycle (politics, unrelated topics), politely red
     }
     #cb-close:hover { color: #E8F4FF; }
 
+    /* Action btns */
+    .cb-action-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 1rem; color: #4A6080; padding: 4px 6px;
+      border-radius: 6px; transition: color 0.15s;
+    }
+    .cb-action-btn:hover { color: #E8F4FF; }
+    #cb-clear { font-size: 0.85rem; }
+    #cb-clear:hover { color: #FF4D4D; }
+
     /* Messages */
     #cb-messages {
       flex: 1; overflow-y: auto; padding: 16px;
@@ -218,13 +228,7 @@ If asked something outside CraftCycle (politics, unrelated topics), politely red
     #cb-send:hover { opacity: 0.85; transform: scale(1.05); }
     #cb-send:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-    /* Clear btn */
-    #cb-clear {
-      background: none; border: none; cursor: pointer;
-      font-size: 0.72rem; color: #2A4060; padding: 4px 8px;
-      border-radius: 6px; transition: color 0.15s;
-    }
-    #cb-clear:hover { color: #FF4D4D; }
+    /* Action btns moved to common class above */
 
     /* Mobile */
     @media (max-width: 480px) {
@@ -253,8 +257,11 @@ If asked something outside CraftCycle (politics, unrelated topics), politely red
             <span id="cb-status-text">Online — Ask me anything!</span>
           </div>
         </div>
-        <button id="cb-clear" title="Clear chat">🗑️</button>
-        <button id="cb-close" title="Close">✕</button>
+        <div style="display:flex; align-items:center; gap:4px;">
+          <button id="cb-speak-toggle" class="cb-action-btn" title="Toggle Speech">🔊</button>
+          <button id="cb-clear" class="cb-action-btn" title="Clear chat">🗑️</button>
+          <button id="cb-close" title="Close">✕</button>
+        </div>
       </div>
 
       <!-- Messages -->
@@ -282,6 +289,44 @@ If asked something outside CraftCycle (politics, unrelated topics), politely red
   const quickEl = document.getElementById("cb-quick");
   const unreadBadge = document.getElementById("cb-unread");
   const statusText = document.getElementById("cb-status-text");
+  const speakToggleBtn = document.getElementById("cb-speak-toggle");
+
+  // ── Speech Synthesis ────────────────────────────────────────
+  let isSpeechEnabled = true;
+
+  function speakText(text) {
+    if (!isSpeechEnabled || typeof window.speechSynthesis === "undefined") return;
+    
+    // Stop any currently playing audio
+    window.speechSynthesis.cancel();
+    
+    // Clean text: remove markdown and common emojis
+    let cleanText = text.replace(/[\u1000-\uFFFF]+/g, '').replace(/\*/g, '').replace(/#/g, '');
+    
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = "en-US";
+    utterance.rate = 1.0;
+    utterance.pitch = 1.1; // Slightly friendly pitch
+    
+    // Try to find a good female English voice if available
+    const voices = window.speechSynthesis.getVoices();
+    const preferredVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Google UK English Female')));
+    if (preferredVoice) utterance.voice = preferredVoice;
+
+    window.speechSynthesis.speak(utterance);
+  }
+
+  // Load voices proactively
+  if (typeof window.speechSynthesis !== "undefined") {
+    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+  }
+
+  speakToggleBtn.addEventListener("click", () => {
+    isSpeechEnabled = !isSpeechEnabled;
+    speakToggleBtn.textContent = isSpeechEnabled ? "🔊" : "🔇";
+    speakToggleBtn.title = isSpeechEnabled ? "Mute Speech" : "Enable Speech";
+    if (!isSpeechEnabled) window.speechSynthesis.cancel();
+  });
 
   // ── Toggle panel ──────────────────────────────────────────
   function togglePanel() {
@@ -303,6 +348,7 @@ If asked something outside CraftCycle (politics, unrelated topics), politely red
   document.getElementById("cb-clear").addEventListener("click", () => {
     conversation = [];
     messagesEl.innerHTML = "";
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
     showWelcome();
   });
 
@@ -311,9 +357,11 @@ If asked something outside CraftCycle (politics, unrelated topics), politely red
     const user = (typeof Auth !== "undefined" && Auth.getUser()) || null;
     const name = user?.full_name?.split(" ")[0] || "there";
 
-    addMessage("bot",
-      `Hey ${name}! 👋 I'm **CraftBot**, your AI guide on CraftCycle Market.\n\nI can help you find scrap materials, suggest DIY product ideas, explain the platform, and more. What can I help you with today?`
-    );
+    const welcomeMsg = `Hey ${name}! 👋 I'm **CraftBot**, your AI guide on CraftCycle Market.\n\nI can help you find scrap materials, suggest DIY product ideas, explain the platform, and more. What can I help you with today?`;
+    
+    addMessage("bot", welcomeMsg);
+    // Don't auto-speak welcome message unless panel is open
+    if (isOpen) speakText(welcomeMsg);
 
     // Show quick prompts
     quickEl.innerHTML = QUICK_PROMPTS.map(p =>
@@ -399,6 +447,10 @@ If asked something outside CraftCycle (politics, unrelated topics), politely red
       conversation.push({ role: "assistant", content: reply });
       hideTyping();
       addMessage("bot", reply);
+      
+      if (isOpen) {
+        speakText(reply);
+      }
 
       // Badge if panel is closed
       if (!isOpen) {
