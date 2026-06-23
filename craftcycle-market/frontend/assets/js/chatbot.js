@@ -388,24 +388,13 @@ If asked something outside CraftCycle (politics, unrelated topics), politely red
     showTyping();
 
     try {
-      // Manual Own AI Logic
-      let reply = "I'm not sure about that. Try asking about scrap materials, DIY ideas, or green coins!";
-      const lowerText = text.toLowerCase();
-      
-      if (lowerText.includes("plastic") || lowerText.includes("bottle")) {
-        reply = "You can upcycle plastic bottles into beautiful planters or even bird feeders. Cut them in half, paint them, and add some soil!";
-      } else if (lowerText.includes("list") || lowerText.includes("sell") || lowerText.includes("scrap")) {
-        reply = "To list materials, go to the Marketplace and click '+ List Material'. Make sure to add a clear picture, price per kg, and your city.";
-      } else if (lowerText.includes("coin") || lowerText.includes("reward")) {
-        reply = "Green Coins are earned every time you scan waste or make a sustainable sale. You can use them to unlock premium DIY tutorials or get discounts.";
-      } else if (lowerText.includes("scan")) {
-        reply = "The AI Scanner lets you point your camera at any scrap material, and it will instantly suggest upcycling ideas and tell you how many Green Coins you'll earn!";
-      } else if (lowerText.includes("hello") || lowerText.includes("hi") || lowerText.includes("hey")) {
-        reply = "Hello there! How can I help you with your upcycling journey today?";
-      }
+      // Call the backend Gemini AI API
+      const res = await api.post("/chatbot/chat", {
+        message: text,
+        history: conversation
+      });
 
-      // Simulate thinking delay
-      await new Promise(resolve => setTimeout(resolve, 800));
+      const reply = res.reply || "I'm sorry, I couldn't process that.";
 
       conversation.push({ role: "assistant", content: reply });
       hideTyping();
