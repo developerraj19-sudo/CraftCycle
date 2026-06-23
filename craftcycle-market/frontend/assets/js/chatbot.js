@@ -304,13 +304,33 @@ If asked something outside CraftCycle (politics, unrelated topics), politely red
     let cleanText = text.replace(/[\u1000-\uFFFF]+/g, '').replace(/\*/g, '').replace(/#/g, '');
     
     const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = "en-US";
-    utterance.rate = 1.0;
-    utterance.pitch = 1.1; // Slightly friendly pitch
     
-    // Try to find a good female English voice if available
+    // Basic language detection
+    let targetLang = "en-US";
+    if (/[\u0900-\u097F]/.test(cleanText)) {
+      targetLang = "hi-IN"; // Hindi
+    } else if (/[\u4e00-\u9fa5]/.test(cleanText)) {
+      targetLang = "zh-CN"; // Chinese
+    } else if (/[\u0600-\u06FF]/.test(cleanText)) {
+      targetLang = "ar-SA"; // Arabic
+    } else if (navigator.language && !navigator.language.startsWith('en')) {
+      // Use browser default if not English
+      targetLang = navigator.language;
+    }
+
+    utterance.lang = targetLang;
+    utterance.rate = 1.0;
+    utterance.pitch = 1.05; // Slightly natural pitch
+    
+    // Try to find the best voice for the target language
     const voices = window.speechSynthesis.getVoices();
-    const preferredVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Google UK English Female')));
+    let preferredVoice = voices.find(v => v.lang.startsWith(targetLang.split('-')[0]) && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Female') || v.name.includes('Samantha')));
+    
+    // Fallback to any voice in that language
+    if (!preferredVoice) {
+      preferredVoice = voices.find(v => v.lang.startsWith(targetLang.split('-')[0]));
+    }
+    
     if (preferredVoice) utterance.voice = preferredVoice;
 
     window.speechSynthesis.speak(utterance);
