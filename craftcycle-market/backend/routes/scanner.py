@@ -100,7 +100,7 @@ Respond ONLY with a valid JSON object — no markdown, no commentary.
 
 Provide exactly 3 suggestions, ranging from easy to harder.
 """
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("gemini-2.5-flash")
         
         # Enforce JSON output format directly from Gemini
         response = model.generate_content(

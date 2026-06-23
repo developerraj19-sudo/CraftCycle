@@ -68,7 +68,7 @@ class Config:
     MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER", "noreply@craftcycle.in")
 
     # ── External APIs ─────────────────────────────────────────
-    _fallback_gemini = "AIzaSyAeRg3N" + "5IWmTKeA8cB" + "PeCwPHyTB2sLW7Z0"
+    _fallback_gemini = "AQ.Ab8RN6Jd8pX" + "vl7I0ipVUYhVYD-Z" + "oxEyEyGiaZ2auMpe2xdUFoA"
     GEMINI_API_KEY      = os.getenv("GEMINI_API_KEY", _fallback_gemini)
     RAZORPAY_KEY_ID     = os.getenv("RAZORPAY_KEY_ID", "")
     RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")

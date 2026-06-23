@@ -52,7 +52,7 @@ def chat():
 
     try:
         model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash",
+            model_name="gemini-2.5-flash",
             system_instruction=SYSTEM_PROMPT
         )
 
@@ -67,7 +67,7 @@ def chat():
         return jsonify({
             "status": "success",
             "reply": response.text,
-            "model_used": "gemini-1.5-flash"
+            "model_used": "gemini-2.5-flash"
         })
     except Exception as e:
         print(f"Gemini failed: {e}")
